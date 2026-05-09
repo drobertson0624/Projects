@@ -1,0 +1,827 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>East Africa Audio Survey</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --bg:#f7f7f7; --surface:#ffffff; --surface2:#f7f7f7; --surface3:#efefef;
+      --border:rgba(0,0,0,0.08); --border-strong:rgba(0,0,0,0.13);
+      --accent:#007AFF; --accent-light:rgba(0,122,255,0.09);
+      --text:#1d1d1f; --text-secondary:#444444; --text-muted:#86868b; --text-placeholder:#aeaeb2;
+      --warn:#FF9500; --warn-light:rgba(255,149,0,0.10);
+      --danger:#FF3B30; --danger-light:rgba(255,59,48,0.09);
+      --success:#34C759; --success-light:rgba(52,199,89,0.10);
+      --shadow-sm:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
+      --shadow-lg:0 12px 40px rgba(0,0,0,0.10),0 2px 8px rgba(0,0,0,0.05);
+      --radius:18px; --radius-sm:12px; --radius-xs:8px;
+    }
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:-apple-system,'Inter',BlinkMacSystemFont,'Helvetica Neue',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;-webkit-font-smoothing:antialiased;}
+    .app{min-height:100vh;display:flex;flex-direction:column;}
+    .nav{display:flex;align-items:center;justify-content:space-between;padding:0 24px;height:52px;border-bottom:1px solid var(--border);background:rgba(247,247,247,0.88);backdrop-filter:saturate(180%) blur(20px);-webkit-backdrop-filter:saturate(180%) blur(20px);position:sticky;top:0;z-index:100;}
+    .nav-logo{display:flex;align-items:center;gap:8px;}
+    .nav-dot{width:7px;height:7px;border-radius:50%;background:var(--accent);}
+    .nav-title{font-size:13px;font-weight:600;color:var(--text-secondary);letter-spacing:-0.01em;}
+    .nav-tabs{display:flex;gap:2px;background:var(--surface3);border-radius:9px;padding:3px;}
+    .nav-tab{padding:5px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:transparent;color:var(--text-muted);transition:all 0.15s;letter-spacing:-0.01em;}
+    .nav-tab.active{background:var(--surface);color:var(--text);font-weight:600;box-shadow:var(--shadow-sm);}
+    .survey-wrap{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:32px 16px 56px;}
+    .survey-card{width:100%;max-width:500px;background:var(--surface);border-radius:22px;overflow:hidden;box-shadow:var(--shadow-lg);border:1px solid var(--border);}
+    .survey-header{padding:28px 28px 0;}
+    .step-label{font-size:12px;font-weight:600;color:var(--accent);margin-bottom:5px;letter-spacing:0.01em;}
+    .step-title{font-size:21px;font-weight:700;line-height:1.25;color:var(--text);margin-bottom:5px;letter-spacing:-0.02em;}
+    .step-sub{font-size:14px;color:var(--text-muted);line-height:1.55;letter-spacing:-0.01em;}
+    .progress-bar{margin:18px 0 0;height:3px;background:var(--surface3);border-radius:2px;overflow:hidden;}
+    .progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width 0.45s cubic-bezier(0.4,0,0.2,1);}
+    .survey-body{padding:20px 28px 28px;display:flex;flex-direction:column;gap:15px;}
+    .field-label{font-size:13px;font-weight:600;color:var(--text-secondary);margin-bottom:7px;letter-spacing:-0.01em;}
+    .field-group{display:flex;flex-direction:column;}
+    input[type="text"],input[type="number"],select,textarea{background:var(--surface2);border:1px solid var(--border-strong);border-radius:var(--radius-sm);color:var(--text);font-family:-apple-system,'Inter',BlinkMacSystemFont,sans-serif;font-size:15px;font-weight:400;padding:11px 14px;outline:none;transition:border-color 0.15s,box-shadow 0.15s;width:100%;-webkit-appearance:none;letter-spacing:-0.01em;}
+    input::placeholder,textarea::placeholder{color:var(--text-placeholder);}
+    input:focus,select:focus,textarea:focus{border-color:var(--accent);box-shadow:0 0 0 3px rgba(0,122,255,0.09);background:var(--surface);}
+    select{cursor:pointer;}
+    textarea{resize:vertical;min-height:80px;line-height:1.5;}
+    .choices{display:flex;flex-direction:column;gap:7px;}
+    .choices.row{flex-direction:row;flex-wrap:wrap;gap:7px;}
+    .choice-btn{display:flex;align-items:center;gap:11px;padding:11px 14px;background:var(--surface2);border:1px solid var(--border-strong);border-radius:var(--radius-sm);color:var(--text);font-family:-apple-system,'Inter',BlinkMacSystemFont,sans-serif;font-size:15px;font-weight:400;cursor:pointer;transition:all 0.15s;text-align:left;width:100%;letter-spacing:-0.01em;}
+    .choices.row .choice-btn{width:auto;flex:1;min-width:0;justify-content:center;gap:6px;}
+    .choice-btn:hover{background:var(--surface);border-color:rgba(0,0,0,0.2);}
+    .choice-btn:active{transform:scale(0.99);}
+    .choice-btn.selected{background:rgba(0,122,255,0.09);border-color:var(--accent);color:var(--accent);font-weight:500;}
+    .choice-dot{width:18px;height:18px;border-radius:50%;border:1.5px solid var(--border-strong);flex-shrink:0;transition:all 0.15s;display:flex;align-items:center;justify-content:center;background:var(--surface);}
+    .choice-btn.selected .choice-dot{background:var(--accent);border-color:var(--accent);}
+    .choice-dot-inner{width:6px;height:6px;border-radius:50%;background:#fff;}
+    .survey-footer{display:flex;gap:8px;margin-top:4px;}
+    .btn-back{padding:12px 18px;border-radius:var(--radius-sm);border:1px solid var(--border-strong);background:var(--surface2);color:var(--text-secondary);font-family:-apple-system,'Inter',BlinkMacSystemFont,sans-serif;font-size:15px;font-weight:500;cursor:pointer;transition:all 0.15s;letter-spacing:-0.01em;}
+    .btn-back:hover{background:var(--surface3);}
+    .btn-next{flex:1;padding:12px 20px;border-radius:var(--radius-sm);border:none;background:var(--accent);color:#fff;font-family:-apple-system,'Inter',BlinkMacSystemFont,sans-serif;font-size:15px;font-weight:600;cursor:pointer;transition:all 0.15s;letter-spacing:-0.01em;}
+    .btn-next:hover{background:#0071eb;}
+    .btn-next:active{transform:scale(0.99);background:#0068d6;}
+    .btn-next:disabled{background:var(--surface3);color:var(--text-placeholder);cursor:not-allowed;transform:none;}
+    .welcome-screen{display:flex;flex-direction:column;align-items:center;text-align:center;padding:48px 28px 40px;gap:18px;}
+    .welcome-icon{width:68px;height:68px;border-radius:18px;background:rgba(0,122,255,0.09);display:flex;align-items:center;justify-content:center;}
+    .welcome-title{font-size:24px;font-weight:700;line-height:1.2;letter-spacing:-0.03em;}
+    .welcome-sub{font-size:15px;color:var(--text-muted);line-height:1.55;max-width:360px;letter-spacing:-0.01em;}
+    .welcome-pills{display:flex;gap:7px;flex-wrap:wrap;justify-content:center;}
+    .pill{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;background:var(--surface2);border:1px solid var(--border-strong);font-size:12px;color:var(--text-muted);font-weight:500;}
+    .pill-dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+    .complete-screen{display:flex;flex-direction:column;align-items:center;text-align:center;padding:48px 28px 40px;gap:18px;}
+    .complete-icon{width:72px;height:72px;border-radius:50%;background:var(--success-light);border:2px solid var(--success);display:flex;align-items:center;justify-content:center;animation:pop 0.5s cubic-bezier(0.34,1.56,0.64,1);}
+    @keyframes pop{from{transform:scale(0.5);opacity:0;}to{transform:scale(1);opacity:1;}}
+    .msg-badge{display:inline-flex;align-items:center;gap:7px;padding:5px 12px;border-radius:100px;background:rgba(0,122,255,0.09);font-size:13px;color:var(--accent);font-weight:600;margin-bottom:2px;}
+    .time-input-wrap{position:relative;display:flex;align-items:center;}
+    .time-input-wrap input{padding-right:50px;}
+    .time-unit{position:absolute;right:14px;font-size:13px;color:var(--text-muted);pointer-events:none;font-weight:500;}
+    .info-box{padding:13px 15px;border-radius:var(--radius-xs);font-size:14px;line-height:1.55;letter-spacing:-0.01em;}
+    .info-box.blue{background:rgba(0,122,255,0.07);color:#0058cc;border:1px solid rgba(0,122,255,0.18);}
+    .info-box.green{background:var(--success-light);color:#1a7a3a;border:1px solid rgba(52,199,89,0.25);}
+    .info-box.danger{background:var(--danger-light);color:#b02520;border:1px solid rgba(255,59,48,0.2);}
+    .info-box.warn{background:var(--warn-light);color:#8a5200;border:1px solid rgba(255,149,0,0.25);}
+    .rss-box{background:var(--surface2);border:1px solid var(--border-strong);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all 0.15s;}
+    .rss-box:hover{border-color:var(--accent);background:rgba(0,122,255,0.04);}
+    .rss-url{font-size:11px;color:var(--text-muted);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-family:monospace;letter-spacing:0;}
+    .rss-copy-btn{font-size:12px;font-weight:700;color:var(--accent);white-space:nowrap;flex-shrink:0;padding:4px 10px;background:rgba(0,122,255,0.09);border-radius:6px;}
+    .rss-copied{color:var(--success)!important;background:var(--success-light)!important;}
+    .steps-list{display:flex;flex-direction:column;gap:10px;}
+    .step-row{display:flex;gap:12px;align-items:flex-start;}
+    .step-num{width:24px;height:24px;border-radius:50%;background:rgba(0,122,255,0.09);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:1px;}
+    .step-text{font-size:15px;color:var(--text);line-height:1.45;letter-spacing:-0.01em;}
+    .step-sub-text{font-size:13px;color:var(--text-muted);display:block;margin-top:2px;}
+    .watch-list{display:flex;flex-direction:column;gap:8px;}
+    .watch-row{display:flex;align-items:flex-start;gap:10px;padding:11px 13px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
+    .watch-icon{flex-shrink:0;margin-top:1px;display:flex;align-items:center;}
+    .watch-text{font-size:14px;color:var(--text);line-height:1.4;letter-spacing:-0.01em;}
+    .divider{height:1px;background:var(--border);margin:2px 0;}
+    .dashboard{padding:28px 24px 56px;max-width:1080px;margin:0 auto;width:100%;}
+    .dash-header{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:22px;flex-wrap:wrap;gap:12px;}
+    .dash-title{font-size:22px;font-weight:700;letter-spacing:-0.025em;}
+    .dash-sub{font-size:13px;color:var(--text-muted);margin-top:3px;letter-spacing:-0.01em;}
+    .status-badge{display:flex;align-items:center;gap:7px;padding:7px 14px;border-radius:100px;font-size:13px;font-weight:600;letter-spacing:-0.01em;border:1px solid;}
+    .status-good{background:var(--success-light);border-color:rgba(52,199,89,0.3);color:#1a7a3a;}
+    .status-warn{background:var(--warn-light);border-color:rgba(255,149,0,0.3);color:#8a5200;}
+    .status-crit{background:var(--danger-light);border-color:rgba(255,59,48,0.25);color:#b02520;}
+    .status-dot{width:7px;height:7px;border-radius:50%;background:currentColor;}
+    .metrics-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(185px,1fr));gap:10px;margin-bottom:14px;}
+    .metric-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);}
+    .metric-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:8px;letter-spacing:-0.01em;}
+    .metric-value{font-size:28px;font-weight:700;line-height:1;letter-spacing:-0.03em;}
+    .metric-unit{font-size:13px;color:var(--text-muted);font-weight:400;margin-left:2px;}
+    .metric-sub{font-size:11px;color:var(--text-muted);margin-top:5px;}
+    .metric-bar{height:3px;background:var(--surface3);border-radius:2px;margin-top:10px;overflow:hidden;}
+    .metric-bar-fill{height:100%;border-radius:2px;transition:width 0.8s cubic-bezier(0.4,0,0.2,1);}
+    .section-title{font-size:11px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;color:var(--text-muted);margin-bottom:13px;padding-bottom:10px;border-bottom:1px solid var(--border);}
+    .breakdown-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:10px;margin-bottom:14px;}
+    .breakdown-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;box-shadow:var(--shadow-sm);}
+    .bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+    .bar-label{font-size:13px;color:var(--text);min-width:85px;font-weight:500;letter-spacing:-0.01em;}
+    .bar-track{flex:1;height:5px;background:var(--surface3);border-radius:3px;overflow:hidden;}
+    .bar-fill{height:100%;border-radius:3px;transition:width 1s cubic-bezier(0.4,0,0.2,1);}
+    .bar-val{font-size:12px;color:var(--text-muted);min-width:32px;text-align:right;font-weight:600;}
+    .network-grid{display:flex;flex-direction:column;gap:7px;}
+    .network-row{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;background:var(--surface2);border-radius:10px;border:1px solid var(--border);}
+    .network-name{font-size:13px;font-weight:600;}
+    .network-meta{font-size:11px;color:var(--text-muted);margin-top:1px;}
+    .network-status{font-size:11px;font-weight:600;padding:3px 8px;border-radius:100px;}
+    .responses-table{width:100%;border-collapse:collapse;}
+    .responses-table th{font-size:11px;font-weight:600;letter-spacing:0.03em;text-transform:uppercase;color:var(--text-muted);text-align:left;padding:8px 12px;border-bottom:1px solid var(--border);}
+    .responses-table td{font-size:13px;padding:10px 12px;border-bottom:1px solid var(--border);letter-spacing:-0.01em;}
+    .responses-table tr:last-child td{border-bottom:none;}
+    .responses-table tr:hover td{background:var(--surface2);}
+    .tag{display:inline-block;padding:2px 8px;border-radius:100px;font-size:11px;font-weight:600;letter-spacing:-0.01em;}
+    .tag-green{background:var(--success-light);color:#1a7a3a;}
+    .tag-warn{background:var(--warn-light);color:#8a5200;}
+    .tag-red{background:var(--danger-light);color:#b02520;}
+    .tag-gray{background:var(--surface3);color:var(--text-muted);}
+    .decision-card{padding:13px 15px;background:var(--surface2);border-radius:11px;border:1px solid var(--border);}
+    .decision-label{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;letter-spacing:0.03em;}
+    @media(max-width:480px){
+      .nav{padding:0 16px;} .nav-title{display:none;}
+      .survey-card{border-radius:18px;}
+      .survey-header{padding:20px 20px 0;}
+      .survey-body{padding:16px 20px 22px;}
+      .welcome-screen{padding:36px 20px 32px;}
+      .dashboard{padding:18px 14px 48px;}
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const SUPABASE_URL = "https://ooogbcxsqncxstytrasa.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_Z39aD66kKWygUpHW8RbRIA_68a23w9F";
+    const RSS_LINK = "https://lcaforesthills.org/podcast/feeds/eastern-africa?token=ZX7TWsp5pUO2pg74zm6cJ88WPbrizh5QCdjO3clf6Hslo5IVjhHx8Ns383PvPC3d";
+
+    async function insertResponse(data) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify(data),
+      });
+      return res.ok;
+    }
+
+    const MOCK_RESPONSES = [
+      { country: "Uganda", region: "Kampala", network_type: "4G", device_type: "Android Phone", avg_start_time: 3.2, buffering_count: 0, smooth_count: 2, overall_rating: "Very smooth" },
+      { country: "Uganda", region: "Gulu", network_type: "3G", device_type: "Android Phone", avg_start_time: 8.1, buffering_count: 1, smooth_count: 1, overall_rating: "Some issues" },
+      { country: "Kenya", region: "Nairobi", network_type: "4G", device_type: "iPhone", avg_start_time: 2.5, buffering_count: 0, smooth_count: 2, overall_rating: "Very smooth" },
+      { country: "Kenya", region: "Kisumu", network_type: "3G", device_type: "Android Phone", avg_start_time: 11.4, buffering_count: 2, smooth_count: 0, overall_rating: "Difficult" },
+      { country: "Tanzania", region: "Dar es Salaam", network_type: "4G", device_type: "Android Phone", avg_start_time: 4.0, buffering_count: 1, smooth_count: 1, overall_rating: "Mostly smooth" },
+      { country: "Tanzania", region: "Mwanza", network_type: "2G", device_type: "Android Phone", avg_start_time: 18.7, buffering_count: 2, smooth_count: 0, overall_rating: "Difficult" },
+      { country: "Uganda", region: "Jinja", network_type: "4G", device_type: "Android Phone", avg_start_time: 5.1, buffering_count: 0, smooth_count: 2, overall_rating: "Mostly smooth" },
+      { country: "Kenya", region: "Mombasa", network_type: "3G", device_type: "Android Phone", avg_start_time: 9.3, buffering_count: 1, smooth_count: 1, overall_rating: "Some issues" },
+      { country: "Tanzania", region: "Arusha", network_type: "4G", device_type: "iPhone", avg_start_time: 3.8, buffering_count: 0, smooth_count: 2, overall_rating: "Very smooth" },
+      { country: "Uganda", region: "Mbarara", network_type: "3G", device_type: "Android Phone", avg_start_time: 7.2, buffering_count: 1, smooth_count: 1, overall_rating: "Some issues" },
+      { country: "Kenya", region: "Eldoret", network_type: "2G", device_type: "Android Phone", avg_start_time: 22.1, buffering_count: 2, smooth_count: 0, overall_rating: "Difficult" },
+      { country: "Tanzania", region: "Dodoma", network_type: "3G", device_type: "Android Phone", avg_start_time: 6.9, buffering_count: 1, smooth_count: 1, overall_rating: "Mostly smooth" },
+    ];
+
+    const COUNTRIES = {
+      Uganda: ["Kampala","Gulu","Jinja","Mbarara","Entebbe","Lira","Other"],
+      Kenya: ["Nairobi","Mombasa","Kisumu","Eldoret","Nakuru","Thika","Other"],
+      Tanzania: ["Dar es Salaam","Dodoma","Arusha","Mwanza","Zanzibar","Moshi","Other"],
+      Rwanda: ["Kigali","Butare","Gisenyi","Ruhengeri","Other"],
+      Ethiopia: ["Addis Ababa","Dire Dawa","Gondar","Mekelle","Other"],
+      "Other": ["Other"],
+    };
+
+    const TOTAL_STEPS = 10;
+
+    const Icons = {
+      mic:        "M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z M19 10v2a7 7 0 0 1-14 0v-2 M12 19v3 M8 22h8",
+      check:      "M20 6 9 17l-5-5",
+      x:          "M18 6 6 18M6 6l12 12",
+      clock:      "M12 2a10 10 0 1 0 0 20A10 10 0 0 0 12 2z M12 6v6l4 2",
+      link:       "M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71 M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71",
+      play:       "M5 3l14 9-14 9V3z",
+      pause:      "M6 4h4v16H6z M14 4h4v16h-4z",
+      volume:     "M11 5 6 9H2v6h4l5 4V5z M19.07 4.93a10 10 0 0 1 0 14.14 M15.54 8.46a5 5 0 0 1 0 7.07",
+      alertCircle:"M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 8v4 M12 16h.01",
+      checkCircle:"M22 11.08V12a10 10 0 1 1-5.93-9.14 M22 4 12 14.01l-3-3",
+      info:       "M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M12 16v-4 M12 8h.01",
+    };
+
+    function SvgIcon({ name, size = 18, color = "currentColor" }) {
+      const d = Icons[name];
+      if (!d) return null;
+      const paths = d.split(" M ").map((p, i) => i === 0 ? p : "M " + p);
+      return (
+        <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+          {paths.map((p, i) => <path key={i} d={p} />)}
+        </svg>
+      );
+    }
+
+    function Choice({ label, selected, onSelect, icon }) {
+      return (
+        <button className={`choice-btn${selected ? " selected" : ""}`} onClick={onSelect} type="button">
+          <span className="choice-dot">{selected && <span className="choice-dot-inner" />}</span>
+          {icon && <span style={{ display: "flex", alignItems: "center" }}>{icon}</span>}
+          <span>{label}</span>
+        </button>
+      );
+    }
+
+    function ChoiceRow({ options, value, onChange }) {
+      return (
+        <div className="choices row">
+          {options.map(o => (
+            <button key={o} className={`choice-btn${value === o ? " selected" : ""}`} onClick={() => onChange(o)} type="button">
+              <span>{o}</span>
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    function StepList({ items }) {
+      return (
+        <div className="steps-list">
+          {items.map(([n, main, sub]) => (
+            <div key={n} className="step-row">
+              <div className="step-num">{n}</div>
+              <div className="step-text">
+                <span dangerouslySetInnerHTML={{ __html: main }} />
+                {sub && <span className="step-sub-text">{sub}</span>}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    function RSSCopyBox() {
+      const [copied, setCopied] = useState(false);
+      const copy = () => {
+        navigator.clipboard?.writeText(RSS_LINK).catch(() => {});
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      };
+      return (
+        <div className="rss-box" onClick={copy}>
+          <SvgIcon name="link" size={16} color="var(--text-muted)" />
+          <span className="rss-url">{RSS_LINK}</span>
+          <span className={`rss-copy-btn${copied ? " rss-copied" : ""}`}>{copied ? "✓ Copied!" : "Copy"}</span>
+        </div>
+      );
+    }
+
+    function SurveyWizard() {
+      const [step, setStep] = useState(0);
+      const [data, setData] = useState({
+        name: "", church_name: "", country: "", region: "", location: "",
+        device_type: "", connection_type: "", network_type: "", youtube_ability: "",
+        app_installed: "", rss_loaded: "",
+        messages: [{}, {}],
+        overall_rating: "", consistent: "", consistency_notes: "",
+        errors: "", error_notes: "", easy: "", comments: "",
+        test_time: new Date().toISOString(),
+      });
+
+      const set = (k, v) => setData(d => ({ ...d, [k]: v }));
+      const setMsg = (i, k, v) => setData(d => {
+        const msgs = [...d.messages];
+        msgs[i] = { ...msgs[i], [k]: v };
+        return { ...d, messages: msgs };
+      });
+
+      const isAndroid = data.device_type === "Android Phone";
+      const isIphone = data.device_type === "iPhone";
+
+      const canNext = () => {
+        if (step === 1) return data.name.trim() && data.church_name.trim() && data.country && data.location;
+        if (step === 2) return data.device_type && data.connection_type && data.network_type && data.youtube_ability;
+        if (step === 3) return !!data.app_installed;
+        if (step === 4) return !!data.rss_loaded;
+        if (step >= 6 && step <= 7) {
+          const m = data.messages[step - 6];
+          return m.start_time !== undefined && m.start_time !== "" && m.buffering && m.smooth;
+        }
+        if (step === 8) return !!data.overall_rating && !!data.consistent;
+        return true;
+      };
+
+      const next = () => {
+        if (step === 4 && data.rss_loaded === "No") { setStep(9); return; }
+        if (step < TOTAL_STEPS) setStep(s => s + 1);
+        else handleSubmit();
+      };
+      const back = () => setStep(s => Math.max(0, s - 1));
+
+      const handleSubmit = async () => {
+        const payload = {
+          name: data.name, church_name: data.church_name, country: data.country,
+          region: data.region, location: data.location, device_type: data.device_type,
+          connection_type: data.connection_type, network_type: data.network_type,
+          youtube_ability: data.youtube_ability, app_installed: data.app_installed,
+          rss_loaded: data.rss_loaded, overall_rating: data.overall_rating,
+          consistent: data.consistent, consistency_notes: data.consistency_notes,
+          errors: data.errors, error_notes: data.error_notes, easy: data.easy,
+          comments: data.comments, test_time: data.test_time,
+          avg_start_time: data.messages.filter(m => m.start_time).reduce((a, m, _, arr) => a + Number(m.start_time) / arr.length, 0),
+          buffering_count: data.messages.filter(m => m.buffering === "Yes").length,
+          smooth_count: data.messages.filter(m => m.smooth === "Yes").length,
+          message_data: JSON.stringify(data.messages),
+        };
+        await insertResponse(payload);
+        setStep(TOTAL_STEPS);
+      };
+
+      const progress = Math.min((step / TOTAL_STEPS) * 100, 100);
+
+      const Hdr = ({ label, title, sub }) => (
+        <div className="survey-header">
+          <div className="step-label">{label}</div>
+          <div className="step-title">{title}</div>
+          {sub && <div className="step-sub">{sub}</div>}
+          <div className="progress-bar"><div className="progress-fill" style={{ width: `${progress}%` }} /></div>
+        </div>
+      );
+
+      const Foot = ({ nextLabel = "Continue →", showBack = true }) => (
+        <div className="survey-footer">
+          {showBack && <button className="btn-back" onClick={back}>←</button>}
+          <button className="btn-next" onClick={step >= TOTAL_STEPS - 1 ? handleSubmit : next} disabled={!canNext()}>
+            {nextLabel}
+          </button>
+        </div>
+      );
+
+      switch (step) {
+        case 0:
+          return (
+            <div className="survey-card">
+              <div className="welcome-screen">
+                <div className="welcome-icon"><SvgIcon name="mic" size={30} color="var(--accent)" /></div>
+                <div>
+                  <div className="step-label">East Africa Audio Survey</div>
+                  <div className="welcome-title">Help us reach your community</div>
+                </div>
+                <div className="welcome-sub">We're testing how well audio messages load and play in East Africa. This guide walks you through everything — including installing an app and loading the audio. Your results help us improve delivery for everyone.</div>
+                <div className="welcome-pills">
+                  <span className="pill"><span className="pill-dot" />10 minutes</span>
+                  <span className="pill"><span className="pill-dot" />Step-by-step guide</span>
+                  <span className="pill"><span className="pill-dot" />2 audio tests</span>
+                </div>
+                <button className="btn-next" style={{ width: "100%", padding: "14px" }} onClick={() => setStep(1)}>Get Started →</button>
+              </div>
+            </div>
+          );
+
+        case 1:
+          return (
+            <div className="survey-card">
+              <Hdr label="Step 1 of 9 · About You" title="Who are you?" sub="Tell us your name, church, and where you're testing from." />
+              <div className="survey-body">
+                <div className="field-group">
+                  <div className="field-label">Your Name</div>
+                  <input type="text" placeholder="Full name" value={data.name} onChange={e => set("name", e.target.value)} />
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Church Name</div>
+                  <input type="text" placeholder="Name of your church" value={data.church_name} onChange={e => set("church_name", e.target.value)} />
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Country</div>
+                  <select value={data.country} onChange={e => { set("country", e.target.value); set("region", ""); }}>
+                    <option value="">Select country…</option>
+                    {Object.keys(COUNTRIES).map(c => <option key={c}>{c}</option>)}
+                  </select>
+                </div>
+                {data.country && (
+                  <div className="field-group">
+                    <div className="field-label">Region / City / Village</div>
+                    <select value={data.region} onChange={e => set("region", e.target.value)}>
+                      <option value="">Select region…</option>
+                      {COUNTRIES[data.country]?.map(r => <option key={r}>{r}</option>)}
+                    </select>
+                  </div>
+                )}
+                <div className="field-group">
+                  <div className="field-label">Where are you testing from?</div>
+                  <div className="choices">
+                    {["Home","Church","Internet Café","Other"].map(l => (
+                      <Choice key={l} label={l} selected={data.location === l} onSelect={() => set("location", l)} />
+                    ))}
+                  </div>
+                </div>
+                <Foot showBack={false} />
+              </div>
+            </div>
+          );
+
+        case 2:
+          return (
+            <div className="survey-card">
+              <Hdr label="Step 2 of 9 · Your Device" title="Device & Connection" sub="This helps us give you the right installation instructions on the next screen." />
+              <div className="survey-body">
+                <div className="field-group">
+                  <div className="field-label">What type of device are you using?</div>
+                  <div className="choices">
+                    {["Android Phone","iPhone","Tablet","Computer"].map(d => (
+                      <Choice key={d} label={d} selected={data.device_type === d} onSelect={() => set("device_type", d)} />
+                    ))}
+                  </div>
+                </div>
+                <div className="field-group">
+                  <div className="field-label">How are you connected?</div>
+                  <ChoiceRow options={["Mobile Data","Wi-Fi","Other"]} value={data.connection_type} onChange={v => set("connection_type", v)} />
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Mobile network type</div>
+                  <ChoiceRow options={["2G","3G","4G","5G","?"]} value={data.network_type} onChange={v => set("network_type", v)} />
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Can you normally watch YouTube videos?</div>
+                  <div className="choices">
+                    {["Yes, easily","Yes, but slowly","No, it doesn't work"].map(o => (
+                      <Choice key={o} label={o} selected={data.youtube_ability === o} onSelect={() => set("youtube_ability", o)} />
+                    ))}
+                  </div>
+                </div>
+                <Foot />
+              </div>
+            </div>
+          );
+
+        case 3:
+          return (
+            <div className="survey-card">
+              <Hdr
+                label="Step 3 of 9 · Install App"
+                title={isIphone ? "Open Apple Podcasts" : isAndroid ? "Install Podcast Addict" : "Get a podcast app"}
+                sub={isIphone ? "Apple Podcasts is already on your iPhone — just find and open it." : isAndroid ? "You'll install a free app called Podcast Addict from the Play Store." : "You'll need a podcast app that supports RSS feeds."}
+              />
+              <div className="survey-body">
+                {isAndroid && <>
+                  <div className="info-box blue" style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                    <SvgIcon name="info" size={16} color="#0058cc" /><span>Podcast Addict is free and takes about 1 minute to install.</span>
+                  </div>
+                  <StepList items={[
+                    ["1","Open the <strong>Google Play Store</strong>","The colourful triangle icon on your phone"],
+                    ["2","Tap the search bar and type: <strong>Podcast Addict</strong>"],
+                    ["3","Tap the app with the <strong>orange and white icon</strong>"],
+                    ["4","Tap <strong>Install</strong> and wait for it to finish"],
+                    ["5","Tap <strong>Open</strong> to launch the app"],
+                  ]} />
+                </>}
+                {isIphone && <>
+                  <div className="info-box blue" style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                    <SvgIcon name="info" size={16} color="#0058cc" /><span>Apple Podcasts is pre-installed — you do not need to download anything.</span>
+                  </div>
+                  <StepList items={[
+                    ["1","Swipe down from the middle of your screen to open Search"],
+                    ["2","Type <strong>Podcasts</strong> in the search bar"],
+                    ["3","Tap the app — it has a <strong>purple icon</strong> with a white wave symbol"],
+                    ["4","Tap <strong>Open</strong>"],
+                  ]} />
+                </>}
+                {!isAndroid && !isIphone && (
+                  <div className="info-box warn" style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                    <SvgIcon name="alertCircle" size={16} color="#8a5200" /><span>These instructions are designed for Android and iPhone. If you're on a tablet or computer, look for a podcast app that supports adding an RSS feed URL.</span>
+                  </div>
+                )}
+                <div className="divider" />
+                <div className="field-group">
+                  <div className="field-label">Were you able to open the app?</div>
+                  <div className="choices">
+                    <Choice label={isIphone ? "Yes — Apple Podcasts is open" : "Yes — the app is installed and open"} selected={data.app_installed === "Yes"} onSelect={() => set("app_installed", "Yes")} icon={<SvgIcon name="check" size={15} color="var(--success)" />} />
+                    <Choice label="No — I'm having trouble" selected={data.app_installed === "No"} onSelect={() => set("app_installed", "No")} icon={<SvgIcon name="x" size={15} color="var(--danger)" />} />
+                  </div>
+                </div>
+                {data.app_installed === "No" && (
+                  <div className="info-box warn" style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                    <SvgIcon name="info" size={16} color="#8a5200" /><span>That's okay. Tap Continue and we'll try the next step. Note down what went wrong.</span>
+                  </div>
+                )}
+                <Foot />
+              </div>
+            </div>
+          );
+
+        case 4:
+          return (
+            <div className="survey-card">
+              <Hdr label="Step 4 of 9 · Load Audio" title="Add the audio channel" sub="You'll paste a private link into the app to load all the audio messages." />
+              <div className="survey-body">
+                <div className="field-group">
+                  <div className="field-label">1. Copy your private audio link first</div>
+                  <RSSCopyBox />
+                  <div style={{ fontSize:12, color:"var(--text-muted)", marginTop:6 }}>Tap the box above to copy the link. You'll paste it in the next step.</div>
+                </div>
+                <div className="field-group">
+                  <div className="field-label">2. Follow these steps in the app</div>
+                  {isAndroid && (
+                    <StepList items={[
+                      ["1","Open <strong>Podcast Addict</strong>"],
+                      ["2","Tap the <strong>+ button</strong> at the bottom of the screen"],
+                      ["3",'Select <strong>"RSS Feed"</strong> from the menu'],
+                      ["4","Tap the text field and <strong>paste the link</strong>","Hold your finger on the field, then tap Paste"],
+                      ["5","Tap <strong>Add</strong>"],
+                      ["6","The audio messages should now appear — tap one to confirm"],
+                    ]} />
+                  )}
+                  {isIphone && (
+                    <StepList items={[
+                      ["1","Open <strong>Apple Podcasts</strong>"],
+                      ["2","Tap <strong>Library</strong> at the bottom"],
+                      ["3","Tap the <strong>three dots (…)</strong> in the top right corner"],
+                      ["4",'Select <strong>"Follow a Show by URL"</strong>'],
+                      ["5","Tap the field and <strong>paste the link</strong>","Hold your finger on the field, then tap Paste"],
+                      ["6","Tap <strong>Follow</strong>"],
+                      ["7","The audio messages should now appear in your Library"],
+                    ]} />
+                  )}
+                  {!isAndroid && !isIphone && (
+                    <div className="info-box blue">Open your podcast app, find the option to add by RSS or URL, paste the link above, then confirm.</div>
+                  )}
+                </div>
+                <div className="divider" />
+                <div className="field-group">
+                  <div className="field-label">Can you see the audio messages in the app?</div>
+                  <div className="choices">
+                    <Choice label="Yes — I can see the audio messages" selected={data.rss_loaded === "Yes"} onSelect={() => set("rss_loaded", "Yes")} icon={<SvgIcon name="check" size={15} color="var(--success)" />} />
+                    <Choice label="No — I couldn't get it to load" selected={data.rss_loaded === "No"} onSelect={() => set("rss_loaded", "No")} icon={<SvgIcon name="x" size={15} color="var(--danger)" />} />
+                  </div>
+                </div>
+                {data.rss_loaded === "No" && (
+                  <div className="info-box danger" style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                    <SvgIcon name="info" size={16} color="#b02520" /><span>No problem — tap Continue and you'll be taken to a short issue report.</span>
+                  </div>
+                )}
+                <Foot nextLabel={data.rss_loaded === "No" ? "Report Issue →" : "Continue →"} />
+              </div>
+            </div>
+          );
+
+        case 5:
+          return (
+            <div className="survey-card">
+              <Hdr label="Step 5 of 9 · Before You Test" title="What to watch for" sub="As you listen to each message, pay attention to these four things." />
+              <div className="survey-body">
+                <div className="watch-list">
+                  {[
+                    ["clock","Count the seconds from when you tap Play until you hear sound"],
+                    ["pause","Notice if the audio pauses or stops while playing — this is called buffering"],
+                    ["volume","Notice if it plays all the way through without stopping"],
+                    ["alertCircle","Notice if both messages behave the same, or if one works better"],
+                  ].map(([icon, text], i) => (
+                    <div key={i} className="watch-row">
+                      <span className="watch-icon"><SvgIcon name={icon} size={16} color="var(--accent)" /></span>
+                      <span className="watch-text">{text}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="info-box green" style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                  <SvgIcon name="checkCircle" size={16} color="#1a7a3a" />
+                  <span>You will test <strong>2 messages</strong>. For each one: tap Play, count the seconds, listen for 1–2 minutes, then fill in the short form.</span>
+                </div>
+                <Foot nextLabel="I'm Ready — Start Testing →" />
+              </div>
+            </div>
+          );
+
+        case 6: case 7: {
+          const i = step - 6;
+          const m = data.messages[i];
+          return (
+            <div className="survey-card">
+              <Hdr label={`Step ${step} of 9 · Audio Test`} title={`Message ${i + 1} of 2`} sub="Tap Play on this message now, then fill in what you experience below." />
+              <div className="survey-body">
+                <div className="msg-badge"><SvgIcon name="play" size={13} color="var(--accent)" /> Now playing: Message {i + 1}</div>
+                <div className="field-group">
+                  <div className="field-label">How many seconds until you heard sound?</div>
+                  <div className="time-input-wrap">
+                    <input type="number" min="0" max="999" placeholder="e.g. 5" value={m.start_time || ""} onChange={e => setMsg(i, "start_time", e.target.value)} />
+                    <span className="time-unit">sec</span>
+                  </div>
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Did it buffer or pause while playing?</div>
+                  <ChoiceRow options={["Yes","No"]} value={m.buffering} onChange={v => setMsg(i, "buffering", v)} />
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Did it play smoothly overall?</div>
+                  <ChoiceRow options={["Yes","No"]} value={m.smooth} onChange={v => setMsg(i, "smooth", v)} />
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Notes (optional)</div>
+                  <textarea placeholder="Anything else about this message…" value={m.notes || ""} onChange={e => setMsg(i, "notes", e.target.value)} />
+                </div>
+                <Foot nextLabel={step === 7 ? "All Done — Next →" : "Next Message →"} />
+              </div>
+            </div>
+          );
+        }
+
+        case 8:
+          return (
+            <div className="survey-card">
+              <Hdr label="Step 8 of 9 · Overall" title="Overall Experience" sub="Now that you've tested both messages, how did it go?" />
+              <div className="survey-body">
+                <div className="field-group">
+                  <div className="field-label">How would you describe the overall experience?</div>
+                  <div className="choices">
+                    {["Very smooth","Mostly smooth","Some issues","Difficult"].map(r => (
+                      <Choice key={r} label={r} selected={data.overall_rating === r} onSelect={() => set("overall_rating", r)} />
+                    ))}
+                  </div>
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Did both messages behave the same way?</div>
+                  <ChoiceRow options={["Yes","No"]} value={data.consistent} onChange={v => set("consistent", v)} />
+                </div>
+                {data.consistent === "No" && (
+                  <div className="field-group">
+                    <div className="field-label">Describe the differences</div>
+                    <textarea placeholder="e.g. Message 2 took much longer to start…" value={data.consistency_notes} onChange={e => set("consistency_notes", e.target.value)} />
+                  </div>
+                )}
+                <Foot />
+              </div>
+            </div>
+          );
+
+        case 9:
+          return (
+            <div className="survey-card">
+              <Hdr label="Step 9 of 9 · Feedback" title="Issues & Comments" sub="Tell us about any problems and anything else you noticed." />
+              <div className="survey-body">
+                <div className="field-group">
+                  <div className="field-label">Did you experience any errors or failures?</div>
+                  <ChoiceRow options={["Yes","No"]} value={data.errors} onChange={v => set("errors", v)} />
+                </div>
+                {data.errors === "Yes" && (
+                  <div className="field-group">
+                    <div className="field-label">Describe what happened</div>
+                    <textarea placeholder="e.g. App crashed, link didn't work, couldn't connect…" value={data.error_notes} onChange={e => set("error_notes", e.target.value)} />
+                  </div>
+                )}
+                <div className="field-group">
+                  <div className="field-label">Was the process easy to follow?</div>
+                  <div className="choices">
+                    {["Very easy","Somewhat easy","Difficult"].map(e => (
+                      <Choice key={e} label={e} selected={data.easy === e} onSelect={() => set("easy", e)} />
+                    ))}
+                  </div>
+                </div>
+                <div className="field-group">
+                  <div className="field-label">Any other comments?</div>
+                  <textarea placeholder="Anything else the team should know…" value={data.comments} onChange={e => set("comments", e.target.value)} />
+                </div>
+                <Foot nextLabel="Submit Survey ✓" />
+              </div>
+            </div>
+          );
+
+        case TOTAL_STEPS:
+          return (
+            <div className="survey-card">
+              <div className="complete-screen">
+                <div className="complete-icon"><SvgIcon name="check" size={28} color="var(--success)" /></div>
+                <div className="step-label">Survey Complete</div>
+                <div className="welcome-title" style={{ fontSize:24 }}>Thank you!</div>
+                <div className="welcome-sub">Your response has been recorded. This data will directly help us improve how audio messages are delivered across East Africa.</div>
+                <button className="btn-next" style={{ width:"100%", padding:"14px" }} onClick={() => setStep(0)}>Submit Another Response</button>
+              </div>
+            </div>
+          );
+
+        default: return null;
+      }
+    }
+
+    function Dashboard() {
+      const data = MOCK_RESPONSES;
+      const total = data.length;
+      const avgStart = (data.reduce((a, r) => a + r.avg_start_time, 0) / total).toFixed(1);
+      const bufferPct = Math.round((data.reduce((a, r) => a + r.buffering_count, 0) / (total * 2)) * 100);
+      const smoothPct = Math.round((data.reduce((a, r) => a + r.smooth_count, 0) / (total * 2)) * 100);
+      const getStatus = () => {
+        if (bufferPct > 50 || avgStart > 15) return { label: "Critical", cls: "status-crit" };
+        if (bufferPct > 30 || avgStart > 10 || smoothPct < 70) return { label: "Needs Improvement", cls: "status-warn" };
+        return { label: "Good", cls: "status-good" };
+      };
+      const status = getStatus();
+      const byCountry = {};
+      data.forEach(r => {
+        if (!byCountry[r.country]) byCountry[r.country] = { count:0, start:0 };
+        byCountry[r.country].count++; byCountry[r.country].start += r.avg_start_time;
+      });
+      const maxCS = Math.max(...Object.values(byCountry).map(v => v.start / v.count));
+      const byNetwork = {};
+      data.forEach(r => {
+        if (!byNetwork[r.network_type]) byNetwork[r.network_type] = { count:0, start:0, smooth:0 };
+        byNetwork[r.network_type].count++; byNetwork[r.network_type].start += r.avg_start_time; byNetwork[r.network_type].smooth += r.smooth_count;
+      });
+      const netStatus = net => {
+        const avg = byNetwork[net].start / byNetwork[net].count;
+        if (avg > 15) return { cls:"tag-red", label:"Critical" };
+        if (avg > 8) return { cls:"tag-warn", label:"Slow" };
+        return { cls:"tag-green", label:"Good" };
+      };
+      return (
+        <div className="dashboard">
+          <div className="dash-header">
+            <div><div className="dash-title">Analytics Dashboard</div><div className="dash-sub">East Africa Audio Survey · Mock Data</div></div>
+            <div className={`status-badge ${status.cls}`}><span className="status-dot" />System Status: {status.label}</div>
+          </div>
+          <div className="metrics-grid">
+            <div className="metric-card"><div className="metric-label">Total Responses</div><div className="metric-value">{total}</div><div className="metric-sub">Across {Object.keys(byCountry).length} countries</div></div>
+            <div className="metric-card"><div className="metric-label">Avg Start Time</div><div className="metric-value" style={{ color: avgStart > 10 ? "var(--warn)" : "var(--text)" }}>{avgStart}<span className="metric-unit">s</span></div><div className="metric-bar"><div className="metric-bar-fill" style={{ width:`${Math.min((avgStart/20)*100,100)}%`, background: avgStart>10?"var(--warn)":"var(--accent)" }} /></div></div>
+            <div className="metric-card"><div className="metric-label">Smooth Playback</div><div className="metric-value" style={{ color: smoothPct>=70?"var(--success)":"var(--warn)" }}>{smoothPct}<span className="metric-unit">%</span></div><div className="metric-bar"><div className="metric-bar-fill" style={{ width:`${smoothPct}%`, background: smoothPct>=70?"var(--success)":"var(--warn)" }} /></div></div>
+            <div className="metric-card"><div className="metric-label">Buffering Rate</div><div className="metric-value" style={{ color: bufferPct>30?"var(--danger)":"var(--text)" }}>{bufferPct}<span className="metric-unit">%</span></div><div className="metric-bar"><div className="metric-bar-fill" style={{ width:`${bufferPct}%`, background: bufferPct>30?"var(--danger)":"var(--accent)" }} /></div></div>
+          </div>
+          <div className="breakdown-grid">
+            <div className="breakdown-card">
+              <div className="section-title">Performance by Country</div>
+              {Object.entries(byCountry).map(([country, v]) => {
+                const avg = v.start / v.count;
+                return (<div key={country} className="bar-row"><div className="bar-label">{country}</div><div className="bar-track"><div className="bar-fill" style={{ width:`${(avg/maxCS)*100}%`, background: avg>10?"var(--warn)":"var(--accent)" }} /></div><div className="bar-val">{avg.toFixed(1)}s</div></div>);
+              })}
+              <div style={{ fontSize:11, color:"var(--text-muted)", marginTop:6 }}>Average start time in seconds</div>
+            </div>
+            <div className="breakdown-card">
+              <div className="section-title">Performance by Network</div>
+              <div className="network-grid">
+                {Object.entries(byNetwork).sort((a,b)=>a[0].localeCompare(b[0])).map(([net,v]) => {
+                  const avg=(v.start/v.count).toFixed(1); const smoothP=Math.round((v.smooth/(v.count*2))*100); const s=netStatus(net);
+                  return (<div key={net} className="network-row"><div><div className="network-name">{net}</div><div className="network-meta">{v.count} tests · {avg}s avg · {smoothP}% smooth</div></div><span className={`tag ${s.cls} network-status`}>{s.label}</span></div>);
+                })}
+              </div>
+            </div>
+          </div>
+          <div className="breakdown-card" style={{ marginBottom:14 }}>
+            <div className="section-title">Recent Responses</div>
+            <div style={{ overflowX:"auto" }}>
+              <table className="responses-table">
+                <thead><tr><th>Country</th><th>Region</th><th>Network</th><th>Device</th><th>Avg Start</th><th>Buffering</th><th>Overall</th></tr></thead>
+                <tbody>
+                  {data.map((r,i) => {
+                    const cls = r.overall_rating==="Very smooth"||r.overall_rating==="Mostly smooth"?"tag-green":r.overall_rating==="Some issues"?"tag-warn":"tag-red";
+                    return (<tr key={i}><td>{r.country}</td><td style={{color:"var(--text-muted)"}}>{r.region}</td><td><span className="tag tag-gray">{r.network_type}</span></td><td style={{color:"var(--text-muted)"}}>{r.device_type}</td><td style={{color:r.avg_start_time>10?"var(--warn)":"var(--accent)",fontWeight:600}}>{r.avg_start_time}s</td><td>{r.buffering_count>0?<span className="tag tag-warn">{r.buffering_count}x</span>:<span className="tag tag-green">None</span>}</td><td><span className={`tag ${cls}`}>{r.overall_rating}</span></td></tr>);
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <div className="breakdown-card">
+            <div className="section-title">Decision Framework</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:10 }}>
+              {[
+                { label:"CDN Needed?", val:bufferPct>30?"Likely Yes":"Not Yet", cls:bufferPct>30?"tag-warn":"tag-green" },
+                { label:"File Compression?", val:avgStart>8?"Recommended":"Optional", cls:avgStart>8?"tag-warn":"tag-green" },
+                { label:"Offline Hubs?", val:byNetwork["2G"]?"Consider for 2G":"Not Required", cls:byNetwork["2G"]?"tag-warn":"tag-green" },
+                { label:"Rollout Ready?", val:smoothPct>=70&&bufferPct<30?"Yes":"Not Yet", cls:smoothPct>=70&&bufferPct<30?"tag-green":"tag-red" },
+              ].map(d => (
+                <div key={d.label} className="decision-card">
+                  <div className="decision-label">{d.label}</div>
+                  <span className={`tag ${d.cls}`} style={{ fontSize:13, padding:"4px 10px" }}>{d.val}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    function App() {
+      const [view, setView] = useState("survey");
+      return (
+        <div className="app">
+          <nav className="nav">
+            <div className="nav-logo">
+              <div className="nav-dot" />
+              <span className="nav-title">East Africa Audio Survey</span>
+            </div>
+            <div className="nav-tabs">
+              <button className={`nav-tab${view==="survey"?" active":""}`} onClick={() => setView("survey")}>Survey</button>
+              <button className={`nav-tab${view==="dashboard"?" active":""}`} onClick={() => setView("dashboard")}>Dashboard</button>
+            </div>
+          </nav>
+          <div className="survey-wrap">
+            {view === "survey" ? <SurveyWizard /> : <Dashboard />}
+          </div>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById("root"));
+    root.render(<App />);
+  </script>
+</body>
+</html>
