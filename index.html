@@ -9,6 +9,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
   <style>
     :root {
       --bg:#f7f7f7; --surface:#ffffff; --surface2:#f7f7f7; --surface3:#efefef;
@@ -141,7 +143,11 @@
     .tag-gray{background:var(--surface3);color:var(--text-muted);}
     .decision-card{padding:13px 15px;background:var(--surface2);border-radius:11px;border:1px solid var(--border);}
     .decision-label{font-size:11px;font-weight:600;text-transform:uppercase;color:var(--text-muted);margin-bottom:7px;letter-spacing:0.03em;}
-    @media(max-width:480px){
+    .leaflet-container { font-family: -apple-system, 'Inter', BlinkMacSystemFont, sans-serif; }
+    .leaflet-popup-content-wrapper { border-radius: 14px !important; box-shadow: 0 8px 32px rgba(0,0,0,0.15) !important; border: 1px solid rgba(0,0,0,0.08) !important; padding: 0 !important; }
+    .leaflet-popup-content { margin: 16px !important; }
+    .leaflet-popup-tip { display: none; }
+    .leaflet-control-layers { border-radius: 10px !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; font-family: -apple-system, sans-serif !important; font-size: 13px !important; }
       .nav{padding:0 16px;} .nav-title{display:none;}
       .survey-card{border-radius:18px;}
       .survey-header{padding:20px 20px 0;}
@@ -1056,139 +1062,153 @@
       );
     }
 
-    // ─── Church Map ────────────────────────────────────────────────────────────
+    // ─── Church Map (Leaflet) ────────────────────────────────────────────────
     function ChurchMap({ churches }) {
-      const [hovered, setHovered] = useState(null);
-      const [selected, setSelected] = useState(null);
+      const mapRef = React.useRef(null);
+      const leafletMap = React.useRef(null);
+      const markersRef = React.useRef([]);
       const [viewMode, setViewMode] = useState("map");
-      const MAP_W=700, MAP_H=560, LAT_MAX=4.5, LAT_MIN=-1.8, LNG_MIN=29.3, LNG_MAX=35.2;
-      const toXY = (lat,lng) => ({ x:((lng-LNG_MIN)/(LNG_MAX-LNG_MIN))*MAP_W, y:((LAT_MAX-lat)/(LAT_MAX-LAT_MIN))*MAP_H });
+      const [selectedChurch, setSelectedChurch] = useState(null);
+      const [mapReady, setMapReady] = useState(false);
 
       const byRegion = {};
-      churches.forEach(c => { if(!byRegion[c.region]) byRegion[c.region]={count:0,members:0,churches:[]}; byRegion[c.region].count++; byRegion[c.region].members+=c.members||0; byRegion[c.region].churches.push(c); });
+      churches.forEach(c => {
+        if (!byRegion[c.region]) byRegion[c.region] = { count:0, members:0, churches:[] };
+        byRegion[c.region].count++;
+        byRegion[c.region].members += c.members||0;
+        byRegion[c.region].churches.push(c);
+      });
 
       const sCol = s => s==="STRONG"?"#34C759":s==="Growing"?"#FF9500":"#007AFF";
-      const maxMembers = Math.max(...churches.map(c=>c.members||0), 1);
-      const pinR = members => Math.max(5, Math.min(14, 5 + (members/maxMembers)*9));
+      const sLabel = s => s==="STRONG"?"Strong":s==="Growing"?"Growing":"Stable";
 
-      // Uganda approximate border path (simplified polygon)
-      const ugandaBorder = [
-        [4.22,29.57],[4.20,30.00],[3.80,30.85],[3.62,30.93],[3.50,31.00],[3.30,30.88],
-        [2.89,31.00],[2.70,31.20],[2.30,31.76],[1.98,32.04],[1.50,31.85],[1.22,31.94],
-        [0.90,31.56],[0.50,31.30],[0.05,31.40],[-0.10,30.64],[-0.40,30.20],[-0.60,29.87],
-        [-0.95,29.57],[-1.35,29.70],[-1.48,29.98],[-1.20,30.45],[-0.75,30.70],[-0.20,30.82],
-        [0.00,31.07],[0.50,31.85],[1.00,33.90],[1.00,34.00],[0.85,34.18],[1.20,34.40],
-        [1.80,34.18],[2.50,33.95],[3.00,34.20],[3.50,33.75],[3.80,34.45],[4.22,34.00],
-        [4.35,33.00],[4.50,32.20],[4.30,31.50],[4.22,29.57]
-      ].map(([lat,lng]) => toXY(lat,lng));
-      const borderPath = ugandaBorder.map((p,i)=>`${i===0?"M":"L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")+"Z";
+      React.useEffect(() => {
+        if (viewMode !== "map") return;
+        if (!window.L) { setMapReady(false); return; }
 
-      // Lake Victoria approximate shape
-      const lakeVic = [
-        [0.45,32.00],[-0.10,32.20],[-0.85,32.00],[-1.20,33.60],[-0.45,34.20],[0.60,34.30],
-        [1.10,34.20],[0.60,33.20],[0.45,32.00]
-      ].map(([lat,lng]) => toXY(lat,lng));
-      const lakePath = lakeVic.map((p,i)=>`${i===0?"M":"L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")+"Z";
+        setTimeout(() => {
+          if (!mapRef.current) return;
+          if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; }
 
-      // City labels
-      const cities = [
-        { name:"Kampala", lat:0.3476, lng:32.5825, major:true },
-        { name:"Jinja", lat:0.4244, lng:33.2041, major:false },
-        { name:"Gulu", lat:2.7747, lng:32.2990, major:false },
-        { name:"Tororo", lat:0.6920, lng:34.1810, major:false },
-        { name:"Lira", lat:2.2499, lng:32.8997, major:false },
-        { name:"Mubende", lat:0.5833, lng:31.3833, major:false },
-        { name:"Busia", lat:0.4647, lng:34.0900, major:false },
-      ];
+          const map = window.L.map(mapRef.current, {
+            center: [1.5, 32.5],
+            zoom: 7,
+            zoomControl: true,
+            scrollWheelZoom: true,
+          });
+          leafletMap.current = map;
+
+          // Street layer
+          const street = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18,
+          });
+
+          // Satellite layer (ESRI)
+          const satellite = window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: '© Esri',
+            maxZoom: 18,
+          });
+
+          // Terrain layer
+          const terrain = window.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenTopoMap',
+            maxZoom: 17,
+          });
+
+          street.addTo(map);
+          window.L.control.layers({ "Street": street, "Satellite": satellite, "Terrain": terrain }, {}, { position:'topright' }).addTo(map);
+
+          // Clear old markers
+          markersRef.current.forEach(m => map.removeLayer(m));
+          markersRef.current = [];
+
+          churches.filter(c => c.lat && c.lng).forEach(c => {
+            const col = sCol(c.standing);
+            const r = Math.max(8, Math.min(20, 8 + ((c.members||0)/220)*12));
+            const icon = window.L.divIcon({
+              className: '',
+              html: `<div style="
+                width:${r*2}px;height:${r*2}px;border-radius:50%;
+                background:${col};border:2.5px solid white;
+                box-shadow:0 2px 8px rgba(0,0,0,0.25);
+                display:flex;align-items:center;justify-content:center;
+                font-size:${r>13?'9':'0'}px;font-weight:700;color:white;
+                cursor:pointer;transition:transform 0.15s;
+              ">${c.members>80?c.members:""}</div>`,
+              iconSize: [r*2, r*2],
+              iconAnchor: [r, r],
+              popupAnchor: [0, -r-4],
+            });
+
+            const marker = window.L.marker([c.lat, c.lng], { icon });
+            marker.bindPopup(`
+              <div style="font-family:-apple-system,sans-serif;min-width:200px;">
+                <div style="font-size:14px;font-weight:700;color:#1d1d1f;margin-bottom:4px;">${c.pastor}</div>
+                <div style="font-size:12px;color:#86868b;margin-bottom:10px;">${c.location}</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
+                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
+                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Members</div>
+                    <div style="font-size:14px;font-weight:700;color:#007AFF;">${c.members||"?"}</div>
+                  </div>
+                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
+                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Standing</div>
+                    <div style="font-size:12px;font-weight:600;color:${col};">${c.standing||"—"}</div>
+                  </div>
+                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
+                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Region</div>
+                    <div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.region}</div>
+                  </div>
+                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
+                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">From Kampala</div>
+                    <div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.distKampala||"—"}</div>
+                  </div>
+                </div>
+                ${c.language ? `<div style="margin-top:8px;padding:7px 9px;background:#f7f7f7;border-radius:7px;font-size:12px;color:#444;"><span style="font-weight:600;">Language:</span> ${c.language}</div>` : ""}
+              </div>
+            `, { maxWidth: 260 });
+
+            marker.addTo(map);
+            markersRef.current.push(marker);
+          });
+
+          setMapReady(true);
+        }, 100);
+
+        return () => {
+          if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; }
+        };
+      }, [viewMode, churches]);
 
       return (
         <div style={{ padding:"28px 24px", maxWidth:1080, margin:"0 auto", width:"100%" }}>
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:12 }}>
-            <div><div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Church Locations</div><div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>Uganda &amp; Kenya — {churches.length} churches · pin size = congregation size</div></div>
+            <div>
+              <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Church Locations</div>
+              <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{churches.length} churches · click any pin for details · scroll to zoom</div>
+            </div>
             <div style={{ display:"flex", gap:4, background:"var(--surface3)", borderRadius:9, padding:3 }}>
-              {["map","region"].map(m => <button key={m} onClick={() => setViewMode(m)} style={{ padding:"5px 16px", borderRadius:7, border:"none", fontSize:13, fontWeight:500, cursor:"pointer", background:viewMode===m?"var(--surface)":"transparent", color:viewMode===m?"var(--text)":"var(--text-muted)", boxShadow:viewMode===m?"var(--shadow-sm)":"none", textTransform:"capitalize", transition:"all 0.15s" }}>{m==="map"?"Pin Map":"By Region"}</button>)}
+              {["map","region"].map(m => (
+                <button key={m} onClick={() => setViewMode(m)} style={{ padding:"5px 16px", borderRadius:7, border:"none", fontSize:13, fontWeight:500, cursor:"pointer", background:viewMode===m?"var(--surface)":"transparent", color:viewMode===m?"var(--text)":"var(--text-muted)", boxShadow:viewMode===m?"var(--shadow-sm)":"none", transition:"all 0.15s" }}>
+                  {m==="map"?"Live Map":"By Region"}
+                </button>
+              ))}
             </div>
           </div>
 
           {viewMode==="map" && (
             <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", overflow:"hidden", boxShadow:"var(--shadow-sm)" }}>
               {/* Legend */}
-              <div style={{ padding:"12px 20px", borderBottom:"1px solid var(--border)", display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
-                <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.04em", color:"var(--text-muted)" }}>Standing:</div>
+              <div style={{ padding:"12px 20px", borderBottom:"1px solid var(--border)", display:"flex", gap:18, flexWrap:"wrap", alignItems:"center" }}>
                 {[["STRONG","#34C759"],["Growing","#FF9500"],["Stable","#007AFF"]].map(([l,c]) => (
                   <div key={l} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-secondary)" }}>
-                    <div style={{ width:9, height:9, borderRadius:"50%", background:c, boxShadow:`0 0 0 2px ${c}33` }} />{l}
+                    <div style={{ width:10, height:10, borderRadius:"50%", background:c }} />{l}
                   </div>
                 ))}
-                <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-muted)", marginLeft:"auto" }}>
-                  <div style={{ width:5, height:5, borderRadius:"50%", background:"#86868b" }} />Small
-                  <div style={{ width:10, height:10, borderRadius:"50%", background:"#86868b" }} />Large congregation
-                </div>
+                <div style={{ fontSize:11, color:"var(--text-muted)", marginLeft:"auto" }}>Pin size = congregation size · Layer switcher top-right</div>
               </div>
-              {/* SVG Map */}
-              <div style={{ overflowX:"auto", background:"#dce8f0" }}>
-                <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} style={{ width:"100%", minWidth:400, display:"block" }}>
-                  <defs>
-                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
-                      <feDropShadow dx="2" dy="3" stdDeviation="4" floodOpacity="0.15"/>
-                    </filter>
-                  </defs>
-                  {/* Country fill */}
-                  <path d={borderPath} fill="#e8f0e8" stroke="#b8ccb8" strokeWidth="1.5" filter="url(#shadow)" />
-                  {/* Lake Victoria */}
-                  <path d={lakePath} fill="#a8c8e8" stroke="#88aac8" strokeWidth="1" opacity="0.8" />
-                  <text x={toXY(-0.3,33.0).x} y={toXY(-0.3,33.0).y} textAnchor="middle" fontSize="9" fill="#5588aa" fontStyle="italic" fontWeight="500">Lake Victoria</text>
-                  {/* City reference dots */}
-                  {cities.map(city => {
-                    const p = toXY(city.lat, city.lng);
-                    return (
-                      <g key={city.name}>
-                        <circle cx={p.x} cy={p.y} r={city.major?6:3} fill={city.major?"rgba(0,122,255,0.15)":"rgba(0,0,0,0.08)"} stroke={city.major?"#007AFF":"rgba(0,0,0,0.2)"} strokeWidth={city.major?"1.5":"1"} />
-                        <text x={p.x} y={p.y - (city.major?9:6)} textAnchor="middle" fontSize={city.major?"9":"7.5"} fill={city.major?"#007AFF":"#666"} fontWeight={city.major?"700":"500"}>{city.name}</text>
-                      </g>
-                    );
-                  })}
-                  {/* Church pins — render hovered last so it's on top */}
-                  {churches.filter(c=>c.lat&&c.lng).sort((a,b) => (hovered?.id===a.id?1:-1)).map(c => {
-                    const p=toXY(c.lat,c.lng);
-                    const col=sCol(c.standing);
-                    const r=pinR(c.members||0);
-                    const isH=hovered?.id===c.id;
-                    // Tooltip positioning — flip if near right edge
-                    const flipX = p.x > MAP_W - 160;
-                    const tipX = flipX ? p.x - 155 : p.x + r + 6;
-                    const tipY = Math.max(10, p.y - 28);
-                    return (
-                      <g key={c.id} onMouseEnter={()=>setHovered(c)} onMouseLeave={()=>setHovered(null)} onClick={()=>setSelected(c)} style={{ cursor:"pointer" }}>
-                        {isH && <circle cx={p.x} cy={p.y} r={r+6} fill={col} fillOpacity={0.15} />}
-                        <circle cx={p.x} cy={p.y} r={isH?r+2:r} fill={col} fillOpacity={isH?1:0.82} stroke="white" strokeWidth={isH?2:1.5} style={{ transition:"all 0.15s" }} />
-                        {c.members > 100 && <text x={p.x} y={p.y+1} textAnchor="middle" dominantBaseline="middle" fontSize="7" fill="white" fontWeight="700" style={{ pointerEvents:"none" }}>{c.members}</text>}
-                        {isH && (
-                          <g style={{ pointerEvents:"none" }}>
-                            <rect x={tipX} y={tipY} width={148} height={54} rx="6" fill="white" stroke="rgba(0,0,0,0.1)" strokeWidth="1" filter="url(#shadow)" />
-                            <rect x={tipX} y={tipY} width={148} height={16} rx="6" fill={col} fillOpacity="0.15" />
-                            <rect x={tipX} y={tipY+10} width={148} height={6} fill={col} fillOpacity="0.15" />
-                            <text x={tipX+10} y={tipY+11} fontSize="9.5" fontWeight="700" fill="#1d1d1f">{c.pastor.split(" ").slice(0,3).join(" ")}</text>
-                            <text x={tipX+10} y={tipY+25} fontSize="8.5" fill="#86868b">{c.location}</text>
-                            <text x={tipX+10} y={tipY+38} fontSize="8.5" fill="#86868b">{c.members?`${c.members} members · `:""}{c.standing||"Unknown"}</text>
-                            <text x={tipX+10} y={tipY+50} fontSize="8" fill="#007AFF">{c.distKampala ? `${c.distKampala} from Kampala` : ""}</text>
-                          </g>
-                        )}
-                      </g>
-                    );
-                  })}
-                </svg>
-              </div>
-              {selected && (
-                <div style={{ borderTop:"1px solid var(--border)", padding:"14px 20px", display:"flex", alignItems:"center", gap:14, background:"var(--surface2)" }}>
-                  <div style={{ width:10, height:10, borderRadius:"50%", background:sCol(selected.standing), flexShrink:0 }} />
-                  <div style={{ flex:1 }}>
-                    <div style={{ fontSize:14, fontWeight:700 }}>{selected.pastor}</div>
-                    <div style={{ fontSize:12, color:"var(--text-muted)" }}>{selected.location} · {selected.members||"?"} members · {selected.standing||"Unknown"}</div>
-                  </div>
-                  <button onClick={()=>setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:7, padding:"5px 10px", fontSize:12, color:"var(--text-muted)", cursor:"pointer" }}>✕</button>
-                </div>
-              )}
+              {/* Map container */}
+              <div ref={mapRef} style={{ height:520, width:"100%" }} />
             </div>
           )}
 
