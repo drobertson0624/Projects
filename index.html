@@ -190,7 +190,33 @@
 
     const SUPABASE_URL = "https://gwvaarvwmptbsnanxmij.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ziOlB_rYW9yh9-DMRPqzXg_7ZWV6THq";
-    const RSS_LINK = "https://lcaforesthills.org/podcast/feeds/eastern-africa?token=ZX7TWsp5pUO2pg74zm6cJ88WPbrizh5QCdjO3clf6Hslo5IVjhHx8Ns383PvPC3d";
+    const DEFAULT_RSS  = "https://lcaforesthills.org/podcast/feeds/eastern-africa?token=ZX7TWsp5pUO2pg74zm6cJ88WPbrizh5QCdjO3clf6Hslo5IVjhHx8Ns383PvPC3d";
+
+    // Global RSS link — loaded from Supabase portal_settings at startup
+    let LIVE_RSS_LINK = DEFAULT_RSS;
+
+    async function loadSettings() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/portal_settings?key=eq.rss_link&select=value&limit=1`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const rows = await res.json();
+        if (rows?.[0]?.value) LIVE_RSS_LINK = rows[0].value;
+      } catch(e) {}
+    }
+
+    async function saveSetting(key, value) {
+      await fetch(`${SUPABASE_URL}/rest/v1/portal_settings`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          Prefer: "resolution=merge-duplicates,return=minimal",
+        },
+        body: JSON.stringify({ key, value }),
+      });
+    }
 
     async function insertResponse(data) {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`, {
@@ -282,17 +308,18 @@
       );
     }
 
-    function RSSCopyBox() {
+    function RSSCopyBox({ link }) {
+      const url = link || LIVE_RSS_LINK;
       const [copied, setCopied] = useState(false);
       const copy = () => {
-        navigator.clipboard?.writeText(RSS_LINK).catch(() => {});
+        navigator.clipboard?.writeText(url).catch(() => {});
         setCopied(true);
         setTimeout(() => setCopied(false), 2500);
       };
       return (
         <div className="rss-box" onClick={copy}>
           <SvgIcon name="link" size={16} color="var(--text-muted)" />
-          <span className="rss-url">{RSS_LINK}</span>
+          <span className="rss-url">{url}</span>
           <span className={`rss-copy-btn${copied ? " rss-copied" : ""}`}>{copied ? "✓ Copied!" : "Copy"}</span>
         </div>
       );
@@ -1421,8 +1448,95 @@
       );
     }
 
+    // ─── Portal Settings ───────────────────────────────────────────────────────
+    function PortalSettings({ rssLink, onRssUpdate }) {
+      const [link, setLink]     = useState(rssLink);
+      const [saving, setSaving] = useState(false);
+      const [saved, setSaved]   = useState(false);
+      const [error, setError]   = useState("");
+
+      React.useEffect(() => { setLink(rssLink); }, [rssLink]);
+
+      const save = async () => {
+        if (!link.trim()) { setError("Link cannot be empty."); return; }
+        if (!link.startsWith("http")) { setError("Link must start with http or https."); return; }
+        setSaving(true); setError("");
+        try {
+          await saveSetting("rss_link", link.trim());
+          onRssUpdate(link.trim());
+          setSaved(true);
+          setTimeout(() => setSaved(false), 3000);
+        } catch(e) {
+          setError("Failed to save. Check your connection.");
+        }
+        setSaving(false);
+      };
+
+      return (
+        <div style={{ padding:"28px 20px", maxWidth:600, margin:"0 auto", width:"100%" }}>
+          <div style={{ marginBottom:24 }}>
+            <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Settings</div>
+            <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>Manage the audio link sent to survey testers</div>
+          </div>
+
+          {/* RSS Link card */}
+          <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", padding:24, boxShadow:"var(--shadow-sm)", marginBottom:16 }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
+              <div style={{ width:36, height:36, borderRadius:10, background:"rgba(0,122,255,0.09)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <SvgIcon name="link" size={16} color="var(--accent)" />
+              </div>
+              <div>
+                <div style={{ fontSize:15, fontWeight:700, letterSpacing:"-0.02em" }}>Podcast RSS Link</div>
+                <div style={{ fontSize:12, color:"var(--text-muted)" }}>This is the link testers paste into their podcast app</div>
+              </div>
+            </div>
+
+            <div className="field-group" style={{ marginBottom:12 }}>
+              <div className="field-label">Current Link</div>
+              <textarea
+                value={link}
+                onChange={e => { setLink(e.target.value); setError(""); setSaved(false); }}
+                style={{ minHeight:90, fontSize:13, fontFamily:"monospace", letterSpacing:0, wordBreak:"break-all" }}
+                placeholder="https://..."
+              />
+            </div>
+
+            {error && (
+              <div className="info-box danger" style={{ display:"flex", gap:8, alignItems:"flex-start", marginBottom:12 }}>
+                <SvgIcon name="alertCircle" size={15} color="#b02520" /><span>{error}</span>
+              </div>
+            )}
+
+            {saved && (
+              <div className="info-box green" style={{ display:"flex", gap:8, alignItems:"center", marginBottom:12 }}>
+                <SvgIcon name="checkCircle" size={15} color="#1a7a3a" /><span>Link saved — survey will now use the updated URL.</span>
+              </div>
+            )}
+
+            <div style={{ display:"flex", gap:10, alignItems:"center" }}>
+              <button className="btn-next" onClick={save} disabled={saving || link === rssLink} style={{ flex:"none", padding:"11px 22px" }}>
+                {saving ? "Saving…" : saved ? "✓ Saved" : "Save Link"}
+              </button>
+              {link !== rssLink && (
+                <button className="btn-back" onClick={() => { setLink(rssLink); setError(""); }} style={{ flex:"none" }}>
+                  Reset
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Preview */}
+          <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", padding:20, boxShadow:"var(--shadow-sm)" }}>
+            <div style={{ fontSize:13, fontWeight:600, color:"var(--text-secondary)", marginBottom:10 }}>Preview — how testers will see it</div>
+            <RSSCopyBox link={link} />
+            <div style={{ fontSize:12, color:"var(--text-muted)", marginTop:8 }}>Testers tap this box to copy the link during the survey setup step.</div>
+          </div>
+        </div>
+      );
+    }
+
     // ─── Portal Shell ──────────────────────────────────────────────────────────
-    function Portal({ onClose }) {
+    function Portal({ onClose, rssLink, onRssUpdate }) {
       const [user, setUser]           = useState(null);
       const [tab, setTab]             = useState("results");
       const [menuOpen, setMenuOpen]   = useState(false);
@@ -1433,6 +1547,7 @@
         ["churches", "Churches"],
         ["map",      "Map"],
         ["users",    "Users"],
+        ["settings", "Settings"],
       ];
 
       if (!user) return (
@@ -1489,6 +1604,7 @@
             {tab==="churches" && <ChurchDatabase churches={churches} onAdd={c => setChurches(cs=>[...cs,{...c,id:Date.now(),lat:0,lng:0}])} onUpdate={updated => setChurches(cs=>cs.map(c=>c.id===updated.id?{...c,...updated}:c))} />}
             {tab==="map"      && <ChurchMap churches={churches} />}
             {tab==="users"    && <AdminUsers />}
+            {tab==="settings" && <PortalSettings rssLink={rssLink} onRssUpdate={onRssUpdate} />}
           </div>
         </div>
       );
@@ -1497,7 +1613,13 @@
     // ─── App ──────────────────────────────────────────────────────────────────
     function App() {
       const [view, setView] = useState("survey");
-      if (view === "portal") return <Portal onClose={() => setView("survey")} />;
+      const [rssLink, setRssLink] = useState(DEFAULT_RSS);
+
+      React.useEffect(() => {
+        loadSettings().then(() => setRssLink(LIVE_RSS_LINK));
+      }, []);
+
+      if (view === "portal") return <Portal onClose={() => setView("survey")} rssLink={rssLink} onRssUpdate={link => { LIVE_RSS_LINK = link; setRssLink(link); }} />;
       return (
         <div className="app">
           <nav className="nav">
