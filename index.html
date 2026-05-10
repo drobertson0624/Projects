@@ -2,15 +2,17 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0" />
   <title>East Africa Audio Survey</title>
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="dns-prefetch" href="https://gwvaarvwmptbsnanxmij.supabase.co" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.2/babel.min.js"></script>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
   <style>
     :root {
       --bg:#f7f7f7; --surface:#ffffff; --surface2:#f7f7f7; --surface3:#efefef;
@@ -184,7 +186,17 @@
   </style>
 </head>
 <body>
-  <div id="root"></div>
+  <div id="root">
+    <div style="min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f7f7;font-family:-apple-system,sans-serif;">
+      <div style="text-align:center;padding:40px 24px;">
+        <div style="width:48px;height:48px;border-radius:14px;background:rgba(0,122,255,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#007AFF" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2a3 3 0 0 1 3 3v7a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><path d="M12 19v3"/><path d="M8 22h8"/></svg>
+        </div>
+        <div style="font-size:15px;font-weight:600;color:#1d1d1f;margin-bottom:6px;">East Africa Audio Survey</div>
+        <div style="font-size:13px;color:#86868b;">Loading…</div>
+      </div>
+    </div>
+  </div>
 
   <script type="text/babel">
     const { useState } = React;
@@ -332,8 +344,9 @@
       });
 
       const goToStep = (s) => {
-        try { sessionStorage.setItem("ea_survey_step", s); } catch(e) {}
-        goToStep(s);
+        const next = typeof s === 'function' ? s(step) : s;
+        try { sessionStorage.setItem("ea_survey_step", next); } catch(e) {}
+        setStep(next);
       };
       const [data, setData] = useState({
         name: "", church_name: "", country: "", region: "", location: "",
@@ -357,7 +370,7 @@
       const isIphone = data.device_type === "iPhone";
 
       const canNext = () => {
-        if (step === 1) return data.name.trim() && data.church_name.trim() && data.country && data.location;
+        if (step === 1) return data.name.trim() && data.church_name.trim() && data.country;
         if (step === 2) return data.device_type && data.connection_type && data.network_type && data.youtube_ability;
         if (step === 3) return !!data.app_installed;
         if (step === 4) return !!data.rss_loaded;
@@ -371,10 +384,10 @@
 
       const next = () => {
         if (step === 4 && data.rss_loaded === "No") { goToStep(9); return; }
-        if (step < TOTAL_STEPS) goToStep(s => s + 1);
+        if (step < TOTAL_STEPS) goToStep(step + 1);
         else handleSubmit();
       };
-      const back = () => goToStep(s => Math.max(0, s - 1));
+      const back = () => goToStep(Math.max(0, step - 1));
 
       const handleSubmit = async () => {
         const payload = {
