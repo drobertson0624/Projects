@@ -922,12 +922,15 @@
     }
 
     // ─── Church Database ───────────────────────────────────────────────────────
-    function ChurchDatabase({ churches, onAdd }) {
+    function ChurchDatabase({ churches, onAdd, onUpdate }) {
       const [search, setSearch]     = useState("");
       const [filter, setFilter]     = useState("All");
       const [selected, setSelected] = useState(null);
+      const [editing, setEditing]   = useState(false);
+      const [editData, setEditData] = useState(null);
       const [showAdd, setShowAdd]   = useState(false);
       const [newC, setNewC]         = useState({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable", language:"", priority:"", internet:"", distKampala:"" });
+
       const standings = ["All","STRONG","Stable","Growing"];
       const filtered = churches.filter(c => {
         const q = search.toLowerCase();
@@ -935,6 +938,15 @@
           && (filter === "All" || c.standing === filter);
       });
       const sColor = s => s==="STRONG"?"tag-green":s==="Growing"?"tag-warn":"tag-gray";
+      const openEdit = (c, e) => { e.stopPropagation(); setEditData({...c}); setEditing(true); setSelected(null); };
+      const saveEdit = () => { onUpdate(editData); setEditing(false); setEditData(null); };
+      const FIELDS = [
+        ["Pastor Name","pastor","text"],["Location","location","text"],["Region","region","text"],
+        ["Country","country","text"],["Distance from Kampala","distKampala","text"],
+        ["Language","language","text"],["Members","members","number"],
+        ["Priority (1-9)","priority","number"],["Internet","internet","text"],
+      ];
+
       return (
         <div style={{ padding:"28px 24px", maxWidth:1080, margin:"0 auto", width:"100%" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:12 }}>
@@ -949,8 +961,8 @@
           </div>
           <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", overflow:"hidden", boxShadow:"var(--shadow-sm)" }}>
             <div style={{ overflowX:"auto" }}>
-              <table className="responses-table" style={{ minWidth:700 }}>
-                <thead><tr><th>#</th><th>Pastor</th><th>Location</th><th>Region</th><th>Members</th><th>Standing</th><th>Language</th><th>Internet</th><th>Priority</th></tr></thead>
+              <table className="responses-table" style={{ minWidth:760 }}>
+                <thead><tr><th>#</th><th>Pastor</th><th>Location</th><th>Region</th><th>Members</th><th>Standing</th><th>Language</th><th>Internet</th><th>Priority</th><th></th></tr></thead>
                 <tbody>
                   {filtered.map((c,i) => (
                     <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer" }}>
@@ -963,6 +975,11 @@
                       <td style={{ color:"var(--text-muted)", fontSize:12 }}>{c.language || "—"}</td>
                       <td>{c.internet ? <span className={`tag ${c.internet==="Available"||c.internet==="Yes"?"tag-green":"tag-gray"}`}>{c.internet}</span> : "—"}</td>
                       <td style={{ fontWeight:700, color:c.priority>=8?"var(--success)":c.priority>=5?"var(--warn)":"var(--text-muted)" }}>{c.priority || "—"}</td>
+                      <td onClick={e => openEdit(c,e)} style={{ padding:"8px 10px" }}>
+                        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, background:"var(--surface2)", border:"1px solid var(--border-strong)", cursor:"pointer" }} title="Edit">
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </div>
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -970,12 +987,15 @@
             </div>
             {filtered.length===0 && <div style={{ padding:"40px 24px", textAlign:"center", color:"var(--text-muted)", fontSize:14 }}>No churches match your search.</div>}
           </div>
-          {selected && (
+          {selected && !editing && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setSelected(null)}>
               <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:460, width:"100%", boxShadow:"var(--shadow-lg)" }} onClick={e => e.stopPropagation()}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18 }}>
                   <div><div style={{ fontSize:17, fontWeight:700, letterSpacing:"-0.02em" }}>{selected.pastor}</div><div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{selected.location}</div></div>
-                  <button onClick={() => setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button onClick={e => openEdit(selected,e)} style={{ border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontSize:13, fontWeight:500 }}>Edit</button>
+                    <button onClick={() => setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                  </div>
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                   {[["Region",selected.region],["Country",selected.country],["Members",selected.members||"Unknown"],["Standing",selected.standing||"Unknown"],["Language",selected.language||"Unknown"],["Internet",selected.internet||"Unknown"],["From Kampala",selected.distKampala||"Unknown"],["Priority",selected.priority||"—"]].map(([k,v]) => (
@@ -988,13 +1008,41 @@
               </div>
             </div>
           )}
+          {editing && editData && (
+            <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setEditing(false)}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:480, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+                  <div style={{ fontSize:17, fontWeight:700 }}>Edit Church</div>
+                  <button onClick={() => setEditing(false)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                </div>
+                <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                  {FIELDS.map(([label,key,type]) => (
+                    <div key={key} className="field-group">
+                      <div className="field-label">{label}</div>
+                      <input type={type} value={editData[key]||""} onChange={e => setEditData(d=>({...d,[key]:e.target.value}))} />
+                    </div>
+                  ))}
+                  <div className="field-group">
+                    <div className="field-label">Standing</div>
+                    <select value={editData.standing||""} onChange={e => setEditData(d=>({...d,standing:e.target.value}))}>
+                      {["STRONG","Stable","Growing",""].map(s => <option key={s} value={s}>{s||"(none)"}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ display:"flex", gap:8, marginTop:4 }}>
+                    <button className="btn-back" onClick={() => setEditing(false)} style={{ flex:1 }}>Cancel</button>
+                    <button className="btn-next" onClick={saveEdit}>Save Changes</button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
           {showAdd && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setShowAdd(false)}>
               <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:440, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize:17, fontWeight:700, marginBottom:18 }}>Add New Church</div>
                 <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
                   {[["Pastor Name","pastor","text"],["Location","location","text"],["Region","region","text"],["Distance from Kampala","distKampala","text"],["Language","language","text"],["Members","members","number"],["Priority (1-9)","priority","number"]].map(([label,key,type]) => (
-                    <div key={key} className="field-group"><div className="field-label">{label}</div><input type={type} placeholder={label} value={newC[key]} onChange={e => setNewC(p => ({...p,[key]:e.target.value}))} /></div>
+                    <div key={key} className="field-group"><div className="field-label">{label}</div><input type={type} placeholder={label} value={newC[key]} onChange={e => setNewC(p=>({...p,[key]:e.target.value}))} /></div>
                   ))}
                   <div style={{ display:"flex", gap:8, marginTop:4 }}>
                     <button className="btn-back" onClick={() => setShowAdd(false)} style={{ flex:1 }}>Cancel</button>
@@ -1011,60 +1059,149 @@
     // ─── Church Map ────────────────────────────────────────────────────────────
     function ChurchMap({ churches }) {
       const [hovered, setHovered] = useState(null);
+      const [selected, setSelected] = useState(null);
       const [viewMode, setViewMode] = useState("map");
-      const MAP_W=600, MAP_H=480, LAT_MAX=4.5, LAT_MIN=-1.8, LNG_MIN=29.3, LNG_MAX=35.2;
+      const MAP_W=700, MAP_H=560, LAT_MAX=4.5, LAT_MIN=-1.8, LNG_MIN=29.3, LNG_MAX=35.2;
       const toXY = (lat,lng) => ({ x:((lng-LNG_MIN)/(LNG_MAX-LNG_MIN))*MAP_W, y:((LAT_MAX-lat)/(LAT_MAX-LAT_MIN))*MAP_H });
+
       const byRegion = {};
       churches.forEach(c => { if(!byRegion[c.region]) byRegion[c.region]={count:0,members:0,churches:[]}; byRegion[c.region].count++; byRegion[c.region].members+=c.members||0; byRegion[c.region].churches.push(c); });
+
       const sCol = s => s==="STRONG"?"#34C759":s==="Growing"?"#FF9500":"#007AFF";
+      const maxMembers = Math.max(...churches.map(c=>c.members||0), 1);
+      const pinR = members => Math.max(5, Math.min(14, 5 + (members/maxMembers)*9));
+
+      // Uganda approximate border path (simplified polygon)
+      const ugandaBorder = [
+        [4.22,29.57],[4.20,30.00],[3.80,30.85],[3.62,30.93],[3.50,31.00],[3.30,30.88],
+        [2.89,31.00],[2.70,31.20],[2.30,31.76],[1.98,32.04],[1.50,31.85],[1.22,31.94],
+        [0.90,31.56],[0.50,31.30],[0.05,31.40],[-0.10,30.64],[-0.40,30.20],[-0.60,29.87],
+        [-0.95,29.57],[-1.35,29.70],[-1.48,29.98],[-1.20,30.45],[-0.75,30.70],[-0.20,30.82],
+        [0.00,31.07],[0.50,31.85],[1.00,33.90],[1.00,34.00],[0.85,34.18],[1.20,34.40],
+        [1.80,34.18],[2.50,33.95],[3.00,34.20],[3.50,33.75],[3.80,34.45],[4.22,34.00],
+        [4.35,33.00],[4.50,32.20],[4.30,31.50],[4.22,29.57]
+      ].map(([lat,lng]) => toXY(lat,lng));
+      const borderPath = ugandaBorder.map((p,i)=>`${i===0?"M":"L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")+"Z";
+
+      // Lake Victoria approximate shape
+      const lakeVic = [
+        [0.45,32.00],[-0.10,32.20],[-0.85,32.00],[-1.20,33.60],[-0.45,34.20],[0.60,34.30],
+        [1.10,34.20],[0.60,33.20],[0.45,32.00]
+      ].map(([lat,lng]) => toXY(lat,lng));
+      const lakePath = lakeVic.map((p,i)=>`${i===0?"M":"L"}${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(" ")+"Z";
+
+      // City labels
+      const cities = [
+        { name:"Kampala", lat:0.3476, lng:32.5825, major:true },
+        { name:"Jinja", lat:0.4244, lng:33.2041, major:false },
+        { name:"Gulu", lat:2.7747, lng:32.2990, major:false },
+        { name:"Tororo", lat:0.6920, lng:34.1810, major:false },
+        { name:"Lira", lat:2.2499, lng:32.8997, major:false },
+        { name:"Mubende", lat:0.5833, lng:31.3833, major:false },
+        { name:"Busia", lat:0.4647, lng:34.0900, major:false },
+      ];
+
       return (
         <div style={{ padding:"28px 24px", maxWidth:1080, margin:"0 auto", width:"100%" }}>
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:12 }}>
-            <div><div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Church Locations</div><div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>Uganda &amp; Kenya — {churches.length} churches mapped</div></div>
+            <div><div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Church Locations</div><div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>Uganda &amp; Kenya — {churches.length} churches · pin size = congregation size</div></div>
             <div style={{ display:"flex", gap:4, background:"var(--surface3)", borderRadius:9, padding:3 }}>
               {["map","region"].map(m => <button key={m} onClick={() => setViewMode(m)} style={{ padding:"5px 16px", borderRadius:7, border:"none", fontSize:13, fontWeight:500, cursor:"pointer", background:viewMode===m?"var(--surface)":"transparent", color:viewMode===m?"var(--text)":"var(--text-muted)", boxShadow:viewMode===m?"var(--shadow-sm)":"none", textTransform:"capitalize", transition:"all 0.15s" }}>{m==="map"?"Pin Map":"By Region"}</button>)}
             </div>
           </div>
+
           {viewMode==="map" && (
             <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", overflow:"hidden", boxShadow:"var(--shadow-sm)" }}>
-              <div style={{ padding:"14px 20px", borderBottom:"1px solid var(--border)", display:"flex", gap:16, flexWrap:"wrap", alignItems:"center" }}>
+              {/* Legend */}
+              <div style={{ padding:"12px 20px", borderBottom:"1px solid var(--border)", display:"flex", gap:20, flexWrap:"wrap", alignItems:"center" }}>
                 <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", letterSpacing:"0.04em", color:"var(--text-muted)" }}>Standing:</div>
-                {[["STRONG","#34C759"],["Growing","#FF9500"],["Stable","#007AFF"]].map(([l,c]) => <div key={l} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-muted)" }}><div style={{ width:8, height:8, borderRadius:"50%", background:c }} />{l}</div>)}
-                <div style={{ fontSize:11, color:"var(--text-muted)", marginLeft:"auto" }}>Hover a pin for details</div>
+                {[["STRONG","#34C759"],["Growing","#FF9500"],["Stable","#007AFF"]].map(([l,c]) => (
+                  <div key={l} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-secondary)" }}>
+                    <div style={{ width:9, height:9, borderRadius:"50%", background:c, boxShadow:`0 0 0 2px ${c}33` }} />{l}
+                  </div>
+                ))}
+                <div style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-muted)", marginLeft:"auto" }}>
+                  <div style={{ width:5, height:5, borderRadius:"50%", background:"#86868b" }} />Small
+                  <div style={{ width:10, height:10, borderRadius:"50%", background:"#86868b" }} />Large congregation
+                </div>
               </div>
-              <div style={{ position:"relative", overflowX:"auto" }}>
-                <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} style={{ width:"100%", minWidth:360, background:"#eef2ee", display:"block" }}>
-                  {[0,1,2,3,4].map(i => <line key={"h"+i} x1={0} y1={(i/4)*MAP_H} x2={MAP_W} y2={(i/4)*MAP_H} stroke="rgba(0,0,0,0.05)" strokeWidth="1" />)}
-                  {[0,1,2,3,4,5].map(i => <line key={"v"+i} x1={(i/5)*MAP_W} y1={0} x2={(i/5)*MAP_W} y2={MAP_H} stroke="rgba(0,0,0,0.05)" strokeWidth="1" />)}
-                  {(() => { const p=toXY(0.3476,32.5825); return <><circle cx={p.x} cy={p.y} r={10} fill="rgba(0,122,255,0.12)" stroke="var(--accent)" strokeWidth="1.5"/><text x={p.x} y={p.y-13} textAnchor="middle" fontSize="9" fill="var(--accent)" fontWeight="600">KAMPALA</text></>; })()}
-                  {churches.filter(c=>c.lat&&c.lng).map(c => {
-                    const p=toXY(c.lat,c.lng); const col=sCol(c.standing); const isH=hovered?.id===c.id;
+              {/* SVG Map */}
+              <div style={{ overflowX:"auto", background:"#dce8f0" }}>
+                <svg viewBox={`0 0 ${MAP_W} ${MAP_H}`} style={{ width:"100%", minWidth:400, display:"block" }}>
+                  <defs>
+                    <filter id="shadow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feDropShadow dx="2" dy="3" stdDeviation="4" floodOpacity="0.15"/>
+                    </filter>
+                  </defs>
+                  {/* Country fill */}
+                  <path d={borderPath} fill="#e8f0e8" stroke="#b8ccb8" strokeWidth="1.5" filter="url(#shadow)" />
+                  {/* Lake Victoria */}
+                  <path d={lakePath} fill="#a8c8e8" stroke="#88aac8" strokeWidth="1" opacity="0.8" />
+                  <text x={toXY(-0.3,33.0).x} y={toXY(-0.3,33.0).y} textAnchor="middle" fontSize="9" fill="#5588aa" fontStyle="italic" fontWeight="500">Lake Victoria</text>
+                  {/* City reference dots */}
+                  {cities.map(city => {
+                    const p = toXY(city.lat, city.lng);
                     return (
-                      <g key={c.id} onMouseEnter={()=>setHovered(c)} onMouseLeave={()=>setHovered(null)} style={{ cursor:"pointer" }}>
-                        <circle cx={p.x} cy={p.y} r={isH?8:5} fill={col} fillOpacity={0.85} stroke="white" strokeWidth={isH?2:1.5} style={{ transition:"all 0.15s" }} />
-                        {isH && <g>
-                          <rect x={p.x+10} y={p.y-24} width={140} height={46} rx="4" fill="white" stroke="rgba(0,0,0,0.12)" strokeWidth="1"/>
-                          <text x={p.x+16} y={p.y-10} fontSize="9" fontWeight="700" fill="#1d1d1f">{c.pastor.split(" ").slice(0,3).join(" ")}</text>
-                          <text x={p.x+16} y={p.y+2} fontSize="8" fill="#86868b">{c.location}</text>
-                          <text x={p.x+16} y={p.y+13} fontSize="8" fill="#86868b">{c.members?`${c.members} members`:""}</text>
-                        </g>}
+                      <g key={city.name}>
+                        <circle cx={p.x} cy={p.y} r={city.major?6:3} fill={city.major?"rgba(0,122,255,0.15)":"rgba(0,0,0,0.08)"} stroke={city.major?"#007AFF":"rgba(0,0,0,0.2)"} strokeWidth={city.major?"1.5":"1"} />
+                        <text x={p.x} y={p.y - (city.major?9:6)} textAnchor="middle" fontSize={city.major?"9":"7.5"} fill={city.major?"#007AFF":"#666"} fontWeight={city.major?"700":"500"}>{city.name}</text>
+                      </g>
+                    );
+                  })}
+                  {/* Church pins — render hovered last so it's on top */}
+                  {churches.filter(c=>c.lat&&c.lng).sort((a,b) => (hovered?.id===a.id?1:-1)).map(c => {
+                    const p=toXY(c.lat,c.lng);
+                    const col=sCol(c.standing);
+                    const r=pinR(c.members||0);
+                    const isH=hovered?.id===c.id;
+                    // Tooltip positioning — flip if near right edge
+                    const flipX = p.x > MAP_W - 160;
+                    const tipX = flipX ? p.x - 155 : p.x + r + 6;
+                    const tipY = Math.max(10, p.y - 28);
+                    return (
+                      <g key={c.id} onMouseEnter={()=>setHovered(c)} onMouseLeave={()=>setHovered(null)} onClick={()=>setSelected(c)} style={{ cursor:"pointer" }}>
+                        {isH && <circle cx={p.x} cy={p.y} r={r+6} fill={col} fillOpacity={0.15} />}
+                        <circle cx={p.x} cy={p.y} r={isH?r+2:r} fill={col} fillOpacity={isH?1:0.82} stroke="white" strokeWidth={isH?2:1.5} style={{ transition:"all 0.15s" }} />
+                        {c.members > 100 && <text x={p.x} y={p.y+1} textAnchor="middle" dominantBaseline="middle" fontSize="7" fill="white" fontWeight="700" style={{ pointerEvents:"none" }}>{c.members}</text>}
+                        {isH && (
+                          <g style={{ pointerEvents:"none" }}>
+                            <rect x={tipX} y={tipY} width={148} height={54} rx="6" fill="white" stroke="rgba(0,0,0,0.1)" strokeWidth="1" filter="url(#shadow)" />
+                            <rect x={tipX} y={tipY} width={148} height={16} rx="6" fill={col} fillOpacity="0.15" />
+                            <rect x={tipX} y={tipY+10} width={148} height={6} fill={col} fillOpacity="0.15" />
+                            <text x={tipX+10} y={tipY+11} fontSize="9.5" fontWeight="700" fill="#1d1d1f">{c.pastor.split(" ").slice(0,3).join(" ")}</text>
+                            <text x={tipX+10} y={tipY+25} fontSize="8.5" fill="#86868b">{c.location}</text>
+                            <text x={tipX+10} y={tipY+38} fontSize="8.5" fill="#86868b">{c.members?`${c.members} members · `:""}{c.standing||"Unknown"}</text>
+                            <text x={tipX+10} y={tipY+50} fontSize="8" fill="#007AFF">{c.distKampala ? `${c.distKampala} from Kampala` : ""}</text>
+                          </g>
+                        )}
                       </g>
                     );
                   })}
                 </svg>
               </div>
+              {selected && (
+                <div style={{ borderTop:"1px solid var(--border)", padding:"14px 20px", display:"flex", alignItems:"center", gap:14, background:"var(--surface2)" }}>
+                  <div style={{ width:10, height:10, borderRadius:"50%", background:sCol(selected.standing), flexShrink:0 }} />
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontSize:14, fontWeight:700 }}>{selected.pastor}</div>
+                    <div style={{ fontSize:12, color:"var(--text-muted)" }}>{selected.location} · {selected.members||"?"} members · {selected.standing||"Unknown"}</div>
+                  </div>
+                  <button onClick={()=>setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:7, padding:"5px 10px", fontSize:12, color:"var(--text-muted)", cursor:"pointer" }}>✕</button>
+                </div>
+              )}
             </div>
           )}
+
           {viewMode==="region" && (
             <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(220px,1fr))", gap:10 }}>
               {Object.entries(byRegion).sort((a,b)=>b[1].count-a[1].count).map(([region,d]) => (
                 <div key={region} style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, padding:"16px 18px", boxShadow:"var(--shadow-sm)" }}>
                   <div style={{ fontSize:14, fontWeight:700, marginBottom:6, letterSpacing:"-0.01em" }}>{region}</div>
                   <div style={{ display:"flex", gap:12, marginBottom:10 }}>
-                    <div><div style={{ fontSize:20, fontWeight:700, color:"var(--accent)", lineHeight:1 }}>{d.count}</div><div style={{ fontSize:11, color:"var(--text-muted)" }}>churches</div></div>
-                    <div><div style={{ fontSize:20, fontWeight:700, color:"var(--success)", lineHeight:1 }}>{d.members}</div><div style={{ fontSize:11, color:"var(--text-muted)" }}>members</div></div>
+                    <div><div style={{ fontSize:22, fontWeight:700, color:"var(--accent)", lineHeight:1 }}>{d.count}</div><div style={{ fontSize:11, color:"var(--text-muted)" }}>churches</div></div>
+                    <div><div style={{ fontSize:22, fontWeight:700, color:"var(--success)", lineHeight:1 }}>{d.members}</div><div style={{ fontSize:11, color:"var(--text-muted)" }}>members</div></div>
                   </div>
-                  <div style={{ fontSize:12, color:"var(--text-muted)" }}>{d.churches.map(c=>c.pastor.split(" ").pop()).join(", ")}</div>
+                  <div style={{ fontSize:12, color:"var(--text-muted)", lineHeight:1.5 }}>{d.churches.map(c=>c.pastor.split(" ").pop()).join(", ")}</div>
                 </div>
               ))}
             </div>
@@ -1149,7 +1286,7 @@
             </div>
           </nav>
           <div style={{ flex:1 }}>
-            {tab==="churches" && <ChurchDatabase churches={churches} onAdd={c => setChurches(cs=>[...cs,{...c,id:Date.now(),lat:0,lng:0}])} />}
+            {tab==="churches" && <ChurchDatabase churches={churches} onAdd={c => setChurches(cs=>[...cs,{...c,id:Date.now(),lat:0,lng:0}])} onUpdate={updated => setChurches(cs=>cs.map(c=>c.id===updated.id?{...c,...updated}:c))} />}
             {tab==="map"      && <ChurchMap churches={churches} />}
             {tab==="users"    && <AdminUsers />}
           </div>
