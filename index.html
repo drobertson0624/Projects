@@ -148,6 +148,7 @@
     .leaflet-popup-content { margin: 16px !important; }
     .leaflet-popup-tip { display: none; }
     .leaflet-control-layers { border-radius: 10px !important; border: 1px solid rgba(0,0,0,0.1) !important; box-shadow: 0 2px 8px rgba(0,0,0,0.08) !important; font-family: -apple-system, sans-serif !important; font-size: 13px !important; }
+    @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
     @media(max-width:640px){
       .nav-title{display:none;}
       .metrics-grid{grid-template-columns:1fr 1fr!important;}
@@ -1334,14 +1335,29 @@
       const [responses, setResponses] = useState(null);
       const [selected, setSelected]   = useState(null);
       const [error, setError]         = useState(false);
+      const [refreshing, setRefreshing] = useState(false);
+      const [lastRefresh, setLastRefresh] = useState(null);
 
-      React.useEffect(() => {
+      const fetchData = (showSpinner = false) => {
+        if (showSpinner) setRefreshing(true);
         fetch(`${SUPABASE_URL}/rest/v1/survey_responses?select=*&order=created_at.desc`, {
           headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
         })
           .then(r => r.json())
-          .then(rows => setResponses(Array.isArray(rows) ? rows : []))
-          .catch(() => setError(true));
+          .then(rows => {
+            setResponses(Array.isArray(rows) ? rows : []);
+            setLastRefresh(new Date());
+            setError(false);
+          })
+          .catch(() => setError(true))
+          .finally(() => setRefreshing(false));
+      };
+
+      // Initial load + auto-refresh every 60 seconds
+      React.useEffect(() => {
+        fetchData();
+        const interval = setInterval(() => fetchData(), 60000);
+        return () => clearInterval(interval);
       }, []);
 
       const ratingColor = r => r==="Very smooth"||r==="Mostly smooth" ? "tag-green" : r==="Some issues" ? "tag-warn" : r==="Difficult" ? "tag-red" : "tag-gray";
@@ -1362,10 +1378,21 @@
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, flexWrap:"wrap", gap:12 }}>
             <div>
               <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Survey Results</div>
-              <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{responses.length} submission{responses.length!==1?"s":""} from the field</div>
+              <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>
+                {responses ? `${responses.length} submission${responses.length!==1?"s":""} from the field` : "Loading…"}
+                {lastRefresh && <span style={{ marginLeft:8, color:"var(--text-placeholder)" }}>· Updated {lastRefresh.toLocaleTimeString([], {hour:"2-digit",minute:"2-digit"})}</span>}
+              </div>
             </div>
-            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
-              {responses.length > 0 && [
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
+              {/* Refresh button */}
+              <button onClick={() => fetchData(true)} disabled={refreshing || !responses}
+                style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.15s" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation: refreshing?"spin 0.8s linear infinite":"none" }}>
+                  <path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/>
+                </svg>
+                {refreshing ? "Refreshing…" : "Refresh"}
+              </button>
+              {responses && responses.length > 0 && [
                 ["Total", responses.length, "var(--accent)"],
                 ["Smooth", responses.filter(r=>r.overall_rating==="Very smooth"||r.overall_rating==="Mostly smooth").length, "var(--success)"],
                 ["Issues", responses.filter(r=>r.overall_rating==="Some issues"||r.overall_rating==="Difficult").length, "var(--warn)"],
@@ -1537,8 +1564,10 @@
 
     // ─── Portal Shell ──────────────────────────────────────────────────────────
     function Portal({ onClose, rssLink, onRssUpdate }) {
-      const [user, setUser]           = useState(null);
-      const [tab, setTab]             = useState("results");
+      const [user, setUser]           = useState(() => {
+        try { const s = localStorage.getItem("ea_admin_user"); return s ? JSON.parse(s) : null; } catch(e) { return null; }
+      });
+      const [tab, setTab]             = useState(() => localStorage.getItem("ea_admin_tab") || "results");
       const [menuOpen, setMenuOpen]   = useState(false);
       const [churches, setChurches]   = useState(CHURCHES);
 
@@ -1550,13 +1579,27 @@
         ["settings", "Settings"],
       ];
 
+      const login = (u) => {
+        localStorage.setItem("ea_admin_user", JSON.stringify(u));
+        setUser(u); setTab("results");
+      };
+      const logout = () => {
+        localStorage.removeItem("ea_admin_user");
+        localStorage.removeItem("ea_admin_tab");
+        setUser(null);
+      };
+      const switchTab = (t) => {
+        localStorage.setItem("ea_admin_tab", t);
+        setTab(t); setMenuOpen(false);
+      };
+
       if (!user) return (
         <div className="app">
           <nav className="nav">
             <div className="nav-logo"><div className="nav-dot" /><span className="nav-title" style={{ fontSize:12 }}>East Africa · Admin</span></div>
             <button onClick={onClose} style={{ border:"none", background:"var(--surface3)", color:"var(--text-muted)", borderRadius:8, padding:"6px 12px", fontSize:13, fontWeight:500, cursor:"pointer" }}>← Back</button>
           </nav>
-          <PortalLogin onLogin={u => { setUser(u); setTab("results"); }} />
+          <PortalLogin onLogin={login} />
         </div>
       );
 
@@ -1570,11 +1613,11 @@
             <div className="portal-desktop-tabs" style={{ display:"flex", alignItems:"center", gap:8 }}>
               <div style={{ display:"flex", gap:2, background:"var(--surface3)", borderRadius:9, padding:3 }}>
                 {TABS.map(([key,label]) => (
-                  <button key={key} onClick={() => setTab(key)} className={`nav-tab${tab===key?" active":""}`}>{label}</button>
+                  <button key={key} onClick={() => switchTab(key)} className={`nav-tab${tab===key?" active":""}`}>{label}</button>
                 ))}
               </div>
               <button onClick={onClose} style={{ border:"none", background:"var(--surface3)", color:"var(--text-muted)", borderRadius:8, padding:"6px 12px", fontSize:13, fontWeight:500, cursor:"pointer", whiteSpace:"nowrap" }}>← Survey</button>
-              <button onClick={() => setUser(null)} style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:8, padding:"6px 12px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Out</button>
+              <button onClick={logout} style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:8, padding:"6px 12px", fontSize:13, fontWeight:600, cursor:"pointer" }}>Out</button>
             </div>
 
             {/* Mobile hamburger */}
@@ -1583,7 +1626,7 @@
               <button onClick={() => setMenuOpen(m=>!m)} style={{ border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:8, padding:"6px 10px", fontSize:12, fontWeight:600, cursor:"pointer", color:"var(--text-secondary)" }}>
                 {TABS.find(t=>t[0]===tab)?.[1]} ▾
               </button>
-              <button onClick={() => setUser(null)} style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:8, padding:"6px 10px", fontSize:12, fontWeight:600, cursor:"pointer" }}>Out</button>
+              <button onClick={logout} style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:8, padding:"6px 10px", fontSize:12, fontWeight:600, cursor:"pointer" }}>Out</button>
             </div>
           </nav>
 
@@ -1591,7 +1634,7 @@
           {menuOpen && (
             <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, margin:"8px 16px", padding:6, boxShadow:"var(--shadow-md)", position:"relative", zIndex:50 }}>
               {TABS.map(([key,label]) => (
-                <button key={key} onClick={() => { setTab(key); setMenuOpen(false); }}
+                <button key={key} onClick={() => switchTab(key)}
                   style={{ display:"block", width:"100%", textAlign:"left", padding:"11px 14px", border:"none", background: tab===key?"var(--accent-light)":"transparent", borderRadius:10, fontSize:14, fontWeight: tab===key?600:400, color: tab===key?"var(--accent)":"var(--text)", cursor:"pointer", marginBottom:2 }}>
                   {label}
                 </button>
