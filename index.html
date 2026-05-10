@@ -337,6 +337,7 @@
       };
       const [data, setData] = useState({
         name: "", church_name: "", country: "", region: "", location: "",
+        on_whatsapp: "", whatsapp_contact: "", email: "",
         device_type: "", connection_type: "", network_type: "", youtube_ability: "",
         app_installed: "", rss_loaded: "",
         messages: [{}, {}],
@@ -378,7 +379,8 @@
       const handleSubmit = async () => {
         const payload = {
           name: data.name, church_name: data.church_name, country: data.country,
-          region: data.region, location: data.location, device_type: data.device_type,
+          region: data.region, location: data.location,
+          on_whatsapp: data.on_whatsapp, whatsapp_contact: data.whatsapp_contact, email: data.email, device_type: data.device_type,
           connection_type: data.connection_type, network_type: data.network_type,
           youtube_ability: data.youtube_ability, app_installed: data.app_installed,
           rss_loaded: data.rss_loaded, overall_rating: data.overall_rating,
@@ -473,6 +475,34 @@
                     ))}
                   </div>
                 </div>
+
+                {/* Stay Connected section */}
+                <div style={{ borderTop:"1px solid var(--border)", paddingTop:16, marginTop:4 }}>
+                  <div style={{ fontSize:13, fontWeight:700, color:"var(--text)", marginBottom:4, letterSpacing:"-0.01em" }}>Stay Connected</div>
+                  <div style={{ fontSize:13, color:"var(--text-muted)", lineHeight:1.55, marginBottom:14 }}>
+                    We want to keep open lines of communication with everyone who participates. This helps us follow up, share results, and stay in touch with your community.
+                  </div>
+
+                  <div className="field-group" style={{ marginBottom:12 }}>
+                    <div className="field-label">Are you on WhatsApp?</div>
+                    <ChoiceRow options={["Yes","No"]} value={data.on_whatsapp} onChange={v => { set("on_whatsapp", v); if (v==="No") set("whatsapp_contact",""); }} />
+                  </div>
+
+                  {data.on_whatsapp === "Yes" && (
+                    <div className="field-group" style={{ marginBottom:12 }}>
+                      <div className="field-label">WhatsApp Name or Phone Number</div>
+                      <input type="text" placeholder="e.g. +256 700 123456 or your display name" value={data.whatsapp_contact||""} onChange={e => set("whatsapp_contact", e.target.value)} />
+                      <div style={{ fontSize:12, color:"var(--text-muted)", marginTop:5 }}>We'll only use this to follow up about the survey.</div>
+                    </div>
+                  )}
+
+                  <div className="field-group">
+                    <div className="field-label">Email Address <span style={{ fontWeight:400, color:"var(--text-muted)" }}>(optional)</span></div>
+                    <input type="text" placeholder="your@email.com" value={data.email||""} onChange={e => set("email", e.target.value)} />
+                    <div style={{ fontSize:12, color:"var(--text-muted)", marginTop:5 }}>So we can share results and stay in touch.</div>
+                  </div>
+                </div>
+
                 <Foot showBack={false} />
               </div>
             </div>
@@ -1449,6 +1479,8 @@
                           ["Connection", r.connection_type],
                           ["Network", r.network_type],
                           ["YouTube", r.youtube_ability],
+                          ["WhatsApp", r.on_whatsapp==="Yes" ? (r.whatsapp_contact||"Yes") : r.on_whatsapp||null],
+                          ["Email", r.email],
                           ["App Installed", r.app_installed],
                           ["RSS Loaded", r.rss_loaded],
                           ["Avg Start", r.avg_start_time!=null?`${Number(r.avg_start_time).toFixed(1)}s`:"—"],
