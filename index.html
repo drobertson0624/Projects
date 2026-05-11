@@ -248,11 +248,106 @@
     const MOCK_RESPONSES = []; // replaced by live Supabase fetch below
 
     const COUNTRIES = {
-      Uganda: ["Kampala","Gulu","Jinja","Mbarara","Entebbe","Lira","Other"],
-      Kenya: ["Nairobi","Mombasa","Kisumu","Eldoret","Nakuru","Thika","Other"],
-      Tanzania: ["Dar es Salaam","Dodoma","Arusha","Mwanza","Zanzibar","Moshi","Other"],
-      Rwanda: ["Kigali","Butare","Gisenyi","Ruhengeri","Other"],
-      Ethiopia: ["Addis Ababa","Dire Dawa","Gondar","Mekelle","Other"],
+      Uganda: [
+        "Kampala","Wakiso","Mukono","Jinja","Iganga","Mayuge","Bugiri","Busia","Tororo","Mbale",
+        "Sironko","Manafwa","Bududa","Kapchorwa","Bulambuli","Namisindwa","Butaleja","Pallisa",
+        "Kibuku","Butebo","Kumi","Ngora","Serere","Soroti","Amuria","Katakwi","Kaberamaido",
+        "Kaliro","Kamuli","Buyende","Luuka","Namutumba","Kayunga","Buikwe","Buvuma","Luwero",
+        "Nakaseke","Nakasongola","Mubende","Mityana","Kiboga","Kyankwanzi","Butebo","Gomba",
+        "Kassanda","Masaka","Kalungu","Bukomansimbi","Lwengo","Rakai","Kyotera","Sembabule",
+        "Lyantonde","Kiruhura","Ibanda","Isingiro","Mbarara","Bushenyi","Rubirizi","Mitooma",
+        "Ntungamo","Rukungiri","Kanungu","Kisoro","Kabale","Rubanda","Bundibugyo","Kasese",
+        "Kabarole","Bunyangabu","Kyenjojo","Kyegegwa","Kamwenge","Kibaale","Kakumiro",
+        "Kagadi","Hoima","Masindi","Kiryandongo","Buliisa","Nwoya","Gulu","Amuru","Kitgum",
+        "Pader","Agago","Omoro","Oyam","Kole","Lira","Alebtong","Otuke","Kwania","Dokolo",
+        "Apac","Arua","Madi-Okollo","Terego","Zombo","Nebbi","Pakwach","Koboko","Maracha",
+        "Yumbe","Moyo","Adjumani","Obongi","Moroto","Napak","Nakapiripirit","Amudat",
+        "Kotido","Abim","Kaabong","Karenga","Soroti","Serere","Other"
+      ],
+      Kenya: [
+        "Nairobi","Mombasa","Kisumu","Nakuru","Eldoret","Thika","Malindi","Kitale","Garissa",
+        "Kisii","Nyeri","Machakos","Meru","Kakamega","Embu","Migori","Homa Bay","Kericho",
+        "Uasin Gishu","Trans Nzoia","Bungoma","Busia","Siaya","Vihiga","Nandi","Elgeyo-Marakwet",
+        "West Pokot","Turkana","Samburu","Laikipia","Nyandarua","Murang'a","Kirinyaga","Tharaka-Nithi",
+        "Isiolo","Marsabit","Wajir","Mandera","Lamu","Tana River","Kilifi","Kwale","Taita-Taveta",
+        "Kajiado","Makueni","Kitui","Mwingi","Bomet","Narok","Nyamira","Baringo","Rift Valley","Other"
+      ],
+      Tanzania: [
+        "Dar es Salaam","Dodoma","Arusha","Mwanza","Zanzibar","Moshi","Tanga","Morogoro",
+        "Mbeya","Iringa","Songea","Tabora","Kigoma","Shinyanga","Singida","Mtwara","Lindi",
+        "Musoma","Bukoba","Mara","Kagera","Geita","Simiyu","Njombe","Katavi","Rukwa",
+        "Ruvuma","Pwani","Kilimanjaro","Pemba","Kaskazini Unguja","Kusini Unguja",
+        "Kaskazini Pemba","Kusini Pemba","Mjini Magharibi","Other"
+      ],
+      Rwanda: [
+        "Kigali","Gasabo","Kicukiro","Nyarugenge","Butare (Huye)","Gitarama (Muhanga)",
+        "Ruhengeri (Musanze)","Gisenyi (Rubavu)","Byumba (Gicumbi)","Cyangugu (Rusizi)",
+        "Kibungo (Ngoma)","Kibuye (Karongi)","Nyagatare","Kayonza","Rwamagana","Bugesera",
+        "Rulindo","Gakenke","Burera","Nyabihu","Ngororero","Karongi","Nyamasheke",
+        "Rusizi","Nyanza","Gisagara","Nyaruguru","Ruhango","Kamonyi","Other"
+      ],
+      Ethiopia: [
+        "Addis Ababa","Dire Dawa","Gondar","Mekelle","Bahir Dar","Adama (Nazreth)",
+        "Hawassa","Jimma","Harar","Jijiga","Dessie","Debre Berhan","Debre Markos",
+        "Shashamane","Arba Minch","Nekemte","Asella","Dilla","Wolaita Sodo","Hosaena",
+        "Ambo","Debre Tabor","Axum","Lalibela","Gambela","Assosa","Semera",
+        "Oromia Region","Amhara Region","Tigray Region","SNNPR","Somali Region",
+        "Afar Region","Benishangul-Gumuz","Harari Region","Other"
+      ],
+      Burundi: [
+        "Bujumbura","Gitega","Ngozi","Muyinga","Ruyigi","Bururi","Makamba","Cibitoke",
+        "Bubanza","Kayanza","Muramvya","Mwaro","Rumonge","Rutana","Cankuzo","Kirundo","Other"
+      ],
+      "DR Congo (East)": [
+        "Goma","Bukavu","Butembo","Beni","Uvira","Kindu","Bunia","Kalemie","Mbuji-Mayi",
+        "Lubumbashi","North Kivu","South Kivu","Maniema","Ituri","Tanganyika",
+        "Haut-Lomami","Haut-Katanga","Other"
+      ],
+      "South Sudan": [
+        "Juba","Wau","Malakal","Yei","Torit","Aweil","Kuajok","Bentiu","Bor","Rumbek",
+        "Yambio","Maridi","Mundri","Nimule","Central Equatoria","Western Equatoria",
+        "Eastern Equatoria","Lakes","Warrap","Northern Bahr el Ghazal",
+        "Western Bahr el Ghazal","Upper Nile","Jonglei","Unity","Other"
+      ],
+      Mozambique: [
+        "Maputo","Matola","Beira","Nampula","Chimoio","Nacala","Quelimane","Tete",
+        "Xai-Xai","Lichinga","Inhambane","Pemba","Montepuez","Cuamba","Maxixe",
+        "Cabo Delgado","Gaza","Inhambane","Manica","Maputo Province","Nampula Province",
+        "Niassa","Sofala","Tete Province","Zambezia","Other"
+      ],
+      Zambia: [
+        "Lusaka","Ndola","Kitwe","Livingstone","Kabwe","Chipata","Solwezi","Mansa",
+        "Mongu","Kasama","Chingola","Mufulira","Luanshya","Mazabuka","Choma",
+        "Central Province","Copperbelt","Eastern Province","Luapula","Lusaka Province",
+        "Muchinga","North-Western","Northern Province","Southern Province","Western Province","Other"
+      ],
+      Malawi: [
+        "Lilongwe","Blantyre","Mzuzu","Zomba","Kasungu","Mangochi","Karonga","Salima",
+        "Nkhotakota","Ntcheu","Dedza","Ntchisi","Dowa","Rumphi","Mzimba","Nkhata Bay",
+        "Likoma","Balaka","Machinga","Chiradzulu","Thyolo","Mulanje","Phalombe",
+        "Chikwawa","Nsanje","Neno","Other"
+      ],
+      Zimbabwe: [
+        "Harare","Bulawayo","Chitungwiza","Mutare","Gweru","Kwekwe","Kadoma","Masvingo",
+        "Chinhoyi","Norton","Marondera","Ruwa","Chegutu","Zvishavane","Bindura",
+        "Beitbridge","Hwange","Victoria Falls","Kariba","Lupane","Manicaland",
+        "Mashonaland Central","Mashonaland East","Mashonaland West","Masvingo Province",
+        "Matabeleland North","Matabeleland South","Midlands","Other"
+      ],
+      Somalia: [
+        "Mogadishu","Hargeisa","Kismayo","Bosaso","Baidoa","Garowe","Berbera","Merca",
+        "Afgooye","Jowhar","Dhusamareb","Beledweyne","Luuq","Galkayo","Burco",
+        "Banaadir","Bay","Gedo","Hiiraan","Jubaland","Puntland","Somaliland",
+        "South West State","Other"
+      ],
+      Eritrea: [
+        "Asmara","Keren","Massawa","Assab","Mendefera","Barentu","Adi Quala",
+        "Adi Keyh","Dekemhare","Ghinda","Anseba","Debub","Gash-Barka",
+        "Maekel","Northern Red Sea","Southern Red Sea","Other"
+      ],
+      Djibouti: [
+        "Djibouti City","Ali Sabieh","Dikhil","Obock","Tadjourah","Arta","Other"
+      ],
       "Other": ["Other"],
     };
 
@@ -338,6 +433,120 @@
       );
     }
 
+    // ─── Combobox ──────────────────────────────────────────────────────────────
+    function Combobox({ options, value, onChange, placeholder }) {
+      const [query, setQuery]       = useState("");
+      const [open, setOpen]         = useState(false);
+      const [focused, setFocused]   = useState(false);
+      const containerRef            = React.useRef(null);
+      const inputRef                = React.useRef(null);
+
+      const filtered = query.trim()
+        ? options.filter(o => o.toLowerCase().includes(query.toLowerCase()))
+        : options;
+
+      const select = (opt) => {
+        onChange(opt);
+        setQuery("");
+        setOpen(false);
+      };
+
+      // Close on outside click
+      React.useEffect(() => {
+        const handler = (e) => {
+          if (containerRef.current && !containerRef.current.contains(e.target)) {
+            setOpen(false); setQuery("");
+          }
+        };
+        document.addEventListener("mousedown", handler);
+        document.addEventListener("touchstart", handler);
+        return () => { document.removeEventListener("mousedown", handler); document.removeEventListener("touchstart", handler); };
+      }, []);
+
+      return (
+        <div ref={containerRef} style={{ position:"relative" }}>
+          {/* Input row */}
+          <div
+            onClick={() => { setOpen(true); setTimeout(() => inputRef.current?.focus(), 50); }}
+            style={{
+              display:"flex", alignItems:"center", gap:8,
+              background: focused ? "var(--surface)" : "var(--surface2)",
+              border: `1px solid ${focused ? "var(--accent)" : "var(--border-strong)"}`,
+              boxShadow: focused ? "0 0 0 3px rgba(0,122,255,0.09)" : "none",
+              borderRadius:"var(--radius-sm)", padding:"11px 14px",
+              cursor:"text", transition:"all 0.15s",
+            }}
+          >
+            {/* Search icon */}
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}>
+              <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+            </svg>
+            <input
+              ref={inputRef}
+              type="text"
+              value={open ? query : ""}
+              placeholder={value || placeholder || "Select or type to search…"}
+              onChange={e => { setQuery(e.target.value); setOpen(true); }}
+              onFocus={() => { setFocused(true); setOpen(true); }}
+              onBlur={() => setFocused(false)}
+              style={{
+                border:"none", background:"transparent", outline:"none",
+                fontSize:15, color: open ? "var(--text)" : (value ? "var(--text)" : "var(--text-placeholder)"),
+                flex:1, padding:0, fontFamily:"inherit", width:"100%",
+              }}
+            />
+            {/* Selected checkmark or chevron */}
+            {value && !open ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0 }}><path d="M20 6 9 17l-5-5"/></svg>
+            ) : (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink:0, transform: open?"rotate(180deg)":"none", transition:"transform 0.15s" }}><path d="m6 9 6 6 6-6"/></svg>
+            )}
+          </div>
+
+          {/* Selected value label when closed */}
+          {value && !open && (
+            <div style={{ position:"absolute", left:38, top:"50%", transform:"translateY(-50%)", fontSize:15, color:"var(--text)", pointerEvents:"none", letterSpacing:"-0.01em" }}>
+              {value}
+            </div>
+          )}
+
+          {/* Dropdown list */}
+          {open && (
+            <div style={{
+              position:"absolute", top:"calc(100% + 4px)", left:0, right:0, zIndex:300,
+              background:"var(--surface)", border:"1px solid var(--border-strong)",
+              borderRadius:"var(--radius-sm)", boxShadow:"0 8px 32px rgba(0,0,0,0.12)",
+              maxHeight:220, overflowY:"auto",
+            }}>
+              {filtered.length === 0 ? (
+                <div style={{ padding:"14px 16px", fontSize:14, color:"var(--text-muted)", textAlign:"center" }}>No results — try a different spelling</div>
+              ) : filtered.map(opt => (
+                <div
+                  key={opt}
+                  onMouseDown={() => select(opt)}
+                  onTouchEnd={(e) => { e.preventDefault(); select(opt); }}
+                  style={{
+                    padding:"11px 16px", fontSize:15, cursor:"pointer",
+                    color: opt === value ? "var(--accent)" : "var(--text)",
+                    background: opt === value ? "var(--accent-light)" : "transparent",
+                    fontWeight: opt === value ? 600 : 400,
+                    display:"flex", alignItems:"center", justifyContent:"space-between",
+                    letterSpacing:"-0.01em", transition:"background 0.1s",
+                  }}
+                  onMouseEnter={e => { if (opt !== value) e.currentTarget.style.background = "var(--surface2)"; }}
+                  onMouseLeave={e => { if (opt !== value) e.currentTarget.style.background = "transparent"; }}
+                >
+                  {opt}
+                  {opt === value && <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // ─── Survey Wizard ─────────────────────────────────────────────────────────
     function SurveyWizard() {
       const [step, setStep] = useState(() => {
         try { const s = sessionStorage.getItem("ea_survey_step"); return s ? parseInt(s) : 0; } catch(e) { return 0; }
@@ -466,18 +675,22 @@
                 </div>
                 <div className="field-group">
                   <div className="field-label">Country</div>
-                  <select value={data.country} onChange={e => { set("country", e.target.value); set("region", ""); }}>
-                    <option value="">Select country…</option>
-                    {Object.keys(COUNTRIES).map(c => <option key={c}>{c}</option>)}
-                  </select>
+                  <Combobox
+                    options={Object.keys(COUNTRIES)}
+                    value={data.country}
+                    onChange={v => { set("country", v); set("region", ""); }}
+                    placeholder="Select or search country…"
+                  />
                 </div>
                 {data.country && (
                   <div className="field-group">
                     <div className="field-label">Region / City / Village</div>
-                    <select value={data.region} onChange={e => set("region", e.target.value)}>
-                      <option value="">Select region…</option>
-                      {COUNTRIES[data.country]?.map(r => <option key={r}>{r}</option>)}
-                    </select>
+                    <Combobox
+                      options={COUNTRIES[data.country] || ["Other"]}
+                      value={data.region}
+                      onChange={v => set("region", v)}
+                      placeholder="Select or search region…"
+                    />
                   </div>
                 )}
                 <div className="field-group">
