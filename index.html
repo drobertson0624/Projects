@@ -247,7 +247,6 @@
         if (!res.ok) {
           const txt = await res.text();
           console.error("church_overrides save failed:", res.status, txt);
-          alert("Save failed: " + res.status + " — " + txt);
         } else {
           console.log("church_overrides saved OK for church_id", churchId);
         }
