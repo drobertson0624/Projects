@@ -221,14 +221,18 @@
     async function loadChurchOverrides() {
       try {
         const res = await fetch(`${SUPABASE_URL}/rest/v1/church_overrides?select=*`, {
-          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+          headers: {
+            apikey: SUPABASE_KEY,
+            Authorization: `Bearer ${SUPABASE_KEY}`,
+            "Content-Type": "application/json",
+          }
         });
+        if (!res.ok) { console.warn("church_overrides fetch status:", res.status); return []; }
         const rows = await res.json();
         if (Array.isArray(rows)) {
-          // Map dist_kampala back to distKampala for the app
           return rows.map(r => ({ ...r, distKampala: r.dist_kampala || r.distKampala }));
         }
-      } catch(e) { console.error("loadChurchOverrides error:", e); }
+      } catch(e) { console.warn("loadChurchOverrides:", e.message); }
       return [];
     }
 
@@ -1395,7 +1399,17 @@
                 {deployedCount > 0 && <span style={{ marginLeft:8, color:"var(--accent)", fontWeight:600 }}>· {deployedCount} in deploy queue</span>}
               </div>
             </div>
-            <button className="btn-next" style={{ flex:"none", padding:"10px 18px", fontSize:13 }} onClick={() => setShowAdd(true)}>+ Add Church</button>
+            <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+              <button onClick={() => exportDeployQueue(churches)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.15s" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Deploy Queue
+              </button>
+              <button onClick={() => exportChurchAssessment(churches)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.15s" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Full Assessment
+              </button>
+              <button className="btn-next" style={{ flex:"none", padding:"10px 18px", fontSize:13 }} onClick={() => setShowAdd(true)}>+ Add Church</button>
+            </div>
           </div>
 
           {/* Search + Filters + Sort */}
@@ -1880,7 +1894,118 @@
       );
     }
 
-    // ─── Survey Results (Admin) ────────────────────────────────────────────────
+    // ─── CSV Export Utilities ──────────────────────────────────────────────────
+    function toCSV(rows, headers) {
+      const escape = v => {
+        if (v == null || v === "") return "";
+        const s = String(v).replace(/"/g, '""');
+        return /[,"\n\r]/.test(s) ? '"' + s + '"' : s;
+      };
+      const lines = [
+        headers.map(([label]) => escape(label)).join(","),
+        ...rows.map(row => headers.map(([, key]) => escape(typeof key === "function" ? key(row) : row[key])).join(","))
+      ];
+      return lines.join("\r\n");
+    }
+
+    function downloadCSV(csv, filename) {
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement("a");
+      a.href     = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportDeployQueue(churches) {
+      const queue = [...churches]
+        .filter(c => c.deploy_order)
+        .sort((a, b) => Number(a.deploy_order) - Number(b.deploy_order));
+      if (!queue.length) { alert("No churches have a deploy order set yet."); return; }
+      const headers = [
+        ["Deploy #",       "deploy_order"],
+        ["Pastor",         "pastor"],
+        ["Location",       "location"],
+        ["Region",         "region"],
+        ["Country",        "country"],
+        ["Dist. Kampala",  "distKampala"],
+        ["Members",        "members"],
+        ["Standing",       "standing"],
+        ["Internet",       "internet"],
+        ["Electric Power", "elect_power"],
+        ["Cell Signal",    "cell_signal"],
+        ["Cell Phone",     "cell_phone"],
+        ["Language",       "language"],
+        ["Score",          "priority"],
+      ];
+      const date = new Date().toISOString().slice(0,10);
+      downloadCSV(toCSV(queue, headers), "deploy-queue-" + date + ".csv");
+    }
+
+    function exportChurchAssessment(churches) {
+      const headers = [
+        ["Pastor",              "pastor"],
+        ["Location",            "location"],
+        ["Region",              "region"],
+        ["Country",             "country"],
+        ["Dist. Kampala",       "distKampala"],
+        ["Members",             "members"],
+        ["Standing",            "standing"],
+        ["Spiritual Standing",  "spiritual_standing"],
+        ["Language",            "language"],
+        ["Building Type",       "bldg_type"],
+        ["Internet",            "internet"],
+        ["Cell Signal",         "cell_signal"],
+        ["Cell Quality",        "cell_quality"],
+        ["Cell Phone",          "cell_phone"],
+        ["Tablet",              "tablet"],
+        ["Electric Power",      "elect_power"],
+        ["Laptop",              "laptop"],
+        ["Sound System",        "sound_system"],
+        ["TV Screen",           "tv_screen"],
+        ["Score",               "priority"],
+        ["Deploy Order",        "deploy_order"],
+      ];
+      const date = new Date().toISOString().slice(0,10);
+      downloadCSV(toCSV(churches, headers), "church-assessment-" + date + ".csv");
+    }
+
+    function exportSurveyResults(responses) {
+      if (!responses || !responses.length) { alert("No survey responses to export."); return; }
+      const headers = [
+        ["Date",           r => r.created_at ? new Date(r.created_at).toLocaleDateString("en-US") : ""],
+        ["Time",           r => r.created_at ? new Date(r.created_at).toLocaleTimeString("en-US",{hour:"2-digit",minute:"2-digit"}) : ""],
+        ["Name",           "name"],
+        ["Church",         "church_name"],
+        ["Country",        "country"],
+        ["Region",         "region"],
+        ["Location",       "location"],
+        ["Device",         "device_type"],
+        ["Connection",     "connection_type"],
+        ["Network",        "network_type"],
+        ["YouTube",        "youtube_ability"],
+        ["App Installed",  "app_installed"],
+        ["RSS Loaded",     "rss_loaded"],
+        ["Avg Start (s)",  r => r.avg_start_time != null ? Number(r.avg_start_time).toFixed(1) : ""],
+        ["Buffering",      r => r.buffering_count != null ? r.buffering_count + "x" : ""],
+        ["Smooth",         r => r.smooth_count != null ? r.smooth_count + "/2" : ""],
+        ["Overall Rating", "overall_rating"],
+        ["Consistent",     "consistent"],
+        ["Easy",           "easy"],
+        ["Errors",         "errors"],
+        ["Error Notes",    "error_notes"],
+        ["Comments",       "comments"],
+        ["Consistency Notes","consistency_notes"],
+        ["WhatsApp",       r => r.on_whatsapp === "Yes" ? (r.whatsapp_contact || "Yes") : (r.on_whatsapp || "")],
+        ["Email",          "email"],
+        ["Admin Notes",    "admin_notes"],
+      ];
+      const date = new Date().toISOString().slice(0,10);
+      downloadCSV(toCSV(responses, headers), "survey-results-" + date + ".csv");
+    }
+
+    
     function SurveyResults() {
       const [responses, setResponses]   = useState(null);
       const [selected, setSelected]     = useState(null);
@@ -1950,6 +2075,12 @@
               </div>
             </div>
             <div style={{ display:"flex", gap:10, flexWrap:"wrap", alignItems:"center" }}>
+              {/* Export button */}
+              <button onClick={() => exportSurveyResults(responses)} disabled={!responses || !responses.length}
+                style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.15s" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Export CSV
+              </button>
               {/* Refresh button */}
               <button onClick={() => fetchData(true)} disabled={refreshing || !responses}
                 style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.15s" }}>
@@ -2177,13 +2308,17 @@
 
       // Load persisted overrides from Supabase and merge into church data
       React.useEffect(() => {
-        loadChurchOverrides().then(overrides => {
-          if (!overrides.length) return;
-          setChurches(cs => cs.map(c => {
-            const ov = overrides.find(o => Number(o.church_id) === c.id);
-            return ov ? { ...c, ...ov } : c;
-          }));
-        });
+        // Small delay to ensure page is fully loaded before fetching
+        const timer = setTimeout(() => {
+          loadChurchOverrides().then(overrides => {
+            if (!overrides.length) return;
+            setChurches(cs => cs.map(c => {
+              const ov = overrides.find(o => Number(o.church_id) === c.id);
+              return ov ? { ...c, ...ov } : c;
+            }));
+          });
+        }, 500);
+        return () => clearTimeout(timer);
       }, []);
 
       // Update church locally and persist override to Supabase
