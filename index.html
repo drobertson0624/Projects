@@ -1168,41 +1168,46 @@
 
     // ─── Church Data (from spreadsheet) ───────────────────────────────────────
     const CHURCHES = [
-      { id:1, pastor:"Richard Muwanguzi", location:"Kyomya village", region:"Jinja", country:"Uganda", members:50, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:9, distKampala:"109 km", internet:"Available", lat:0.4178, lng:33.2026 },
-      { id:2, pastor:"Grace Ikomba", location:"Magamaga village", region:"Jinja", country:"Uganda", members:25, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:9, distKampala:"116 km", internet:"Available", lat:0.3833, lng:33.4667 },
-      { id:3, pastor:"Stephen Ikomba", location:"Namwendwa village", region:"Kamuli", country:"Uganda", members:50, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:9, distKampala:"132 km", internet:"Available", lat:0.9500, lng:33.1167 },
-      { id:4, pastor:"Paul Musulube", location:"Iganga town", region:"Iganga", country:"Uganda", members:40, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:9, distKampala:"136 km", internet:"Available", lat:0.6090, lng:33.4680 },
-      { id:5, pastor:"Edward Bwanga", location:"Buyende district", region:"Buyende", country:"Uganda", members:25, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:9, distKampala:"155 km", internet:"Available", lat:1.1500, lng:33.1667 },
-      { id:6, pastor:"David Mukisa", location:"Namusita village", region:"Mayuge", country:"Uganda", members:0, standing:"", language:"", priority:8, distKampala:"155 km", internet:"", lat:0.4500, lng:33.4833 },
-      { id:7, pastor:"Moses Mukisa", location:"Nsinda Mayuge", region:"Mayuge", country:"Uganda", members:0, standing:"", language:"", priority:8, distKampala:"153 km", internet:"", lat:0.4667, lng:33.5000 },
-      { id:8, pastor:"Joshua Otaget", location:"Grace Tabernacle Busia", region:"Busia", country:"Uganda", members:130, standing:"Stable", language:"Samia/Ateso/Luganda", priority:9, distKampala:"171 km", internet:"No", lat:0.4647, lng:34.0900 },
-      { id:9, pastor:"Robert Kirungi", location:"Namukunyu village", region:"Kamuli", country:"Uganda", members:0, standing:"", language:"", priority:7, distKampala:"135 km", internet:"", lat:0.9167, lng:33.1000 },
-      { id:10, pastor:"Julius Nturyabuza", location:"Kasana Mubende", region:"Mubende", country:"Uganda", members:90, standing:"Stable", language:"Lukiga/Lunyankole", priority:4, distKampala:"135 km", internet:"No", lat:0.5833, lng:31.3833 },
-      { id:11, pastor:"Livingstone Okape", location:"Kalachai Tororo", region:"Tororo", country:"Uganda", members:43, standing:"Stable", language:"Ateso", priority:7, distKampala:"226 km", internet:"No", lat:0.6920, lng:34.1810 },
-      { id:12, pastor:"Henry Mulugo", location:"Mayuge town", region:"Mayuge", country:"Uganda", members:20, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:7, distKampala:"134 km", internet:"Available", lat:0.4583, lng:33.4833 },
-      { id:13, pastor:"Charles Bameka", location:"Wandago village", region:"Jinja", country:"Uganda", members:30, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:7, distKampala:"113 km", internet:"Available", lat:0.4167, lng:33.2333 },
-      { id:14, pastor:"Tumwebaze Gideon", location:"Kiryadongo", region:"Kiryadongo", country:"Uganda", members:50, standing:"Stable", language:"Swahili/Luo/Ateso", priority:4, distKampala:"240 km", internet:"No", lat:1.8833, lng:32.0833 },
-      { id:15, pastor:"Jimmy Opoo", location:"Central Division Lira", region:"Lira", country:"Uganda", members:25, standing:"Stable", language:"Langi/Luo", priority:5, distKampala:"342 km", internet:"No", lat:2.2499, lng:32.8997 },
-      { id:16, pastor:"Agensi Emmanuel", location:"Teko Kisoro", region:"Kisoro", country:"Uganda", members:85, standing:"Stable", language:"Lukiga/Lunyankole/Kinyarwanda", priority:9, distKampala:"481 km", internet:"No", lat:-1.2833, lng:29.6833 },
-      { id:17, pastor:"John Adungo", location:"Iyolwa Tororo", region:"Tororo", country:"Uganda", members:17, standing:"Stable", language:"Japadhola", priority:4, distKampala:"195 km", internet:"No", lat:0.7167, lng:34.2167 },
-      { id:18, pastor:"David Anwongowroth", location:"Kasokoso Wakiso", region:"Wakiso", country:"Uganda", members:40, standing:"Stable", language:"English/Luganda", priority:3, distKampala:"", internet:"No", lat:0.3500, lng:32.6500 },
-      { id:19, pastor:"Rodgers Buyinza", location:"Iringa village", region:"Mayuge", country:"Uganda", members:30, standing:"STRONG", language:"LUGANDA/LUSOGA", priority:0, distKampala:"160 km", internet:"Available", lat:0.5000, lng:33.5167 },
-      { id:20, pastor:"Jackson Imai", location:"Kirinya Kampala", region:"Kampala", country:"Uganda", members:79, standing:"Stable", language:"Luganda/Swahili", priority:0, distKampala:"13 km", internet:"Yes", lat:0.3476, lng:32.6300 },
-      { id:21, pastor:"Peter Opendi", location:"Katerema Tororo", region:"Tororo", country:"Uganda", members:63, standing:"Stable", language:"Ateso/Japadhola", priority:0, distKampala:"183 km", internet:"No", lat:0.6833, lng:34.1667 },
-      { id:22, pastor:"Wakuma Julius", location:"Nabitchiki Namisindwa", region:"Namisindwa", country:"Uganda", members:92, standing:"Stable", language:"Lugisu", priority:0, distKampala:"250 km", internet:"No", lat:0.8500, lng:34.3167 },
-      { id:23, pastor:"Aron Ssemaganda", location:"Kyegwegwa", region:"Kyegegwa", country:"Uganda", members:210, standing:"Stable", language:"Lukiga/Lunyankole", priority:0, distKampala:"172 km", internet:"No", lat:0.4833, lng:31.0500 },
-      { id:24, pastor:"Gershom Twinomugisha", location:"Katikara Kakumiro", region:"Kakumiro", country:"Uganda", members:150, standing:"Stable", language:"Lukiga/Lunyankole", priority:0, distKampala:"184 km", internet:"No", lat:0.7667, lng:31.3500 },
-      { id:25, pastor:"Alfred Caleb", location:"Kapapi Buliisa", region:"Buliisa", country:"Uganda", members:80, standing:"Stable", language:"Luo", priority:0, distKampala:"292 km", internet:"No", lat:2.1000, lng:31.4167 },
-      { id:26, pastor:"Marvin Mukungu", location:"Busamu Mayuge", region:"Mayuge", country:"Uganda", members:68, standing:"Growing", language:"Lusoga/Luganda", priority:0, distKampala:"101 km", internet:"No", lat:0.4833, lng:33.5000 },
-      { id:27, pastor:"Peter Musasizi", location:"Bwondha Mayuge", region:"Mayuge", country:"Uganda", members:200, standing:"Growing", language:"Lusoga/Luganda", priority:0, distKampala:"145 km", internet:"No", lat:0.5167, lng:33.4833 },
-      { id:28, pastor:"Moses Mufumbiro", location:"Nakabale Malongo", region:"Mayuge", country:"Uganda", members:63, standing:"Growing", language:"Lusoga/Luganda", priority:0, distKampala:"101 km", internet:"No", lat:0.5000, lng:33.5333 },
-      { id:29, pastor:"Ronald Sabiti", location:"Tondo Kiboga", region:"Kiboga", country:"Uganda", members:65, standing:"Growing", language:"Luganda", priority:0, distKampala:"124 km", internet:"No", lat:0.9167, lng:31.7667 },
-      { id:30, pastor:"Joseph Omoding", location:"Kotido Karamoja", region:"Kotido", country:"Uganda", members:80, standing:"Stable", language:"Karamojongo/Ateso", priority:0, distKampala:"343 km", internet:"No", lat:2.9833, lng:34.1333 },
-      { id:31, pastor:"Caleb Dhafa", location:"Namayemba", region:"Bugiri", country:"Uganda", members:55, standing:"Stable", language:"Lusoga/Luganda/Samia", priority:0, distKampala:"49 km", internet:"No", lat:0.5667, lng:33.7667 },
-      { id:32, pastor:"Gabriel Okobu", location:"Oditel Kapelebyong", region:"Kapelebyong", country:"Uganda", members:71, standing:"Stable", language:"Ateso", priority:0, distKampala:"374 km", internet:"No", lat:2.0167, lng:33.8667 },
-      { id:33, pastor:"Cyprean Amballah Oyasi", location:"Bungoma Western Kenya", region:"Bungoma", country:"Kenya", members:65, standing:"Growing", language:"Swahili", priority:0, distKampala:"222 km", internet:"No", lat:0.5635, lng:34.5606 },
-      { id:34, pastor:"LCA Kampala", location:"Kampala", region:"Kampala", country:"Uganda", members:0, standing:"", language:"", priority:0, distKampala:"0 km", internet:"", lat:0.3476, lng:32.5825 },
-      { id:35, pastor:"Word Bride Tabernacle", location:"Gulu", region:"Gulu", country:"Uganda", members:0, standing:"", language:"", priority:0, distKampala:"337 km", internet:"", lat:2.7747, lng:32.2990 },
+      { id:1,  pastor:"Richard Muwanguzi",     location:"Kyomya village",          region:"Jinja",       country:"Uganda", members:50,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:9, distKampala:"109 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.4178,  lng:33.2026 },
+      { id:2,  pastor:"Grace Ikomba",          location:"Magamaga village",        region:"Jinja",       country:"Uganda", members:25,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:9, distKampala:"116 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.3833,  lng:33.4667 },
+      { id:3,  pastor:"Stephen Ikomba",        location:"Namwendwa village",       region:"Kamuli",      country:"Uganda", members:50,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:9, distKampala:"132 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.9500,  lng:33.1167 },
+      { id:4,  pastor:"Paul Musulube",         location:"Iganga town",             region:"Iganga",      country:"Uganda", members:40,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:9, distKampala:"136 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.6090,  lng:33.4680 },
+      { id:5,  pastor:"Edward Bwanga",         location:"Buyende district",        region:"Buyende",     country:"Uganda", members:25,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:9, distKampala:"155 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:1.1500,  lng:33.1667 },
+      { id:6,  pastor:"David Mukisa",          location:"Namusita village",        region:"Mayuge",      country:"Uganda", members:0,   standing:"",       spiritual_standing:"",       language:"",                            priority:8, distKampala:"155 km", internet:"",          cell_signal:"",    cell_quality:"",     cell_phone:"",    tablet:"",   elect_power:"",     laptop:"",      sound_system:"",         tv_screen:"",    lat:0.4500,  lng:33.4833 },
+      { id:7,  pastor:"Moses Mukisa",          location:"Nsinda Mayuge",           region:"Mayuge",      country:"Uganda", members:0,   standing:"",       spiritual_standing:"",       language:"",                            priority:8, distKampala:"153 km", internet:"",          cell_signal:"",    cell_quality:"",     cell_phone:"",    tablet:"",   elect_power:"",     laptop:"",      sound_system:"",         tv_screen:"",    lat:0.4667,  lng:33.5000 },
+      { id:8,  pastor:"Joshua Otaget",         location:"Grace Tabernacle Busia",  region:"Busia",       country:"Uganda", members:130, standing:"Stable", spiritual_standing:"Stable", language:"Samia/Ateso/Luganda",         priority:9, distKampala:"171 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.4647,  lng:34.0900 },
+      { id:9,  pastor:"Robert Kirungi",        location:"Namukunyu village",       region:"Kamuli",      country:"Uganda", members:0,   standing:"",       spiritual_standing:"",       language:"",                            priority:7, distKampala:"135 km", internet:"",          cell_signal:"",    cell_quality:"",     cell_phone:"",    tablet:"",   elect_power:"",     laptop:"",      sound_system:"",         tv_screen:"",    lat:0.9167,  lng:33.1000 },
+      { id:10, pastor:"Julius Nturyabuza",     location:"Kasana Mubende",          region:"Mubende",     country:"Uganda", members:90,  standing:"Stable", spiritual_standing:"Stable", language:"Lukiga/Lunyankole",           priority:4, distKampala:"135 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5833,  lng:31.3833 },
+      { id:11, pastor:"Livingstone Okape",     location:"Kalachai Tororo",         region:"Tororo",      country:"Uganda", members:43,  standing:"Stable", spiritual_standing:"Stable", language:"Ateso",                       priority:7, distKampala:"226 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.6920,  lng:34.1810 },
+      { id:12, pastor:"Henry Mulugo",          location:"Mayuge town",             region:"Mayuge",      country:"Uganda", members:20,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:7, distKampala:"134 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.4583,  lng:33.4833 },
+      { id:13, pastor:"Charles Bameka",        location:"Wandago village",         region:"Jinja",       country:"Uganda", members:30,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:7, distKampala:"113 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"No",  tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.4167,  lng:33.2333 },
+      { id:14, pastor:"Tumwebaze Gideon",      location:"Kiryadongo",              region:"Kiryadongo",  country:"Uganda", members:50,  standing:"Stable", spiritual_standing:"Stable", language:"Swahili/Luo/Ateso",           priority:4, distKampala:"240 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:1.8833,  lng:32.0833 },
+      { id:15, pastor:"Jimmy Opoo",            location:"Central Division Lira",   region:"Lira",        country:"Uganda", members:25,  standing:"Stable", spiritual_standing:"Stable", language:"Langi/Luo",                   priority:5, distKampala:"342 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.2499,  lng:32.8997 },
+      { id:16, pastor:"Agensi Emmanuel",       location:"Teko Kisoro",             region:"Kisoro",      country:"Uganda", members:85,  standing:"Stable", spiritual_standing:"Stable", language:"Lukiga/Lunyankole/Kinyarwanda",priority:9, distKampala:"481 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:-1.2833, lng:29.6833 },
+      { id:17, pastor:"John Adungo",           location:"Iyolwa Tororo",           region:"Tororo",      country:"Uganda", members:17,  standing:"Stable", spiritual_standing:"Stable", language:"Japadhola",                   priority:4, distKampala:"195 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.7167,  lng:34.2167 },
+      { id:18, pastor:"David Anwongowroth",    location:"Kasokoso Wakiso",         region:"Wakiso",      country:"Uganda", members:40,  standing:"Stable", spiritual_standing:"Stable", language:"English/Luganda",             priority:3, distKampala:"",       internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.3500,  lng:32.6500 },
+      { id:19, pastor:"Rodgers Buyinza",       location:"Iringa village",          region:"Mayuge",      country:"Uganda", members:30,  standing:"STRONG", spiritual_standing:"STRONG", language:"LUGANDA/LUSOGA",              priority:0, distKampala:"160 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.5000,  lng:33.5167 },
+      { id:20, pastor:"Jackson Imai",          location:"Kirinya Kampala",         region:"Kampala",     country:"Uganda", members:79,  standing:"Stable", spiritual_standing:"Stable", language:"Luganda/Swahili",             priority:0, distKampala:"13 km",  internet:"Yes",       cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Yes",  laptop:"Small", sound_system:"Projector",tv_screen:"No",  lat:0.3476,  lng:32.6300 },
+      { id:21, pastor:"Peter Opendi",          location:"Katerema Tororo",         region:"Tororo",      country:"Uganda", members:63,  standing:"Stable", spiritual_standing:"Stable", language:"Ateso/Japadhola",             priority:0, distKampala:"183 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.6833,  lng:34.1667 },
+      { id:22, pastor:"Wakuma Julius",         location:"Nabitchiki Namisindwa",   region:"Namisindwa",  country:"Uganda", members:92,  standing:"Stable", spiritual_standing:"Stable", language:"Lugisu",                      priority:0, distKampala:"250 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.8500,  lng:34.3167 },
+      { id:23, pastor:"Aron Ssemaganda",       location:"Kyegwegwa",               region:"Kyegegwa",    country:"Uganda", members:210, standing:"Stable", spiritual_standing:"Stable", language:"Lukiga/Lunyankole",           priority:0, distKampala:"172 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.4833,  lng:31.0500 },
+      { id:24, pastor:"Gershom Twinomugisha",  location:"Katikara Kakumiro",       region:"Kakumiro",    country:"Uganda", members:150, standing:"Stable", spiritual_standing:"Stable", language:"Lukiga/Lunyankole",           priority:0, distKampala:"184 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.7667,  lng:31.3500 },
+      { id:25, pastor:"Alfred Caleb",          location:"Kapapi Buliisa",          region:"Buliisa",     country:"Uganda", members:80,  standing:"Stable", spiritual_standing:"Stable", language:"Luo",                         priority:0, distKampala:"292 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.1000,  lng:31.4167 },
+      { id:26, pastor:"Marvin Mukungu",        location:"Busamu Mayuge",           region:"Mayuge",      country:"Uganda", members:68,  standing:"Growing",spiritual_standing:"Growing", language:"Lusoga/Luganda",              priority:0, distKampala:"101 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.4833,  lng:33.5000 },
+      { id:27, pastor:"Peter Musasizi",        location:"Bwondha Mayuge",          region:"Mayuge",      country:"Uganda", members:200, standing:"Growing",spiritual_standing:"Growing", language:"Lusoga/Luganda",              priority:0, distKampala:"145 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5167,  lng:33.4833 },
+      { id:28, pastor:"Moses Mufumbiro",       location:"Nakabale Malongo",        region:"Mayuge",      country:"Uganda", members:63,  standing:"Growing",spiritual_standing:"Growing", language:"Lusoga/Luganda",              priority:0, distKampala:"101 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5000,  lng:33.5333 },
+      { id:29, pastor:"Vincent Karugambe",     location:"Jakuzi Namba Six Mayuge", region:"Mayuge",      country:"Uganda", members:50,  standing:"Growing",spiritual_standing:"Growing", language:"Lusoga/Luganda",              priority:0, distKampala:"115 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"No",  tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.4900,  lng:33.5100 },
+      { id:30, pastor:"Martin (Bunamwayi)",    location:"Bunamwayi Mbale",         region:"Mbale",       country:"Uganda", members:65,  standing:"Growing",spiritual_standing:"Growing", language:"Lugisu/Luganda",              priority:0, distKampala:"226 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"No",  tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:1.0833,  lng:34.1833 },
+      { id:31, pastor:"Ronald Sabiti",         location:"Tondo Kiboga",            region:"Kiboga",      country:"Uganda", members:65,  standing:"Growing",spiritual_standing:"Growing", language:"Luganda",                     priority:0, distKampala:"124 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.9167,  lng:31.7667 },
+      { id:32, pastor:"Patrick Obiya",         location:"Kwania",                  region:"Kwania",      country:"Uganda", members:40,  standing:"Stable", spiritual_standing:"Stable", language:"Langi/Luo",                   priority:0, distKampala:"292 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:1.8500,  lng:32.7000 },
+      { id:33, pastor:"Joseph Omoding",        location:"Kotido Karamoja",         region:"Kotido",      country:"Uganda", members:80,  standing:"Stable", spiritual_standing:"Stable", language:"Karamojongo/Ateso",           priority:0, distKampala:"343 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.9833,  lng:34.1333 },
+      { id:34, pastor:"Caleb Dhafa",           location:"Namayemba",               region:"Bugiri",      country:"Uganda", members:55,  standing:"Stable", spiritual_standing:"Stable", language:"Lusoga/Luganda/Samia",        priority:0, distKampala:"49 km",  internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5667,  lng:33.7667 },
+      { id:35, pastor:"Gabriel Okobu",         location:"Oditel Kapelebyong",      region:"Kapelebyong", country:"Uganda", members:71,  standing:"Stable", spiritual_standing:"Stable", language:"Ateso",                       priority:0, distKampala:"374 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.0167,  lng:33.8667 },
+      { id:36, pastor:"Philip Kaputunuwo",     location:"Nsambya",                 region:"Kampala",     country:"Uganda", members:40,  standing:"Stable", spiritual_standing:"Stable", language:"Swahili/Luo/Ateso",           priority:0, distKampala:"245 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.3100,  lng:32.5800 },
+      { id:37, pastor:"Peter Ujiki",           location:"Nyaful Akorwo Nebbi",     region:"Nebbi",       country:"Uganda", members:65,  standing:"Stable", spiritual_standing:"Stable", language:"Luo",                         priority:0, distKampala:"423 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.4833,  lng:31.0833 },
+      { id:38, pastor:"Cyprean Amballah Oyasi",location:"Bungoma Western Kenya",   region:"Bungoma",     country:"Kenya",  members:65,  standing:"Growing",spiritual_standing:"Growing", language:"Swahili",                     priority:0, distKampala:"222 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"No",  tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5635,  lng:34.5606 },
+      { id:39, pastor:"Charles Okello",        location:"Lumino Busia",            region:"Busia",       country:"Uganda", members:89,  standing:"Stable", spiritual_standing:"Stable", language:"Samia/Luganda",               priority:1, distKampala:"186 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5600,  lng:33.9800 },
+      { id:40, pastor:"Daniel Omella",         location:"Morukebu Tororo",         region:"Tororo",      country:"Uganda", members:56,  standing:"Stable", spiritual_standing:"Stable", language:"Ateso",                       priority:1, distKampala:"222 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.7000,  lng:34.1500 },
     ];
 
     const ADMIN_EMAIL = "drobertson0624@gmail.com";
@@ -1263,17 +1268,41 @@
       const sColor = s => s==="STRONG"?"tag-green":s==="Growing"?"tag-warn":"tag-gray";
       const openEdit = (c, e) => { e.stopPropagation(); setEditData({...c}); setEditing(true); setSelected(null); };
       const saveEdit = () => { onUpdate(editData); setEditing(false); setEditData(null); };
+
+      // Yes/No/Unknown select options
+      const YN_OPTS = ["Yes","No","Unknown"];
+
       const FIELDS = [
-        ["Pastor Name","pastor","text"],["Location","location","text"],["Region","region","text"],
-        ["Country","country","text"],["Distance from Kampala","distKampala","text"],
-        ["Language","language","text"],["Members","members","number"],
-        ["Priority (1-9)","priority","number"],["Internet","internet","text"],
+        ["Pastor Name","pastor","text"],
+        ["Location","location","text"],
+        ["Region","region","text"],
+        ["Country","country","text"],
+        ["Distance from Kampala","distKampala","text"],
+        ["Language","language","text"],
+        ["Members","members","number"],
+        ["Priority (1-9)","priority","number"],
+        ["Building Type","bldg_type","text"],
+        ["Spiritual Standing","spiritual_standing","text"],
       ];
+
+      // Yes/No fields rendered as selects
+      const YN_FIELDS = [
+        ["Internet","internet"],
+        ["Cell Signal","cell_signal"],
+        ["Cell Phone","cell_phone"],
+        ["Tablet","tablet"],
+        ["Electric Power","elect_power"],
+        ["Laptop","laptop"],
+        ["Sound System","sound_system"],
+        ["TV Screen","tv_screen"],
+      ];
+
+      const CELL_QUALITY_OPTS = ["Strong","Moderate","Weak","None","Unknown"];
 
       return (
         <div style={{ padding:"28px 24px", maxWidth:1080, margin:"0 auto", width:"100%" }}>
           <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:12 }}>
-            <div><div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Church Database</div><div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{churches.length} churches across Uganda &amp; Kenya</div></div>
+            <div><div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Church Database</div><div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{churches.length} churches across East Africa</div></div>
             <button className="btn-next" style={{ flex:"none", padding:"10px 18px", fontSize:13 }} onClick={() => setShowAdd(true)}>+ Add Church</button>
           </div>
           <div style={{ display:"flex", gap:8, marginBottom:16, flexWrap:"wrap" }}>
@@ -1310,9 +1339,11 @@
             </div>
             {filtered.length===0 && <div style={{ padding:"40px 24px", textAlign:"center", color:"var(--text-muted)", fontSize:14 }}>No churches match your search.</div>}
           </div>
+
+          {/* ── Detail modal ── */}
           {selected && !editing && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setSelected(null)}>
-              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:460, width:"100%", boxShadow:"var(--shadow-lg)" }} onClick={e => e.stopPropagation()}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18 }}>
                   <div><div style={{ fontSize:17, fontWeight:700, letterSpacing:"-0.02em" }}>{selected.pastor}</div><div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{selected.location}</div></div>
                   <div style={{ display:"flex", gap:8 }}>
@@ -1320,37 +1351,105 @@
                     <button onClick={() => setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
                   </div>
                 </div>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-                  {[["Region",selected.region],["Country",selected.country],["Members",selected.members||"Unknown"],["Standing",selected.standing||"Unknown"],["Language",selected.language||"Unknown"],["Internet",selected.internet||"Unknown"],["From Kampala",selected.distKampala||"Unknown"],["Priority",selected.priority||"—"]].map(([k,v]) => (
-                    <div key={k} style={{ padding:"10px 13px", background:"var(--surface2)", borderRadius:10, border:"1px solid var(--border)" }}>
-                      <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:4 }}>{k}</div>
-                      <div style={{ fontSize:14, fontWeight:500 }}>{v}</div>
+
+                {/* Core info */}
+                <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Church Info</div>
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:16 }}>
+                  {[
+                    ["Region", selected.region],
+                    ["Country", selected.country],
+                    ["Members", selected.members||"—"],
+                    ["Standing", selected.standing||"—"],
+                    ["Spiritual Standing", selected.spiritual_standing||"—"],
+                    ["Language", selected.language||"—"],
+                    ["Building Type", selected.bldg_type||"—"],
+                    ["From Kampala", selected.distKampala||"—"],
+                    ["Priority", selected.priority||"—"],
+                  ].map(([k,v]) => (
+                    <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
+                      <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
+                      <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
                     </div>
                   ))}
+                </div>
+
+                {/* Technology & infrastructure */}
+                <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Infrastructure</div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
+                  {[
+                    ["Internet", selected.internet],
+                    ["Cell Signal", selected.cell_signal],
+                    ["Cell Quality", selected.cell_quality],
+                    ["Cell Phone", selected.cell_phone],
+                    ["Tablet", selected.tablet],
+                    ["Electric Power", selected.elect_power],
+                    ["Laptop", selected.laptop],
+                    ["Sound System", selected.sound_system],
+                    ["TV Screen", selected.tv_screen],
+                  ].map(([k,v]) => {
+                    const isYes = v==="Yes"||v==="Available"||v==="Strong";
+                    const isNo = v==="No"||v==="None"||v==="Weak";
+                    return (
+                      <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
+                        <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
+                        <div style={{ fontSize:12, fontWeight:600, color: isYes?"var(--success)":isNo?"var(--danger)":"var(--text-muted)" }}>{v||"—"}</div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </div>
           )}
+
+          {/* ── Edit modal ── */}
           {editing && editData && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setEditing(false)}>
-              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:480, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
                   <div style={{ fontSize:17, fontWeight:700 }}>Edit Church</div>
                   <button onClick={() => setEditing(false)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
                 </div>
-                <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
+
+                  {/* Text fields */}
                   {FIELDS.map(([label,key,type]) => (
                     <div key={key} className="field-group">
                       <div className="field-label">{label}</div>
                       <input type={type} value={editData[key]||""} onChange={e => setEditData(d=>({...d,[key]:e.target.value}))} />
                     </div>
                   ))}
+
+                  {/* Standing dropdown */}
                   <div className="field-group">
                     <div className="field-label">Standing</div>
                     <select value={editData.standing||""} onChange={e => setEditData(d=>({...d,standing:e.target.value}))}>
                       {["STRONG","Stable","Growing",""].map(s => <option key={s} value={s}>{s||"(none)"}</option>)}
                     </select>
                   </div>
+
+                  {/* Infrastructure section */}
+                  <div style={{ borderTop:"1px solid var(--border)", paddingTop:12, marginTop:2 }}>
+                    <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Infrastructure</div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                      {YN_FIELDS.map(([label,key]) => (
+                        <div key={key} className="field-group">
+                          <div className="field-label">{label}</div>
+                          <select value={editData[key]||""} onChange={e => setEditData(d=>({...d,[key]:e.target.value}))}>
+                            <option value="">—</option>
+                            {YN_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                      ))}
+                      <div className="field-group">
+                        <div className="field-label">Cell Quality</div>
+                        <select value={editData.cell_quality||""} onChange={e => setEditData(d=>({...d,cell_quality:e.target.value}))}>
+                          <option value="">—</option>
+                          {CELL_QUALITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+
                   <div style={{ display:"flex", gap:8, marginTop:4 }}>
                     <button className="btn-back" onClick={() => setEditing(false)} style={{ flex:1 }}>Cancel</button>
                     <button className="btn-next" onClick={saveEdit}>Save Changes</button>
@@ -1359,17 +1458,52 @@
               </div>
             </div>
           )}
+
+          {/* ── Add modal ── */}
           {showAdd && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setShowAdd(false)}>
-              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:440, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
-                <div style={{ fontSize:17, fontWeight:700, marginBottom:18 }}>Add New Church</div>
-                <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
-                  {[["Pastor Name","pastor","text"],["Location","location","text"],["Region","region","text"],["Distance from Kampala","distKampala","text"],["Language","language","text"],["Members","members","number"],["Priority (1-9)","priority","number"]].map(([label,key,type]) => (
-                    <div key={key} className="field-group"><div className="field-label">{label}</div><input type={type} placeholder={label} value={newC[key]} onChange={e => setNewC(p=>({...p,[key]:e.target.value}))} /></div>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+                <div style={{ fontSize:17, fontWeight:700, marginBottom:16 }}>Add New Church</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
+                  {[
+                    ["Pastor Name","pastor","text"],["Location","location","text"],["Region","region","text"],
+                    ["Country","country","text"],["Distance from Kampala","distKampala","text"],
+                    ["Language","language","text"],["Building Type","bldg_type","text"],
+                    ["Spiritual Standing","spiritual_standing","text"],
+                    ["Members","members","number"],["Priority (1-9)","priority","number"],
+                  ].map(([label,key,type]) => (
+                    <div key={key} className="field-group">
+                      <div className="field-label">{label}</div>
+                      <input type={type} placeholder={label} value={newC[key]||""} onChange={e => setNewC(p=>({...p,[key]:e.target.value}))} />
+                    </div>
                   ))}
+                  <div className="field-group">
+                    <div className="field-label">Standing</div>
+                    <select value={newC.standing||"Stable"} onChange={e => setNewC(p=>({...p,standing:e.target.value}))}>
+                      {["STRONG","Stable","Growing"].map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div style={{ borderTop:"1px solid var(--border)", paddingTop:12, marginTop:2 }}>
+                    <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Infrastructure</div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                      {[...YN_FIELDS, ["Cell Quality","cell_quality"]].map(([label,key]) => (
+                        <div key={key} className="field-group">
+                          <div className="field-label">{label}</div>
+                          <select value={newC[key]||""} onChange={e => setNewC(p=>({...p,[key]:e.target.value}))}>
+                            <option value="">—</option>
+                            {(key==="cell_quality" ? CELL_QUALITY_OPTS : YN_OPTS).map(o => <option key={o} value={o}>{o}</option>)}
+                          </select>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                   <div style={{ display:"flex", gap:8, marginTop:4 }}>
                     <button className="btn-back" onClick={() => setShowAdd(false)} style={{ flex:1 }}>Cancel</button>
-                    <button className="btn-next" onClick={() => { onAdd(newC); setShowAdd(false); setNewC({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable", language:"", priority:"", internet:"", distKampala:"" }); }}>Add Church</button>
+                    <button className="btn-next" onClick={() => {
+                      onAdd(newC);
+                      setShowAdd(false);
+                      setNewC({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable", language:"", priority:"", internet:"", distKampala:"" });
+                    }}>Add Church</button>
                   </div>
                 </div>
               </div>
