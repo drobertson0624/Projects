@@ -224,8 +224,11 @@
           headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
         });
         const rows = await res.json();
-        if (Array.isArray(rows)) return rows;
-      } catch(e) {}
+        if (Array.isArray(rows)) {
+          // Map dist_kampala back to distKampala for the app
+          return rows.map(r => ({ ...r, distKampala: r.dist_kampala || r.distKampala }));
+        }
+      } catch(e) { console.error("loadChurchOverrides error:", e); }
       return [];
     }
 
@@ -244,9 +247,13 @@
         if (!res.ok) {
           const txt = await res.text();
           console.error("church_overrides save failed:", res.status, txt);
+          alert("Save failed: " + res.status + " — " + txt);
+        } else {
+          console.log("church_overrides saved OK for church_id", churchId);
         }
       } catch(e) {
         console.error("church_overrides network error:", e);
+        alert("Network error: " + e.message);
       }
     }
 
@@ -2186,22 +2193,22 @@
         // Always save all override-able fields explicitly
         saveChurchOverride(updated.id, {
           deploy_order:       updated.deploy_order || null,
-          standing:           updated.standing,
-          spiritual_standing: updated.spiritual_standing,
-          language:           updated.language,
-          members:            updated.members,
-          priority:           updated.priority,
-          bldg_type:          updated.bldg_type,
-          internet:           updated.internet,
-          cell_signal:        updated.cell_signal,
-          cell_quality:       updated.cell_quality,
-          cell_phone:         updated.cell_phone,
-          tablet:             updated.tablet,
-          elect_power:        updated.elect_power,
-          laptop:             updated.laptop,
-          sound_system:       updated.sound_system,
-          tv_screen:          updated.tv_screen,
-          distKampala:        updated.distKampala,
+          standing:           updated.standing     || null,
+          spiritual_standing: updated.spiritual_standing || null,
+          language:           updated.language     || null,
+          members:            updated.members      || null,
+          priority:           updated.priority     || null,
+          bldg_type:          updated.bldg_type    || null,
+          internet:           updated.internet     || null,
+          cell_signal:        updated.cell_signal  || null,
+          cell_quality:       updated.cell_quality || null,
+          cell_phone:         updated.cell_phone   || null,
+          tablet:             updated.tablet       || null,
+          elect_power:        updated.elect_power  || null,
+          laptop:             updated.laptop       || null,
+          sound_system:       updated.sound_system || null,
+          tv_screen:          updated.tv_screen    || null,
+          dist_kampala:       updated.distKampala  || null,
         });
       };
 
