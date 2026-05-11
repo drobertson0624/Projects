@@ -231,7 +231,7 @@
 
     async function saveChurchOverride(churchId, fields) {
       try {
-        await fetch(`${SUPABASE_URL}/rest/v1/church_overrides`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/church_overrides`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
@@ -241,7 +241,13 @@
           },
           body: JSON.stringify({ church_id: churchId, ...fields }),
         });
-      } catch(e) {}
+        if (!res.ok) {
+          const txt = await res.text();
+          console.error("church_overrides save failed:", res.status, txt);
+        }
+      } catch(e) {
+        console.error("church_overrides network error:", e);
+      }
     }
 
     async function saveAdminNote(responseId, note) {
@@ -1435,13 +1441,18 @@
                 <tbody>
                   {sorted.map((c) => (
                     <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer" }}>
-                      {/* Deploy order - inline editable */}
+                      {/* Deploy order - saves on blur */}
                       <td onClick={e => e.stopPropagation()} style={{ padding:"8px 10px", minWidth:64 }}>
                         <input
                           type="number" min="1" max="999"
-                          value={c.deploy_order||""}
+                          defaultValue={c.deploy_order||""}
                           placeholder="—"
-                          onChange={e => onUpdate({...c, deploy_order: e.target.value ? Number(e.target.value) : ""})}
+                          onBlur={e => {
+                            const val = e.target.value ? Number(e.target.value) : null;
+                            if (val !== (c.deploy_order||null)) {
+                              onUpdate({...c, deploy_order: val});
+                            }
+                          }}
                           style={{
                             width:48, padding:"4px 6px", border:"1px solid var(--border-strong)",
                             borderRadius:7, fontSize:13, fontWeight:700, textAlign:"center",
@@ -1450,7 +1461,7 @@
                             outline:"none",
                           }}
                           onFocus={e => e.target.style.borderColor="var(--accent)"}
-                          onBlur={e => e.target.style.borderColor="var(--border-strong)"}
+                          onBlur={e => { e.target.style.borderColor="var(--border-strong)"; const val = e.target.value ? Number(e.target.value) : null; if (val !== (c.deploy_order||null)) onUpdate({...c, deploy_order: val}); }}
                         />
                       </td>
                       <td style={{ fontWeight:500 }}>{c.pastor}</td>
@@ -2172,8 +2183,26 @@
       // Update church locally and persist override to Supabase
       const updateChurch = (updated) => {
         setChurches(cs => cs.map(c => c.id === updated.id ? { ...c, ...updated } : c));
-        const { id, pastor, location, region, country, lat, lng, ...overrideFields } = updated;
-        saveChurchOverride(id, overrideFields);
+        // Always save all override-able fields explicitly
+        saveChurchOverride(updated.id, {
+          deploy_order:       updated.deploy_order || null,
+          standing:           updated.standing,
+          spiritual_standing: updated.spiritual_standing,
+          language:           updated.language,
+          members:            updated.members,
+          priority:           updated.priority,
+          bldg_type:          updated.bldg_type,
+          internet:           updated.internet,
+          cell_signal:        updated.cell_signal,
+          cell_quality:       updated.cell_quality,
+          cell_phone:         updated.cell_phone,
+          tablet:             updated.tablet,
+          elect_power:        updated.elect_power,
+          laptop:             updated.laptop,
+          sound_system:       updated.sound_system,
+          tv_screen:          updated.tv_screen,
+          distKampala:        updated.distKampala,
+        });
       };
 
       const TABS = [
