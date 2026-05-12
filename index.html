@@ -1697,7 +1697,32 @@
                   Download Template
                 </button>
 
-                {/* Paste area */}
+                {/* File upload */}
+                <div style={{ marginBottom:14 }}>
+                  <div className="field-label">Upload CSV file</div>
+                  <label style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10, padding:"18px", border:"2px dashed var(--border-strong)", borderRadius:12, cursor:"pointer", background:"var(--surface2)", transition:"all 0.15s" }}
+                    onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor="var(--accent)"; }}
+                    onDragLeave={e => e.currentTarget.style.borderColor="var(--border-strong)"}
+                    onDrop={e => {
+                      e.preventDefault();
+                      e.currentTarget.style.borderColor="var(--border-strong)";
+                      const file = e.dataTransfer.files[0];
+                      if (file) { const r = new FileReader(); r.onload = ev => { setImportText(ev.target.result); parseImportCSV(ev.target.result); }; r.readAsText(file); }
+                    }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    <span style={{ fontSize:14, color:"var(--text-muted)" }}>Drop CSV here or <span style={{ color:"var(--accent)", fontWeight:600 }}>browse</span></span>
+                    <input type="file" accept=".csv,text/csv" style={{ display:"none" }} onChange={e => {
+                      const file = e.target.files[0];
+                      if (file) { const r = new FileReader(); r.onload = ev => { setImportText(ev.target.result); parseImportCSV(ev.target.result); }; r.readAsText(file); }
+                    }} />
+                  </label>
+                </div>
+
+                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:14 }}>
+                  <div style={{ flex:1, height:1, background:"var(--border)" }} />
+                  <span style={{ fontSize:12, color:"var(--text-muted)", fontWeight:500 }}>or paste manually</span>
+                  <div style={{ flex:1, height:1, background:"var(--border)" }} />
+                </div>
                 <div className="field-group" style={{ marginBottom:12 }}>
                   <div className="field-label">Paste CSV here</div>
                   <textarea
