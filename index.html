@@ -1405,7 +1405,7 @@
         const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,""));
         const rows = lines.slice(1).map((line, i) => {
           const vals = line.split(",").map(v => v.trim().replace(/^"|"$/g,""));
-          const obj = { id: Date.now() + i, lat:0, lng:0, standing:"Stable" };
+          const obj = { id: Date.now() + (i * 7) + 100000, lat:0, lng:0, standing:"Stable" };
           headers.forEach((h, j) => { if (vals[j] !== undefined) obj[h] = vals[j]; });
           // Map common header aliases
           if (!obj.pastor && obj.pastor_name) obj.pastor = obj.pastor_name;
@@ -2491,25 +2491,44 @@
             if (!overrides.length) return;
             setChurches(cs => {
               const existingIds = new Set(cs.map(c => c.id));
-              // Merge overrides into existing churches
+
+              // Merge overrides — only apply non-null values so we never erase hardcoded data
               const merged = cs.map(c => {
                 const ov = overrides.find(o => Number(o.church_id) === c.id);
-                return ov ? { ...c, ...ov } : c;
+                if (!ov) return c;
+                // Only pick fields that have actual values in the override
+                const clean = {};
+                Object.entries(ov).forEach(([k,v]) => {
+                  if (v !== null && v !== undefined && v !== "" && k !== "church_id" && k !== "updated_at") {
+                    clean[k] = v;
+                  }
+                });
+                return { ...c, ...clean, distKampala: clean.dist_kampala || c.distKampala };
               });
-              // Add new churches that don't exist in the hardcoded array
+
+              // Add brand new churches from Supabase that aren't in the hardcoded array
               const newChurches = overrides
                 .filter(o => !existingIds.has(Number(o.church_id)) && o.pastor)
                 .map(o => ({
-                  id: Number(o.church_id),
-                  pastor: o.pastor || "",
-                  church_name: o.church_name || "",
-                  location: o.location || "",
-                  region: o.region || "",
-                  country: o.country || "",
+                  id:           Number(o.church_id),
+                  pastor:       o.pastor       || "",
+                  church_name:  o.church_name  || "",
+                  location:     o.location     || "",
+                  region:       o.region       || "",
+                  country:      o.country      || "",
+                  members:      o.members      || 0,
+                  standing:     o.standing     || "Stable",
+                  language:     o.language     || "",
+                  phone:        o.phone        || "",
+                  whatsapp:     o.whatsapp     || "",
+                  email:        o.email        || "",
+                  internet:     o.internet     || "",
+                  priority:     o.priority     || 0,
+                  deploy_order: o.deploy_order || null,
+                  distKampala:  o.dist_kampala || "",
                   lat: 0, lng: 0,
-                  ...o,
-                  distKampala: o.dist_kampala || o.distKampala || "",
                 }));
+
               return [...merged, ...newChurches];
             });
           });
