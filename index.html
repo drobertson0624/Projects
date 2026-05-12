@@ -2486,14 +2486,32 @@
 
       // Load persisted overrides from Supabase and merge into church data
       React.useEffect(() => {
-        // Small delay to ensure page is fully loaded before fetching
         const timer = setTimeout(() => {
           loadChurchOverrides().then(overrides => {
             if (!overrides.length) return;
-            setChurches(cs => cs.map(c => {
-              const ov = overrides.find(o => Number(o.church_id) === c.id);
-              return ov ? { ...c, ...ov } : c;
-            }));
+            setChurches(cs => {
+              const existingIds = new Set(cs.map(c => c.id));
+              // Merge overrides into existing churches
+              const merged = cs.map(c => {
+                const ov = overrides.find(o => Number(o.church_id) === c.id);
+                return ov ? { ...c, ...ov } : c;
+              });
+              // Add new churches that don't exist in the hardcoded array
+              const newChurches = overrides
+                .filter(o => !existingIds.has(Number(o.church_id)) && o.pastor)
+                .map(o => ({
+                  id: Number(o.church_id),
+                  pastor: o.pastor || "",
+                  church_name: o.church_name || "",
+                  location: o.location || "",
+                  region: o.region || "",
+                  country: o.country || "",
+                  lat: 0, lng: 0,
+                  ...o,
+                  distKampala: o.dist_kampala || o.distKampala || "",
+                }));
+              return [...merged, ...newChurches];
+            });
           });
         }, 500);
         return () => clearTimeout(timer);
@@ -2597,7 +2615,39 @@
 
           <div style={{ flex:1, overflowX:"hidden" }}>
             {tab==="results"  && <SurveyResults />}
-            {tab==="churches" && <ChurchDatabase churches={churches} onAdd={c => setChurches(cs=>[...cs,{...c,id:Date.now(),lat:0,lng:0}])} onUpdate={updateChurch} />}
+            {tab==="churches" && <ChurchDatabase churches={churches} onAdd={c => {
+              const newId = Date.now();
+              const newChurch = {...c, id:newId, lat:0, lng:0};
+              setChurches(cs=>[...cs, newChurch]);
+              // Persist to Supabase so it survives refresh
+              saveChurchOverride(newId, {
+                deploy_order:       c.deploy_order || null,
+                standing:           c.standing || "Stable",
+                spiritual_standing: c.spiritual_standing || null,
+                language:           c.language || null,
+                members:            c.members || null,
+                priority:           c.priority || null,
+                bldg_type:          c.bldg_type || null,
+                internet:           c.internet || null,
+                cell_signal:        c.cell_signal || null,
+                cell_quality:       c.cell_quality || null,
+                cell_phone:         c.cell_phone || null,
+                tablet:             c.tablet || null,
+                elect_power:        c.elect_power || null,
+                laptop:             c.laptop || null,
+                sound_system:       c.sound_system || null,
+                tv_screen:          c.tv_screen || null,
+                dist_kampala:       c.distKampala || null,
+                phone:              c.phone || null,
+                whatsapp:           c.whatsapp || null,
+                email:              c.email || null,
+                church_name:        c.church_name || null,
+                pastor:             c.pastor || null,
+                location:           c.location || null,
+                region:             c.region || null,
+                country:            c.country || null,
+              });
+            }} onUpdate={updateChurch} />}
             {tab==="map"      && <ChurchMap churches={churches} />}
             {tab==="users"    && <AdminUsers />}
             {tab==="settings" && <PortalSettings rssLink={rssLink} onRssUpdate={onRssUpdate} />}
