@@ -1332,6 +1332,10 @@
       const [editing, setEditing]   = useState(false);
       const [editData, setEditData] = useState(null);
       const [showAdd, setShowAdd]   = useState(false);
+      const [showImport, setShowImport] = useState(false);
+      const [importText, setImportText] = useState("");
+      const [importPreview, setImportPreview] = useState([]);
+      const [importError, setImportError] = useState("");
       const [newC, setNewC]         = useState({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable", language:"", priority:"", internet:"", distKampala:"" });
 
       const standings = ["All","STRONG","Stable","Growing"];
@@ -1371,11 +1375,15 @@
       const YN_OPTS = ["Yes","No","Unknown"];
       const FIELDS = [
         ["Pastor Name","pastor","text"],
+        ["Church Name","church_name","text"],
         ["Location","location","text"],
         ["Region","region","text"],
         ["Country","country","text"],
         ["Distance from Kampala","distKampala","text"],
         ["Language","language","text"],
+        ["Phone Number","phone","text"],
+        ["WhatsApp","whatsapp","text"],
+        ["Email","email","text"],
         ["Members","members","number"],
         ["Score (1-9)","priority","number"],
         ["Deploy Order","deploy_order","number"],
@@ -1389,17 +1397,34 @@
       ];
       const CELL_QUALITY_OPTS = ["Strong","Moderate","Weak","None","Unknown"];
 
-      // Sort button helper
-      const SortBtn = ({ id, label }) => (
-        <button onClick={() => setSortBy(id)} style={{
-          padding:"5px 12px", borderRadius:7, border:"none", fontSize:12, fontWeight:500,
-          cursor:"pointer", whiteSpace:"nowrap",
-          background: sortBy===id ? "var(--surface)" : "transparent",
-          color: sortBy===id ? "var(--text)" : "var(--text-muted)",
-          boxShadow: sortBy===id ? "var(--shadow-sm)" : "none",
-          transition:"all 0.15s",
-        }}>{label} {sortBy===id ? "↑" : ""}</button>
-      );
+      // CSV import parser
+      const parseImportCSV = (text) => {
+        setImportError("");
+        const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
+        if (lines.length < 2) { setImportError("Need at least a header row and one data row."); setImportPreview([]); return; }
+        const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,""));
+        const rows = lines.slice(1).map((line, i) => {
+          const vals = line.split(",").map(v => v.trim().replace(/^"|"$/g,""));
+          const obj = { id: Date.now() + i, lat:0, lng:0, standing:"Stable" };
+          headers.forEach((h, j) => { if (vals[j] !== undefined) obj[h] = vals[j]; });
+          // Map common header aliases
+          if (!obj.pastor && obj.pastor_name) obj.pastor = obj.pastor_name;
+          if (!obj.pastor && obj.name) obj.pastor = obj.name;
+          if (!obj.distKampala && obj.distance) obj.distKampala = obj.distance;
+          if (!obj.distKampala && obj.dist_kampala) obj.distKampala = obj.dist_kampala;
+          return obj;
+        });
+        const valid = rows.filter(r => r.pastor && r.pastor.trim());
+        if (!valid.length) { setImportError("No valid rows found. Make sure at least a 'Pastor Name' or 'Name' column exists."); setImportPreview([]); return; }
+        setImportPreview(valid);
+      };
+
+      const commitImport = () => {
+        importPreview.forEach(r => onAdd(r));
+        setShowImport(false);
+        setImportText("");
+        setImportPreview([]);
+      };
 
       const deployedCount = churches.filter(c => c.deploy_order).length;
 
@@ -1415,49 +1440,43 @@
               </div>
             </div>
             <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-              <button onClick={() => exportDeployQueue(churches)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.15s" }}>
+              <button onClick={() => exportDeployQueue(churches)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Deploy Queue
               </button>
-              <button onClick={() => exportChurchAssessment(churches)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", transition:"all 0.15s" }}>
+              <button onClick={() => exportChurchAssessment(churches)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                 Full Assessment
+              </button>
+              <button onClick={() => setShowImport(true)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                Import CSV
               </button>
               <button className="btn-next" style={{ flex:"none", padding:"10px 18px", fontSize:13 }} onClick={() => setShowAdd(true)}>+ Add Church</button>
             </div>
           </div>
 
-          {/* Search + Filters + Sort */}
+          {/* Filter row */}
           <div style={{ display:"flex", flexDirection:"column", gap:8, marginBottom:16 }}>
-            {/* Search */}
             <input type="text" placeholder="Search pastor, location, region…" value={search} onChange={e => setSearch(e.target.value)} style={{ fontSize:14, padding:"9px 13px" }} />
-
-            {/* Filter row */}
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
               <span style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em" }}>Filter:</span>
-              {/* Standing */}
               <div style={{ display:"flex", gap:2, background:"var(--surface3)", borderRadius:9, padding:3 }}>
                 {standings.map(s => <button key={s} onClick={() => setFilter(s)} style={{ padding:"4px 11px", borderRadius:7, border:"none", fontSize:12, fontWeight:500, cursor:"pointer", background:filter===s?"var(--surface)":"transparent", color:filter===s?"var(--text)":"var(--text-muted)", boxShadow:filter===s?"var(--shadow-sm)":"none", transition:"all 0.15s" }}>{s}</button>)}
               </div>
-              {/* Internet */}
               <div style={{ display:"flex", gap:2, background:"var(--surface3)", borderRadius:9, padding:3 }}>
                 {["All","Available","No Internet"].map(s => <button key={s} onClick={() => setFilterInternet(s)} style={{ padding:"4px 11px", borderRadius:7, border:"none", fontSize:12, fontWeight:500, cursor:"pointer", background:filterInternet===s?"var(--surface)":"transparent", color:filterInternet===s?"var(--text)":"var(--text-muted)", boxShadow:filterInternet===s?"var(--shadow-sm)":"none", transition:"all 0.15s" }}>{s}</button>)}
               </div>
-              {/* Country */}
               <select value={filterCountry} onChange={e => setFilterCountry(e.target.value)} style={{ fontSize:13, padding:"6px 10px", borderRadius:9, border:"1px solid var(--border-strong)", background:"var(--surface)", cursor:"pointer" }}>
                 {countries.map(c => <option key={c} value={c}>{c}</option>)}
               </select>
             </div>
-
-            {/* Sort row */}
             <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
               <span style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em" }}>Sort:</span>
               <div style={{ display:"flex", gap:2, background:"var(--surface3)", borderRadius:9, padding:3, flexWrap:"wrap" }}>
-                <SortBtn id="deploy"    label="Deploy Order" />
-                <SortBtn id="members"  label="Members" />
-                <SortBtn id="score"    label="Score" />
-                <SortBtn id="distance" label="Distance" />
-                <SortBtn id="name"     label="Name" />
+                {[["deploy","Deploy Order"],["members","Members"],["score","Score"],["distance","Distance"],["name","Name"]].map(([id,label]) => (
+                  <button key={id} onClick={() => setSortBy(id)} style={{ padding:"5px 12px", borderRadius:7, border:"none", fontSize:12, fontWeight:500, cursor:"pointer", whiteSpace:"nowrap", background:sortBy===id?"var(--surface)":"transparent", color:sortBy===id?"var(--text)":"var(--text-muted)", boxShadow:sortBy===id?"var(--shadow-sm)":"none", transition:"all 0.15s" }}>{label}{sortBy===id?" ↑":""}</button>
+                ))}
               </div>
             </div>
           </div>
@@ -1531,6 +1550,21 @@
                     <button onClick={() => setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
                   </div>
                 </div>
+
+                {/* Contact info */}
+                {(selected.phone || selected.whatsapp || selected.email || selected.church_name) && (
+                  <>
+                    <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Contact</div>
+                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:16 }}>
+                      {[["Church Name",selected.church_name],["Phone",selected.phone],["WhatsApp",selected.whatsapp],["Email",selected.email]].filter(([,v])=>v).map(([k,v]) => (
+                        <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
+                          <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
+                          <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
 
                 {/* Core info */}
                 <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Church Info</div>
@@ -1640,17 +1674,81 @@
             </div>
           )}
 
-          {/* ── Add modal ── */}
+          {/* ── Import CSV modal ── */}
+          {showImport && (
+            <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => { setShowImport(false); setImportPreview([]); setImportText(""); setImportError(""); }}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:26, maxWidth:560, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                  <div style={{ fontSize:17, fontWeight:700 }}>Import Churches from CSV</div>
+                  <button onClick={() => { setShowImport(false); setImportPreview([]); setImportText(""); setImportError(""); }} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                </div>
+
+                {/* Instructions */}
+                <div className="info-box blue" style={{ marginBottom:14, fontSize:13 }}>
+                  <strong>Only Pastor Name is required.</strong> Paste CSV with a header row. Supported columns: <code>pastor_name</code>, <code>church_name</code>, <code>location</code>, <code>region</code>, <code>country</code>, <code>members</code>, <code>language</code>, <code>phone</code>, <code>whatsapp</code>, <code>email</code>, <code>internet</code>, <code>standing</code>, <code>dist_kampala</code>
+                </div>
+
+                {/* Template download */}
+                <button onClick={() => {
+                  const template = "pastor_name,church_name,location,region,country,members,language,phone,whatsapp,email,internet,standing\nJohn Doe,Grace Church,Kampala,Kampala,Uganda,50,Luganda,+256700000000,+256700000000,john@example.com,Yes,Stable";
+                  downloadCSV(template, "church-import-template.csv");
+                }} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", marginBottom:14 }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+                  Download Template
+                </button>
+
+                {/* Paste area */}
+                <div className="field-group" style={{ marginBottom:12 }}>
+                  <div className="field-label">Paste CSV here</div>
+                  <textarea
+                    value={importText}
+                    onChange={e => { setImportText(e.target.value); if (e.target.value) parseImportCSV(e.target.value); else { setImportPreview([]); setImportError(""); } }}
+                    placeholder={"pastor_name,location,region\nJohn Doe,Kampala,Kampala"}
+                    style={{ minHeight:120, fontSize:13, fontFamily:"monospace", letterSpacing:0 }}
+                  />
+                </div>
+
+                {importError && <div className="info-box danger" style={{ marginBottom:12, fontSize:13 }}>{importError}</div>}
+
+                {/* Preview */}
+                {importPreview.length > 0 && (
+                  <div style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:12, fontWeight:600, color:"var(--success)", marginBottom:8 }}>✓ {importPreview.length} church{importPreview.length!==1?"es":""} ready to import</div>
+                    <div style={{ background:"var(--surface2)", borderRadius:10, border:"1px solid var(--border)", overflow:"hidden", maxHeight:180, overflowY:"auto" }}>
+                      {importPreview.map((r, i) => (
+                        <div key={i} style={{ padding:"9px 13px", borderBottom: i < importPreview.length-1 ? "1px solid var(--border)" : "none", fontSize:13 }}>
+                          <span style={{ fontWeight:600 }}>{r.pastor}</span>
+                          {r.location && <span style={{ color:"var(--text-muted)", marginLeft:8 }}>{r.location}</span>}
+                          {r.region && <span style={{ color:"var(--text-muted)", marginLeft:4 }}>· {r.region}</span>}
+                          {r.country && <span style={{ color:"var(--text-muted)", marginLeft:4 }}>· {r.country}</span>}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div style={{ display:"flex", gap:8 }}>
+                  <button className="btn-back" onClick={() => { setShowImport(false); setImportPreview([]); setImportText(""); setImportError(""); }} style={{ flex:1 }}>Cancel</button>
+                  <button className="btn-next" onClick={commitImport} disabled={!importPreview.length}>
+                    Import {importPreview.length > 0 ? importPreview.length + " Church" + (importPreview.length!==1?"es":"") : ""}
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
           {showAdd && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setShowAdd(false)}>
               <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
                 <div style={{ fontSize:17, fontWeight:700, marginBottom:16 }}>Add New Church</div>
                 <div style={{ display:"flex", flexDirection:"column", gap:11 }}>
                   {[
-                    ["Pastor Name","pastor","text"],["Location","location","text"],["Region","region","text"],
+                    ["Pastor Name","pastor","text"],["Church Name","church_name","text"],
+                    ["Location","location","text"],["Region","region","text"],
                     ["Country","country","text"],["Distance from Kampala","distKampala","text"],
                     ["Language","language","text"],["Building Type","bldg_type","text"],
                     ["Spiritual Standing","spiritual_standing","text"],
+                    ["Phone Number","phone","text"],["WhatsApp","whatsapp","text"],
+                    ["Email","email","text"],
                     ["Members","members","number"],["Priority (1-9)","priority","number"],
                   ].map(([label,key,type]) => (
                     <div key={key} className="field-group">
