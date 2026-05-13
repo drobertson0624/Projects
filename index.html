@@ -1322,7 +1322,7 @@
     }
 
     // ─── Church Database ───────────────────────────────────────────────────────
-    function ChurchDatabase({ churches, onAdd, onUpdate }) {
+    function ChurchDatabase({ churches, onAdd, onUpdate, onPlaceOrder }) {
       const [search, setSearch]     = useState("");
       const [filter, setFilter]     = useState("All");
       const [filterInternet, setFilterInternet] = useState("All");
@@ -1489,7 +1489,7 @@
                   <tr>
                     <th>Deploy</th><th>Pastor</th><th>Location</th><th>Region</th>
                     <th>Members</th><th>Standing</th><th>Language</th>
-                    <th>Internet</th><th>Score</th><th></th>
+                    <th>Internet</th><th>Score</th><th></th><th></th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1529,6 +1529,11 @@
                       <td onClick={e => openEdit(c,e)} style={{ padding:"8px 10px" }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, background:"var(--surface2)", border:"1px solid var(--border-strong)", cursor:"pointer" }}>
                           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </div>
+                      </td>
+                      <td onClick={e => { e.stopPropagation(); onPlaceOrder && onPlaceOrder(c); }} style={{ padding:"8px 6px" }}>
+                        <div style={{ padding:"5px 10px", borderRadius:7, background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", cursor:"pointer", fontSize:11, fontWeight:600, color:"var(--accent)", whiteSpace:"nowrap" }}>
+                          Order
                         </div>
                       </td>
                     </tr>
@@ -2476,6 +2481,381 @@
     }
 
     // ─── Portal Shell ──────────────────────────────────────────────────────────
+    // ─── Orders Supabase functions ─────────────────────────────────────────────
+    async function fetchInventory() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/inventory_items?active=eq.true&order=category,name`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const rows = await res.json();
+        return Array.isArray(rows) ? rows : [];
+      } catch(e) { return []; }
+    }
+
+    async function saveInventoryItem(item) {
+      await fetch(`${SUPABASE_URL}/rest/v1/inventory_items`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer:"resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify(item),
+      });
+    }
+
+    async function deleteInventoryItem(id) {
+      await fetch(`${SUPABASE_URL}/rest/v1/inventory_items?id=eq.${id}`, {
+        method: "DELETE",
+        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` },
+      });
+    }
+
+    async function createOrder(orderData) {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/orders`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer:"return=representation" },
+        body: JSON.stringify({ ...orderData, order_number: "" }),
+      });
+      const rows = await res.json();
+      return Array.isArray(rows) ? rows[0] : rows;
+    }
+
+    async function fetchOrders() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/orders?order=created_at.desc`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const rows = await res.json();
+        return Array.isArray(rows) ? rows : [];
+      } catch(e) { return []; }
+    }
+
+    async function updateOrderStatus(id, status) {
+      await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type":"application/json", apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, Prefer:"return=minimal" },
+        body: JSON.stringify({ status, updated_at: new Date().toISOString() }),
+      });
+    }
+
+    // ─── Place Order Modal ─────────────────────────────────────────────────────
+    function PlaceOrderModal({ church, onClose, onOrderPlaced }) {
+      const [inventory, setInventory]   = useState([]);
+      const [orderItems, setOrderItems] = useState([]);
+      const [notes, setNotes]           = useState("");
+      const [saving, setSaving]         = useState(false);
+      const [done, setDone]             = useState(null);
+      const [contact, setContact]       = useState({
+        pastor_name: church.pastor || "",
+        church_name: church.church_name || church.pastor || "",
+        region:      church.region || "",
+        country:     church.country || "",
+        phone:       church.phone || "",
+        whatsapp:    church.whatsapp || "",
+        email:       church.email || "",
+      });
+
+      React.useEffect(() => { fetchInventory().then(setInventory); }, []);
+
+      const addItem = (item) => {
+        setOrderItems(prev => {
+          const ex = prev.find(i => i.id === item.id);
+          if (ex) return prev.map(i => i.id === item.id ? {...i, qty: i.qty + 1} : i);
+          return [...prev, { ...item, qty: 1 }];
+        });
+      };
+      const removeItem = (id) => setOrderItems(prev => prev.filter(i => i.id !== id));
+      const changeQty = (id, qty) => {
+        if (qty < 1) { removeItem(id); return; }
+        setOrderItems(prev => prev.map(i => i.id === id ? {...i, qty} : i));
+      };
+
+      const submit = async () => {
+        if (!orderItems.length) { alert("Please add at least one item."); return; }
+        setSaving(true);
+        const result = await createOrder({
+          church_id:   church.id,
+          pastor_name: contact.pastor_name,
+          church_name: contact.church_name,
+          region:      contact.region,
+          country:     contact.country,
+          phone:       contact.phone,
+          whatsapp:    contact.whatsapp,
+          email:       contact.email,
+          items:       JSON.stringify(orderItems),
+          notes,
+          status: "New",
+        });
+        setSaving(false);
+        setDone(result);
+        onOrderPlaced && onOrderPlaced(result);
+      };
+
+      const byCategory = inventory.reduce((acc, item) => {
+        const cat = item.category || "General";
+        if (!acc[cat]) acc[cat] = [];
+        acc[cat].push(item);
+        return acc;
+      }, {});
+
+      if (done) return (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:400, padding:16 }}>
+          <div style={{ background:"var(--surface)", borderRadius:22, padding:36, maxWidth:400, width:"100%", boxShadow:"var(--shadow-lg)", textAlign:"center" }}>
+            <div style={{ width:64, height:64, borderRadius:"50%", background:"var(--success-light)", border:"2px solid var(--success)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 18px", animation:"pop 0.5s cubic-bezier(0.34,1.56,0.64,1)" }}>
+              <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            </div>
+            <div style={{ fontSize:18, fontWeight:700, marginBottom:8 }}>Order Placed!</div>
+            <div style={{ fontSize:28, fontWeight:800, color:"var(--accent)", letterSpacing:"0.04em", marginBottom:8 }}>{done.order_number}</div>
+            <div style={{ fontSize:14, color:"var(--text-muted)", marginBottom:24 }}>Order for {contact.church_name} has been created with status <strong>New</strong>.</div>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={onClose} className="btn-next" style={{ flex:1 }}>Done</button>
+            </div>
+          </div>
+        </div>
+      );
+
+      return (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:400, padding:16, overflowY:"auto" }} onClick={onClose}>
+          <div style={{ background:"var(--surface)", borderRadius:22, padding:26, maxWidth:580, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"92vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+
+            {/* Header */}
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
+              <div>
+                <div style={{ fontSize:17, fontWeight:700 }}>Place Order</div>
+                <div style={{ fontSize:13, color:"var(--text-muted)" }}>{contact.church_name || contact.pastor_name}</div>
+              </div>
+              <button onClick={onClose} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+            </div>
+
+            {/* Contact — editable */}
+            <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Contact Info</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:20 }}>
+              {[["Pastor Name","pastor_name"],["Church Name","church_name"],["Region","region"],["Country","country"],["Phone","phone"],["WhatsApp","whatsapp"],["Email","email"]].map(([label,key]) => (
+                <div key={key} className="field-group" style={{ gridColumn: key==="email"?"1 / -1":"auto" }}>
+                  <div className="field-label">{label}</div>
+                  <input type="text" value={contact[key]||""} onChange={e => setContact(c=>({...c,[key]:e.target.value}))} />
+                </div>
+              ))}
+            </div>
+
+            {/* Inventory picker */}
+            <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Add Items</div>
+            {Object.entries(byCategory).map(([cat, items]) => (
+              <div key={cat} style={{ marginBottom:12 }}>
+                <div style={{ fontSize:12, fontWeight:600, color:"var(--text-muted)", marginBottom:6 }}>{cat}</div>
+                <div style={{ display:"flex", flexWrap:"wrap", gap:7 }}>
+                  {items.map(item => {
+                    const inOrder = orderItems.find(i => i.id === item.id);
+                    return (
+                      <button key={item.id} onClick={() => addItem(item)} style={{ padding:"7px 13px", borderRadius:20, border:"1px solid", fontSize:13, fontWeight:500, cursor:"pointer", transition:"all 0.15s", borderColor: inOrder?"var(--accent)":"var(--border-strong)", background: inOrder?"rgba(0,122,255,0.09)":"var(--surface2)", color: inOrder?"var(--accent)":"var(--text)" }}>
+                        {inOrder && <span style={{ marginRight:5, fontWeight:700 }}>{inOrder.qty}×</span>}{item.name}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+            {inventory.length === 0 && <div style={{ fontSize:13, color:"var(--text-muted)", marginBottom:16 }}>Loading inventory…</div>}
+
+            {/* Order summary */}
+            {orderItems.length > 0 && (
+              <div style={{ marginTop:16, marginBottom:16 }}>
+                <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Order Summary</div>
+                <div style={{ background:"var(--surface2)", borderRadius:12, border:"1px solid var(--border)", overflow:"hidden" }}>
+                  {orderItems.map((item, i) => (
+                    <div key={item.id} style={{ display:"flex", alignItems:"center", padding:"10px 14px", borderBottom: i < orderItems.length-1 ? "1px solid var(--border)" : "none", gap:10 }}>
+                      <div style={{ flex:1, fontSize:14, fontWeight:500 }}>{item.name}</div>
+                      <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                        <button onClick={() => changeQty(item.id, item.qty - 1)} style={{ width:26, height:26, borderRadius:6, border:"1px solid var(--border-strong)", background:"var(--surface)", cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>−</button>
+                        <span style={{ fontSize:14, fontWeight:700, minWidth:20, textAlign:"center" }}>{item.qty}</span>
+                        <button onClick={() => changeQty(item.id, item.qty + 1)} style={{ width:26, height:26, borderRadius:6, border:"1px solid var(--border-strong)", background:"var(--surface)", cursor:"pointer", fontSize:16, display:"flex", alignItems:"center", justifyContent:"center" }}>+</button>
+                        <button onClick={() => removeItem(item.id)} style={{ border:"none", background:"transparent", cursor:"pointer", color:"var(--danger)", padding:"0 4px", fontSize:16 }}>✕</button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Notes */}
+            <div className="field-group" style={{ marginBottom:20 }}>
+              <div className="field-label">Order Notes (optional)</div>
+              <textarea placeholder="Any special instructions…" value={notes} onChange={e => setNotes(e.target.value)} style={{ minHeight:70 }} />
+            </div>
+
+            <div style={{ display:"flex", gap:8 }}>
+              <button className="btn-back" onClick={onClose} style={{ flex:1 }}>Cancel</button>
+              <button className="btn-next" onClick={submit} disabled={saving || !orderItems.length}>
+                {saving ? "Placing Order…" : `Place Order (${orderItems.length} item${orderItems.length!==1?"s":""})`}
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
+    // ─── Orders Tab ────────────────────────────────────────────────────────────
+    function OrdersTab() {
+      const [orders, setOrders]         = useState(null);
+      const [inventory, setInventory]   = useState([]);
+      const [selected, setSelected]     = useState(null);
+      const [updatingId, setUpdatingId] = useState(null);
+      const [showInventory, setShowInventory] = useState(false);
+      const [newItemName, setNewItemName]     = useState("");
+      const [newItemCat, setNewItemCat]       = useState("General");
+      const [refreshing, setRefreshing]       = useState(false);
+
+      const load = (spinner) => {
+        if (spinner) setRefreshing(true);
+        Promise.all([fetchOrders(), fetchInventory()]).then(([o, inv]) => {
+          setOrders(o); setInventory(inv); setRefreshing(false);
+        });
+      };
+      React.useEffect(() => { load(false); }, []);
+
+      const STATUS = ["New","In Progress","Shipped"];
+      const statusColor = s => s==="New"?"tag-blue":s==="In Progress"?"tag-warn":"tag-green";
+      const statusBg    = s => s==="New"?"rgba(0,122,255,0.09)":s==="In Progress"?"var(--warn-light)":"var(--success-light)";
+      const statusFg    = s => s==="New"?"var(--accent)":s==="In Progress"?"#8a5200":"#1a7a3a";
+
+      const changeStatus = async (order, newStatus) => {
+        setUpdatingId(order.id);
+        await updateOrderStatus(order.id, newStatus);
+        setOrders(os => os.map(o => o.id === order.id ? {...o, status: newStatus} : o));
+        if (selected?.id === order.id) setSelected(s => ({...s, status: newStatus}));
+        setUpdatingId(null);
+      };
+
+      const addInventoryItem = async () => {
+        if (!newItemName.trim()) return;
+        const item = { name: newItemName.trim(), category: newItemCat, active: true };
+        await saveInventoryItem(item);
+        setNewItemName(""); 
+        fetchInventory().then(setInventory);
+      };
+
+      const removeInvItem = async (id) => {
+        await deleteInventoryItem(id);
+        setInventory(inv => inv.filter(i => i.id !== id));
+      };
+
+      return (
+        <div style={{ padding:"24px 20px", maxWidth:1080, margin:"0 auto", width:"100%" }}>
+          <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:12 }}>
+            <div>
+              <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Orders</div>
+              <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>
+                {orders ? `${orders.length} order${orders.length!==1?"s":""}` : "Loading…"}
+                {orders && <span style={{ marginLeft:10 }}>
+                  {STATUS.map(s => { const c = orders.filter(o=>o.status===s).length; return c > 0 ? <span key={s} style={{ marginRight:8 }}><span style={{ padding:"2px 8px", borderRadius:100, fontSize:11, fontWeight:600, background:statusBg(s), color:statusFg(s) }}>{c} {s}</span></span> : null; })}
+                </span>}
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={() => setShowInventory(true)} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+                Manage Inventory
+              </button>
+              <button onClick={() => load(true)} disabled={refreshing} style={{ display:"flex", alignItems:"center", gap:6, padding:"9px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ animation:refreshing?"spin 0.8s linear infinite":"none" }}><path d="M23 4v6h-6"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg>
+                Refresh
+              </button>
+            </div>
+          </div>
+
+          {/* Orders list */}
+          {!orders ? (
+            <div style={{ textAlign:"center", padding:"60px 24px", color:"var(--text-muted)", fontSize:14 }}>Loading orders…</div>
+          ) : orders.length === 0 ? (
+            <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", padding:"60px 24px", textAlign:"center", boxShadow:"var(--shadow-sm)" }}>
+              <div style={{ fontSize:16, fontWeight:600, marginBottom:8 }}>No orders yet</div>
+              <div style={{ fontSize:14, color:"var(--text-muted)" }}>Go to the Churches tab and click "Place Order" on any church.</div>
+            </div>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {orders.map(order => {
+                const items = typeof order.items === "string" ? JSON.parse(order.items) : (order.items || []);
+                const isSelected = selected?.id === order.id;
+                return (
+                  <div key={order.id} onClick={() => setSelected(isSelected ? null : order)} style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, padding:"16px 18px", boxShadow:"var(--shadow-sm)", cursor:"pointer", transition:"box-shadow 0.15s" }}>
+                    {/* Row header */}
+                    <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                      <div style={{ fontSize:14, fontWeight:800, color:"var(--accent)", letterSpacing:"0.04em", minWidth:100 }}>{order.order_number}</div>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontSize:14, fontWeight:700 }}>{order.church_name || order.pastor_name}</div>
+                        <div style={{ fontSize:12, color:"var(--text-muted)" }}>{order.region}{order.country?` · ${order.country}`:""} · {items.length} item{items.length!==1?"s":""}</div>
+                      </div>
+                      {/* Status selector */}
+                      <div style={{ display:"flex", gap:4 }} onClick={e => e.stopPropagation()}>
+                        {STATUS.map(s => (
+                          <button key={s} onClick={() => changeStatus(order, s)} disabled={updatingId===order.id} style={{ padding:"5px 12px", borderRadius:20, border:"none", fontSize:12, fontWeight:600, cursor:"pointer", transition:"all 0.15s", background: order.status===s ? statusBg(s) : "var(--surface3)", color: order.status===s ? statusFg(s) : "var(--text-muted)", opacity: updatingId===order.id?0.5:1 }}>
+                            {s}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ fontSize:11, color:"var(--text-muted)" }}>{new Date(order.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</div>
+                    </div>
+
+                    {/* Expanded detail */}
+                    {isSelected && (
+                      <div style={{ marginTop:16, paddingTop:16, borderTop:"1px solid var(--border)" }}>
+                        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8, marginBottom:14 }}>
+                          {[["Pastor",order.pastor_name],["Church",order.church_name],["Region",order.region],["Country",order.country],["Phone",order.phone],["WhatsApp",order.whatsapp],["Email",order.email]].filter(([,v])=>v).map(([k,v]) => (
+                            <div key={k} style={{ padding:"8px 11px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
+                              <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:2 }}>{k}</div>
+                              <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
+                            </div>
+                          ))}
+                        </div>
+                        <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Items</div>
+                        <div style={{ background:"var(--surface2)", borderRadius:10, border:"1px solid var(--border)", overflow:"hidden", marginBottom: order.notes?14:0 }}>
+                          {items.map((item, i) => (
+                            <div key={i} style={{ display:"flex", justifyContent:"space-between", padding:"9px 14px", borderBottom: i<items.length-1?"1px solid var(--border)":"none", fontSize:14 }}>
+                              <span style={{ fontWeight:500 }}>{item.name}</span>
+                              <span style={{ color:"var(--text-muted)", fontWeight:600 }}>×{item.qty}</span>
+                            </div>
+                          ))}
+                        </div>
+                        {order.notes && <div style={{ padding:"10px 13px", background:"var(--surface2)", borderRadius:9, fontSize:13, color:"var(--text-secondary)", border:"1px solid var(--border)" }}><strong>Notes:</strong> {order.notes}</div>}
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Inventory management modal */}
+          {showInventory && (
+            <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.35)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:400, padding:16 }} onClick={() => setShowInventory(false)}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:26, maxWidth:480, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"85vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+                  <div style={{ fontSize:17, fontWeight:700 }}>Manage Inventory</div>
+                  <button onClick={() => setShowInventory(false)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                </div>
+                {/* Add new item */}
+                <div style={{ display:"flex", gap:8, marginBottom:18, flexWrap:"wrap" }}>
+                  <input type="text" placeholder="Item name" value={newItemName} onChange={e => setNewItemName(e.target.value)} onKeyDown={e => e.key==="Enter" && addInventoryItem()} style={{ flex:2, minWidth:150, fontSize:14, padding:"9px 13px" }} />
+                  <input type="text" placeholder="Category" value={newItemCat} onChange={e => setNewItemCat(e.target.value)} style={{ flex:1, minWidth:100, fontSize:14, padding:"9px 13px" }} />
+                  <button onClick={addInventoryItem} disabled={!newItemName.trim()} className="btn-next" style={{ flex:"none", padding:"9px 16px", fontSize:13 }}>+ Add</button>
+                </div>
+                {/* Items list grouped by category */}
+                {Object.entries(inventory.reduce((acc, i) => { (acc[i.category||"General"]||=[]).push(i); return acc; }, {})).map(([cat, items]) => (
+                  <div key={cat} style={{ marginBottom:14 }}>
+                    <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8, paddingBottom:6, borderBottom:"1px solid var(--border)" }}>{cat}</div>
+                    {items.map(item => (
+                      <div key={item.id} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"8px 4px", borderBottom:"1px solid var(--border)" }}>
+                        <span style={{ fontSize:14 }}>{item.name}</span>
+                        <button onClick={() => removeInvItem(item.id)} style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:7, padding:"4px 10px", fontSize:12, cursor:"pointer", fontWeight:600 }}>Remove</button>
+                      </div>
+                    ))}
+                  </div>
+                ))}
+                {inventory.length === 0 && <div style={{ fontSize:14, color:"var(--text-muted)", textAlign:"center", padding:"20px 0" }}>No inventory items yet.</div>}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     function Portal({ onClose, rssLink, onRssUpdate }) {
       const [user, setUser]           = useState(() => {
         try { const s = localStorage.getItem("ea_admin_user"); return s ? JSON.parse(s) : null; } catch(e) { return null; }
@@ -2483,6 +2863,7 @@
       const [tab, setTab]             = useState(() => localStorage.getItem("ea_admin_tab") || "results");
       const [menuOpen, setMenuOpen]   = useState(false);
       const [churches, setChurches]   = useState(CHURCHES);
+      const [orderChurch, setOrderChurch] = useState(null);
 
       // Load persisted overrides from Supabase and merge into church data
       React.useEffect(() => {
@@ -2564,6 +2945,7 @@
       const TABS = [
         ["results",  "Results"],
         ["churches", "Churches"],
+        ["orders",   "Orders"],
         ["map",      "Map"],
         ["users",    "Users"],
         ["settings", "Settings"],
@@ -2634,7 +3016,7 @@
 
           <div style={{ flex:1, overflowX:"hidden" }}>
             {tab==="results"  && <SurveyResults />}
-            {tab==="churches" && <ChurchDatabase churches={churches} onAdd={c => {
+            {tab==="churches" && <ChurchDatabase churches={churches} onPlaceOrder={c => setOrderChurch(c)} onAdd={c => {
               const newId = Date.now();
               const newChurch = {...c, id:newId, lat:0, lng:0};
               setChurches(cs=>[...cs, newChurch]);
@@ -2667,10 +3049,20 @@
                 country:            c.country || null,
               });
             }} onUpdate={updateChurch} />}
+            {tab==="orders"   && <OrdersTab />}
             {tab==="map"      && <ChurchMap churches={churches} />}
             {tab==="users"    && <AdminUsers />}
             {tab==="settings" && <PortalSettings rssLink={rssLink} onRssUpdate={onRssUpdate} />}
           </div>
+
+          {/* Place Order Modal */}
+          {orderChurch && (
+            <PlaceOrderModal
+              church={orderChurch}
+              onClose={() => setOrderChurch(null)}
+              onOrderPlaced={() => {}}
+            />
+          )}
         </div>
       );
     }
