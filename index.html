@@ -1405,11 +1405,16 @@
         const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,""));
         const rows = lines.slice(1).map((line, i) => {
           const vals = line.split(",").map(v => v.trim().replace(/^"|"$/g,""));
-          const obj = { id: Date.now() + (i * 7) + 100000, lat:0, lng:0, standing:"Stable" };
+          const obj = { id: 900000 + Math.floor(Math.random() * 99999) + (i * 100), lat:0, lng:0, standing:"Stable" };
           headers.forEach((h, j) => { if (vals[j] !== undefined) obj[h] = vals[j]; });
           // Map common header aliases
           if (!obj.pastor && obj.pastor_name) obj.pastor = obj.pastor_name;
           if (!obj.pastor && obj.name) obj.pastor = obj.name;
+          if (!obj.church_name && obj.church) obj.church_name = obj.church;
+          if (!obj.phone && obj.contact) obj.phone = obj.contact;
+          if (!obj.phone && obj.phone_number) obj.phone = obj.phone_number;
+          if (!obj.whatsapp && obj.whats_app) obj.whatsapp = obj.whats_app;
+          if (!obj.region && obj.district) obj.region = obj.district;
           if (!obj.distKampala && obj.distance) obj.distKampala = obj.distance;
           if (!obj.distKampala && obj.dist_kampala) obj.distKampala = obj.dist_kampala;
           return obj;
@@ -3017,7 +3022,7 @@
           <div style={{ flex:1, overflowX:"hidden" }}>
             {tab==="results"  && <SurveyResults />}
             {tab==="churches" && <ChurchDatabase churches={churches} onPlaceOrder={c => setOrderChurch(c)} onAdd={c => {
-              const newId = Date.now();
+              const newId = 900000 + Math.floor(Math.random() * 99999);
               const newChurch = {...c, id:newId, lat:0, lng:0};
               setChurches(cs=>[...cs, newChurch]);
               // Persist to Supabase so it survives refresh
