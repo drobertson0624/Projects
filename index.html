@@ -2906,9 +2906,9 @@
                 const items = typeof order.items === "string" ? JSON.parse(order.items) : (order.items || []);
                 const isSelected = selected?.id === order.id;
                 return (
-                  <div key={order.id} onClick={() => setSelected(isSelected ? null : order)} style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, padding:"16px 18px", boxShadow:"var(--shadow-sm)", cursor:"pointer", transition:"box-shadow 0.15s" }}>
-                    {/* Row header */}
-                    <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                  <div key={order.id} style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, padding:"16px 18px", boxShadow:"var(--shadow-sm)", transition:"box-shadow 0.15s" }}>
+                    {/* Clickable header row only */}
+                    <div onClick={() => setSelected(isSelected ? null : order)} style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap", cursor:"pointer" }}>
                       <div style={{ fontSize:14, fontWeight:800, color:"var(--accent)", letterSpacing:"0.04em", minWidth:100 }}>{order.order_number}</div>
                       <div style={{ flex:1 }}>
                         <div style={{ fontSize:14, fontWeight:700 }}>{order.church_name || order.pastor_name}</div>
@@ -2925,9 +2925,9 @@
                       <div style={{ fontSize:11, color:"var(--text-muted)" }}>{new Date(order.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric"})}</div>
                     </div>
 
-                    {/* Expanded detail */}
+                    {/* Expanded detail — stopPropagation so clicks inside don't collapse the card */}
                     {isSelected && (
-                      <div style={{ marginTop:16, paddingTop:16, borderTop:"1px solid var(--border)" }}>
+                      <div onClick={e => e.stopPropagation()} style={{ marginTop:16, paddingTop:16, borderTop:"1px solid var(--border)" }}>
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8, marginBottom:14 }}>
                           {[["Pastor",order.pastor_name],["Church",order.church_name],["Region",order.region],["Country",order.country],["Phone",order.phone],["WhatsApp",order.whatsapp],["Email",order.email]].filter(([,v])=>v).map(([k,v]) => (
                             <div key={k} style={{ padding:"8px 11px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
@@ -3353,16 +3353,15 @@
               <div style={{ fontSize:14, color:C.muted }}>{order.church_name||order.pastor_name} · {orderedAt}</div>
             </div>
 
-            {/* Progress */}
+
+            {/* Progress — flex layout with inline connectors, no overflow */}
             <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:20, padding:"28px 24px", marginBottom:14, boxShadow:C.shadow }}>
-              <div style={{ position:"relative" }}>
-                <div style={{ position:"absolute", top:19, left:"16%", right:"16%", height:2, background:C.border, zIndex:0 }} />
-                <div style={{ position:"absolute", top:19, left:"16%", height:2, zIndex:1, background:C.accent, transition:"width 0.8s ease", width: si<=0?"0%":si===1?"50%":"100%" }} />
-                <div style={{ display:"flex", justifyContent:"space-between", position:"relative", zIndex:2 }}>
-                  {STEPS.map((step, i) => {
-                    const done=i<si, cur=i===si, fut=i>si;
-                    return (
-                      <div key={step.key} style={{ display:"flex", flexDirection:"column", alignItems:"center", flex:1 }}>
+              <div style={{ display:"flex", alignItems:"flex-start" }}>
+                {STEPS.map((step, i) => {
+                  const done=i<si, cur=i===si, fut=i>si;
+                  return (
+                    <React.Fragment key={step.key}>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"center", flex:"none", minWidth:90 }}>
                         <div style={{ width:38, height:38, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12, transition:"all 0.4s", background:done?C.accent:cur?C.surface:"#f5f5f5", border:done?"none":cur?`2px solid ${C.accent}`:`2px solid ${C.border}`, color:done?"#fff":cur?C.accent:C.muted, boxShadow:cur?`0 0 0 4px rgba(0,122,255,0.12)`:"none" }}>
                           {done
                             ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
@@ -3372,11 +3371,15 @@
                           }
                         </div>
                         <div style={{ fontSize:12, fontWeight:600, color:fut?C.muted:cur?C.accent:C.text, textAlign:"center", marginBottom:4 }}>{step.label}</div>
-                        {cur && <div style={{ fontSize:11, color:C.muted, textAlign:"center", maxWidth:120, lineHeight:1.5 }}>{step.desc}</div>}
+                        {cur && <div style={{ fontSize:11, color:C.muted, textAlign:"center", lineHeight:1.5 }}>{step.desc}</div>}
                       </div>
-                    );
-                  })}
-                </div>
+                      {/* Connector — only between steps, never after last */}
+                      {i < STEPS.length - 1 && (
+                        <div style={{ flex:1, height:2, marginTop:19, background: i < si ? C.accent : C.border, transition:"background 0.5s" }} />
+                      )}
+                    </React.Fragment>
+                  );
+                })}
               </div>
             </div>
 
