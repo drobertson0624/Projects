@@ -1905,12 +1905,25 @@
 
     // ─── Church Map (Leaflet) ────────────────────────────────────────────────
     function ChurchMap({ churches }) {
-      const mapRef = React.useRef(null);
-      const leafletMap = React.useRef(null);
-      const markersRef = React.useRef([]);
+      const mapRef      = React.useRef(null);
+      const leafletMap  = React.useRef(null);
+      const markersRef  = React.useRef([]);
+      const rallyLayerRef = React.useRef([]);
       const [viewMode, setViewMode] = useState("map");
-      const [selectedChurch, setSelectedChurch] = useState(null);
       const [mapReady, setMapReady] = useState(false);
+
+      // Rally points state
+      const [rallyPoints, setRallyPoints] = useState([
+        { id:1, name:"Bomet",  lat:-0.7820, lng:35.3420, radiusMiles:50, color:"#FF6B35" },
+        { id:2, name:"Nakuru", lat:-0.3031, lng:36.0800, radiusMiles:50, color:"#9B59B6" },
+      ]);
+      const [showRallyPanel, setShowRallyPanel] = useState(false);
+      const [editingRally, setEditingRally]     = useState(null);
+      const [newRally, setNewRally]             = useState({ name:"", lat:"", lng:"", radiusMiles:50, color:"#FF6B35" });
+      const [showAddRally, setShowAddRally]     = useState(false);
+
+      const MILES_TO_METERS = 1609.34;
+      const RALLY_COLORS = ["#FF6B35","#9B59B6","#E74C3C","#27AE60","#F39C12","#1ABC9C","#2980B9","#E91E63"];
 
       const byRegion = {};
       churches.forEach(c => {
@@ -1921,7 +1934,77 @@
       });
 
       const sCol = s => s==="STRONG"?"#34C759":s==="Growing"?"#FF9500":"#007AFF";
-      const sLabel = s => s==="STRONG"?"Strong":s==="Growing"?"Growing":"Stable";
+
+      // Add CSS for pulse animation once
+      React.useEffect(() => {
+        if (!document.getElementById('rally-pulse-css')) {
+          const style = document.createElement('style');
+          style.id = 'rally-pulse-css';
+          style.textContent = `
+            @keyframes rallyPulse {
+              0%   { transform:scale(1);   opacity:0.8; }
+              50%  { transform:scale(1.6); opacity:0.3; }
+              100% { transform:scale(1);   opacity:0.8; }
+            }
+            .rally-beacon { animation: rallyPulse 2s ease-in-out infinite; }
+            .rally-beacon-2 { animation: rallyPulse 2s ease-in-out infinite 0.6s; }
+            .rally-beacon-3 { animation: rallyPulse 2s ease-in-out infinite 1.2s; }
+          `;
+          document.head.appendChild(style);
+        }
+      }, []);
+
+      // Draw rally points on the map
+      const drawRallyPoints = React.useCallback((map) => {
+        // Clear existing rally layers
+        rallyLayerRef.current.forEach(l => { try { map.removeLayer(l); } catch(e) {} });
+        rallyLayerRef.current = [];
+
+        rallyPoints.forEach(rp => {
+          // Radius circle
+          const circle = window.L.circle([rp.lat, rp.lng], {
+            radius: rp.radiusMiles * MILES_TO_METERS,
+            color: rp.color,
+            fillColor: rp.color,
+            fillOpacity: 0.07,
+            weight: 2,
+            dashArray: "6 4",
+          });
+          circle.addTo(map);
+          rallyLayerRef.current.push(circle);
+
+          // Pulsing beacon icon
+          const beacon = window.L.divIcon({
+            className: '',
+            html: `<div style="position:relative;width:40px;height:40px;transform:translate(-50%,-50%)">
+              <div class="rally-beacon" style="position:absolute;inset:0;border-radius:50%;background:${rp.color};opacity:0.25;"></div>
+              <div class="rally-beacon-2" style="position:absolute;inset:6px;border-radius:50%;background:${rp.color};opacity:0.35;"></div>
+              <div style="position:absolute;inset:12px;border-radius:50%;background:${rp.color};box-shadow:0 0 12px ${rp.color}88;display:flex;align-items:center;justify-content:center;">
+                <div style="width:6px;height:6px;border-radius:50%;background:white;"></div>
+              </div>
+            </div>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20],
+            popupAnchor: [0, -24],
+          });
+
+          const marker = window.L.marker([rp.lat, rp.lng], { icon: beacon });
+          marker.bindPopup(`
+            <div style="font-family:-apple-system,sans-serif;min-width:180px;">
+              <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
+                <div style="width:10px;height:10px;border-radius:50%;background:${rp.color};flex-shrink:0;"></div>
+                <div style="font-size:15px;font-weight:700;color:#1d1d1f;">Rally Point: ${rp.name}</div>
+              </div>
+              <div style="padding:8px;background:#f7f7f7;border-radius:8px;font-size:13px;color:#444;">
+                <div style="margin-bottom:4px;"><strong>Radius:</strong> ${rp.radiusMiles} miles</div>
+                <div><strong>Coords:</strong> ${rp.lat.toFixed(4)}, ${rp.lng.toFixed(4)}</div>
+              </div>
+            </div>
+          `, { maxWidth: 220 });
+          marker.addTo(map);
+          rallyLayerRef.current.push(marker);
+        });
+      }, [rallyPoints]);
 
       React.useEffect(() => {
         if (viewMode !== "map") return;
@@ -1931,124 +2014,180 @@
           if (!mapRef.current) return;
           if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; }
 
-          const map = window.L.map(mapRef.current, {
-            center: [1.5, 32.5],
-            zoom: 7,
-            zoomControl: true,
-            scrollWheelZoom: true,
-          });
+          const map = window.L.map(mapRef.current, { center:[0.5, 33.5], zoom:7, zoomControl:true, scrollWheelZoom:true });
           leafletMap.current = map;
 
-          // Street layer
-          const street = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18,
-          });
-
-          // Satellite layer (ESRI)
-          const satellite = window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-            attribution: '© Esri',
-            maxZoom: 18,
-          });
-
-          // Terrain layer
-          const terrain = window.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenTopoMap',
-            maxZoom: 17,
-          });
-
+          const street    = window.L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap', maxZoom:18 });
+          const satellite = window.L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { attribution:'© Esri', maxZoom:18 });
+          const terrain   = window.L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { attribution:'© OpenTopoMap', maxZoom:17 });
           street.addTo(map);
-          window.L.control.layers({ "Street": street, "Satellite": satellite, "Terrain": terrain }, {}, { position:'topright' }).addTo(map);
+          window.L.control.layers({ "Street":street, "Satellite":satellite, "Terrain":terrain }, {}, { position:'topright' }).addTo(map);
 
-          // Clear old markers
+          // Church pins
           markersRef.current.forEach(m => map.removeLayer(m));
           markersRef.current = [];
-
           churches.filter(c => c.lat && c.lng).forEach(c => {
             const col = sCol(c.standing);
-            const r = Math.max(8, Math.min(20, 8 + ((c.members||0)/220)*12));
+            const r   = Math.max(8, Math.min(20, 8 + ((c.members||0)/220)*12));
             const icon = window.L.divIcon({
-              className: '',
-              html: `<div style="
-                width:${r*2}px;height:${r*2}px;border-radius:50%;
-                background:${col};border:2.5px solid white;
-                box-shadow:0 2px 8px rgba(0,0,0,0.25);
-                display:flex;align-items:center;justify-content:center;
-                font-size:${r>13?'9':'0'}px;font-weight:700;color:white;
-                cursor:pointer;transition:transform 0.15s;
-              ">${c.members>80?c.members:""}</div>`,
-              iconSize: [r*2, r*2],
-              iconAnchor: [r, r],
-              popupAnchor: [0, -r-4],
+              className:'',
+              html:`<div style="width:${r*2}px;height:${r*2}px;border-radius:50%;background:${col};border:2.5px solid white;box-shadow:0 2px 8px rgba(0,0,0,0.25);display:flex;align-items:center;justify-content:center;font-size:${r>13?'9':'0'}px;font-weight:700;color:white;cursor:pointer;">${c.members>80?c.members:""}</div>`,
+              iconSize:[r*2,r*2], iconAnchor:[r,r], popupAnchor:[0,-r-4],
             });
-
-            const marker = window.L.marker([c.lat, c.lng], { icon });
-            marker.bindPopup(`
-              <div style="font-family:-apple-system,sans-serif;min-width:200px;">
-                <div style="font-size:14px;font-weight:700;color:#1d1d1f;margin-bottom:4px;">${c.pastor}</div>
-                <div style="font-size:12px;color:#86868b;margin-bottom:10px;">${c.location}</div>
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;">
-                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
-                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Members</div>
-                    <div style="font-size:14px;font-weight:700;color:#007AFF;">${c.members||"?"}</div>
-                  </div>
-                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
-                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Standing</div>
-                    <div style="font-size:12px;font-weight:600;color:${col};">${c.standing||"—"}</div>
-                  </div>
-                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
-                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">Region</div>
-                    <div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.region}</div>
-                  </div>
-                  <div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;">
-                    <div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;letter-spacing:0.04em;margin-bottom:2px;">From Kampala</div>
-                    <div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.distKampala||"—"}</div>
-                  </div>
-                </div>
-                ${c.language ? `<div style="margin-top:8px;padding:7px 9px;background:#f7f7f7;border-radius:7px;font-size:12px;color:#444;"><span style="font-weight:600;">Language:</span> ${c.language}</div>` : ""}
-              </div>
-            `, { maxWidth: 260 });
-
+            const marker = window.L.marker([c.lat,c.lng], {icon});
+            marker.bindPopup(`<div style="font-family:-apple-system,sans-serif;min-width:200px;"><div style="font-size:14px;font-weight:700;color:#1d1d1f;margin-bottom:4px;">${c.pastor}</div><div style="font-size:12px;color:#86868b;margin-bottom:10px;">${c.location}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Members</div><div style="font-size:14px;font-weight:700;color:#007AFF;">${c.members||"?"}</div></div><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Standing</div><div style="font-size:12px;font-weight:600;color:${col};">${c.standing||"—"}</div></div><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Region</div><div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.region}</div></div><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Country</div><div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.country}</div></div></div></div>`, {maxWidth:260});
             marker.addTo(map);
             markersRef.current.push(marker);
           });
 
+          drawRallyPoints(map);
           setMapReady(true);
         }, 100);
 
-        return () => {
-          if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; }
-        };
+        return () => { if (leafletMap.current) { leafletMap.current.remove(); leafletMap.current = null; } };
       }, [viewMode, churches]);
+
+      // Redraw rally points when they change without rebuilding the whole map
+      React.useEffect(() => {
+        if (leafletMap.current && viewMode === "map") {
+          drawRallyPoints(leafletMap.current);
+        }
+      }, [rallyPoints, drawRallyPoints]);
+
+      const updateRadius = (id, miles) => {
+        setRallyPoints(pts => pts.map(p => p.id===id ? {...p, radiusMiles: Math.max(10, Math.min(500, miles))} : p));
+      };
 
       return (
         <div style={{ padding:"28px 24px", maxWidth:1080, margin:"0 auto", width:"100%" }}>
+          {/* Header */}
           <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:22, flexWrap:"wrap", gap:12 }}>
             <div>
               <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Church Locations</div>
-              <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{churches.length} churches · click any pin for details · scroll to zoom</div>
+              <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{churches.length} churches · {rallyPoints.length} rally point{rallyPoints.length!==1?"s":""}</div>
             </div>
-            <div style={{ display:"flex", gap:4, background:"var(--surface3)", borderRadius:9, padding:3 }}>
-              {["map","region"].map(m => (
-                <button key={m} onClick={() => setViewMode(m)} style={{ padding:"5px 16px", borderRadius:7, border:"none", fontSize:13, fontWeight:500, cursor:"pointer", background:viewMode===m?"var(--surface)":"transparent", color:viewMode===m?"var(--text)":"var(--text-muted)", boxShadow:viewMode===m?"var(--shadow-sm)":"none", transition:"all 0.15s" }}>
-                  {m==="map"?"Live Map":"By Region"}
-                </button>
-              ))}
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={() => setShowRallyPanel(s=>!s)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:`1px solid ${showRallyPanel?"var(--accent)":"var(--border-strong)"}`, background: showRallyPanel?"rgba(0,122,255,0.07)":"var(--surface)", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", color: showRallyPanel?"var(--accent)":"var(--text-secondary)", transition:"all 0.15s" }}>
+                <span style={{ fontSize:14 }}>📡</span> Rally Points
+              </button>
+              <div style={{ display:"flex", gap:2, background:"var(--surface3)", borderRadius:9, padding:3 }}>
+                {["map","region"].map(m => (
+                  <button key={m} onClick={() => setViewMode(m)} style={{ padding:"5px 16px", borderRadius:7, border:"none", fontSize:13, fontWeight:500, cursor:"pointer", background:viewMode===m?"var(--surface)":"transparent", color:viewMode===m?"var(--text)":"var(--text-muted)", boxShadow:viewMode===m?"var(--shadow-sm)":"none", transition:"all 0.15s" }}>
+                    {m==="map"?"Live Map":"By Region"}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
 
+          {/* Rally Points Panel */}
+          {showRallyPanel && (
+            <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:16, padding:20, marginBottom:16, boxShadow:"var(--shadow-sm)" }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
+                <div style={{ fontSize:15, fontWeight:700 }}>📡 Rally Points</div>
+                <button onClick={() => setShowAddRally(true)} className="btn-next" style={{ padding:"7px 16px", fontSize:12 }}>+ Add Rally Point</button>
+              </div>
+
+              <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                {rallyPoints.map(rp => (
+                  <div key={rp.id} style={{ display:"flex", alignItems:"center", gap:14, padding:"14px 16px", background:"var(--surface2)", borderRadius:12, border:"1px solid var(--border)", flexWrap:"wrap" }}>
+                    {/* Color dot + name */}
+                    <div style={{ display:"flex", alignItems:"center", gap:10, minWidth:140 }}>
+                      <div style={{ width:14, height:14, borderRadius:"50%", background:rp.color, boxShadow:`0 0 8px ${rp.color}66`, flexShrink:0 }} />
+                      <div style={{ fontSize:14, fontWeight:700 }}>{rp.name}</div>
+                    </div>
+
+                    {/* Radius slider */}
+                    <div style={{ flex:1, minWidth:200 }}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                        <span style={{ fontSize:12, color:"var(--text-muted)" }}>Radius</span>
+                        <span style={{ fontSize:13, fontWeight:700, color:rp.color }}>{rp.radiusMiles} mi</span>
+                      </div>
+                      <input type="range" min="10" max="300" step="5" value={rp.radiusMiles}
+                        onChange={e => updateRadius(rp.id, Number(e.target.value))}
+                        style={{ width:"100%", accentColor:rp.color, cursor:"pointer" }}
+                      />
+                      <div style={{ display:"flex", justifyContent:"space-between", fontSize:10, color:"var(--text-muted)" }}>
+                        <span>10 mi</span><span>300 mi</span>
+                      </div>
+                    </div>
+
+                    {/* Direct input */}
+                    <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                      <input type="number" min="10" max="500" value={rp.radiusMiles}
+                        onChange={e => updateRadius(rp.id, Number(e.target.value))}
+                        style={{ width:70, padding:"6px 10px", fontSize:13, fontWeight:600, textAlign:"center", border:"1px solid var(--border-strong)", borderRadius:8 }}
+                      />
+                      <span style={{ fontSize:12, color:"var(--text-muted)" }}>mi</span>
+                    </div>
+
+                    {/* Color picker */}
+                    <div style={{ display:"flex", gap:5 }}>
+                      {RALLY_COLORS.map(col => (
+                        <button key={col} onClick={() => setRallyPoints(pts => pts.map(p => p.id===rp.id ? {...p,color:col} : p))}
+                          style={{ width:20, height:20, borderRadius:"50%", background:col, border: rp.color===col?"2px solid #1d1d1f":"2px solid transparent", cursor:"pointer", transition:"transform 0.1s" }} />
+                      ))}
+                    </div>
+
+                    {/* Remove */}
+                    <button onClick={() => setRallyPoints(pts => pts.filter(p => p.id!==rp.id))}
+                      style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:600, cursor:"pointer" }}>
+                      Remove
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* Add Rally Point form */}
+              {showAddRally && (
+                <div style={{ marginTop:16, padding:16, background:"var(--surface3)", borderRadius:12, border:"1px solid var(--border)" }}>
+                  <div style={{ fontSize:13, fontWeight:700, marginBottom:12 }}>New Rally Point</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10, marginBottom:12 }}>
+                    {[["Name","name","text"],["Latitude","lat","number"],["Longitude","lng","number"],["Radius (mi)","radiusMiles","number"]].map(([label,key,type]) => (
+                      <div key={key} className="field-group">
+                        <div className="field-label">{label}</div>
+                        <input type={type} placeholder={label} value={newRally[key]} onChange={e => setNewRally(p=>({...p,[key]:e.target.value}))} />
+                      </div>
+                    ))}
+                  </div>
+                  <div style={{ marginBottom:12 }}>
+                    <div className="field-label">Color</div>
+                    <div style={{ display:"flex", gap:8, marginTop:6 }}>
+                      {RALLY_COLORS.map(col => (
+                        <button key={col} onClick={() => setNewRally(p=>({...p,color:col}))}
+                          style={{ width:24, height:24, borderRadius:"50%", background:col, border: newRally.color===col?"3px solid #1d1d1f":"2px solid transparent", cursor:"pointer" }} />
+                      ))}
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button className="btn-back" onClick={() => setShowAddRally(false)} style={{ flex:1 }}>Cancel</button>
+                    <button className="btn-next" onClick={() => {
+                      if (!newRally.name || !newRally.lat || !newRally.lng) return;
+                      setRallyPoints(pts => [...pts, { id:Date.now(), name:newRally.name, lat:parseFloat(newRally.lat), lng:parseFloat(newRally.lng), radiusMiles:Number(newRally.radiusMiles)||50, color:newRally.color }]);
+                      setNewRally({ name:"", lat:"", lng:"", radiusMiles:50, color:"#FF6B35" });
+                      setShowAddRally(false);
+                    }}>Add Rally Point</button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {viewMode==="map" && (
             <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", overflow:"hidden", boxShadow:"var(--shadow-sm)" }}>
-              {/* Legend */}
               <div style={{ padding:"12px 20px", borderBottom:"1px solid var(--border)", display:"flex", gap:18, flexWrap:"wrap", alignItems:"center" }}>
                 {[["STRONG","#34C759"],["Growing","#FF9500"],["Stable","#007AFF"]].map(([l,c]) => (
                   <div key={l} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-secondary)" }}>
                     <div style={{ width:10, height:10, borderRadius:"50%", background:c }} />{l}
                   </div>
                 ))}
-                <div style={{ fontSize:11, color:"var(--text-muted)", marginLeft:"auto" }}>Pin size = congregation size · Layer switcher top-right</div>
+                {rallyPoints.map(rp => (
+                  <div key={rp.id} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-secondary)" }}>
+                    <div style={{ width:10, height:10, borderRadius:"50%", background:rp.color, boxShadow:`0 0 6px ${rp.color}88` }} />📡 {rp.name} ({rp.radiusMiles}mi)
+                  </div>
+                ))}
+                <div style={{ fontSize:11, color:"var(--text-muted)", marginLeft:"auto" }}>Click pins for details · Layer switcher top-right</div>
               </div>
-              {/* Map container */}
               <div ref={mapRef} style={{ height:720, width:"100%" }} />
             </div>
           )}
