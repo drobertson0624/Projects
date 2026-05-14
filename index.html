@@ -1321,95 +1321,95 @@
       );
     }
 
-    // ─── Church Database (Salesforce-style) ───────────────────────────────────
-    const DEFAULT_VIEWS = [
-      { id:"all",      name:"All Churches",   filters:{} },
-      { id:"uganda",   name:"Uganda",         filters:{ country:"Uganda" } },
-      { id:"kenya",    name:"Kenya",          filters:{ country:"Kenya" } },
-      { id:"strong",   name:"STRONG",         filters:{ standing:"STRONG" } },
-      { id:"deploy",   name:"Deploy Queue",   filters:{ hasDeployOrder:true } },
-      { id:"internet", name:"Has Internet",   filters:{ internet:"Available" } },
-    ];
-
+    // ─── Church Database ───────────────────────────────────────────────────────
     function ChurchDatabase({ churches, onAdd, onUpdate, onPlaceOrder }) {
-      // ── View & filter state ──
+
+      // ── Column definitions ─────────────────────────────────────────────────
+      // ALL_COLS defines every possible column in display order.
+      // always:true = always shown, never in picker.
+      // The table header and body BOTH iterate this same array — no mismatch possible.
+      const ALL_COLS = [
+        { key:"_deploy",      label:"Deploy",   always:true,  w:70  },
+        { key:"pastor",       label:"Pastor",   always:true,  w:140 },
+        { key:"church_name",  label:"Church",   always:false, w:130 },
+        { key:"location",     label:"Location", always:false, w:120 },
+        { key:"region",       label:"Region",   always:false, w:110 },
+        { key:"country",      label:"Country",  always:false, w:90  },
+        { key:"members",      label:"Members",  always:false, w:80  },
+        { key:"standing",     label:"Standing", always:false, w:90  },
+        { key:"language",     label:"Language", always:false, w:140 },
+        { key:"internet",     label:"Internet", always:false, w:90  },
+        { key:"priority",     label:"Score",    always:false, w:70  },
+        { key:"phone",        label:"Phone",    always:false, w:120 },
+        { key:"elect_power",  label:"Power",    always:false, w:80  },
+        { key:"cell_signal",  label:"Cell",     always:false, w:70  },
+        { key:"_edit",        label:"",         always:true,  w:40  },
+        { key:"_order",       label:"",         always:true,  w:60  },
+        { key:"_delete",      label:"",         always:true,  w:36  },
+      ];
+
+      // Optional columns the user can toggle
+      const OPTIONAL_KEYS = ALL_COLS.filter(c => !c.always).map(c => c.key);
+      const [visibleOptional, setVisibleOptional] = useState([
+        "location","region","members","standing","language","internet","priority"
+      ]);
+
+      // Which cols are actually shown = always cols + visible optional cols (in ALL_COLS order)
+      const shownCols = ALL_COLS.filter(c => c.always || visibleOptional.includes(c.key));
+
+      // ── State ──────────────────────────────────────────────────────────────
       const [activeView, setActiveView]   = useState("all");
       const [views, setViews]             = useState(DEFAULT_VIEWS);
       const [showNewView, setShowNewView] = useState(false);
       const [newViewName, setNewViewName] = useState("");
-
-      // ── Filter sidebar ──
       const [showFilters, setShowFilters] = useState(false);
       const [filters, setFilters]         = useState({});
       const [search, setSearch]           = useState("");
-
-      // ── Sort ──
-      const [sortCol, setSortCol]   = useState("deploy_order");
-      const [sortDir, setSortDir]   = useState("asc");
-
-      // ── Pagination ──
-      const [page, setPage]         = useState(1);
-      const [pageSize, setPageSize] = useState(25);
-
-      // ── Column visibility ──
-      const ALL_COLS = [
-        { key:"deploy_order",  label:"Deploy",   always:true },
-        { key:"pastor",        label:"Pastor",   always:true },
-        { key:"church_name",   label:"Church" },
-        { key:"location",      label:"Location" },
-        { key:"region",        label:"Region" },
-        { key:"country",       label:"Country" },
-        { key:"members",       label:"Members" },
-        { key:"standing",      label:"Standing" },
-        { key:"language",      label:"Language" },
-        { key:"internet",      label:"Internet" },
-        { key:"priority",      label:"Score" },
-        { key:"phone",         label:"Phone" },
-        { key:"elect_power",   label:"Power" },
-        { key:"cell_signal",   label:"Cell" },
-      ];
-      const [visibleCols, setVisibleCols] = useState(["deploy_order","pastor","location","region","members","standing","language","internet","priority"]);
+      const [sortCol, setSortCol]         = useState("deploy_order");
+      const [sortDir, setSortDir]         = useState("asc");
+      const [page, setPage]               = useState(1);
+      const [pageSize, setPageSize]       = useState(25);
       const [showColPicker, setShowColPicker] = useState(false);
-
-      // ── Modals ──
-      const [selected, setSelected] = useState(null);
-      const [editing, setEditing]   = useState(false);
-      const [editData, setEditData] = useState(null);
-      const [showAdd, setShowAdd]   = useState(false);
-      const [showImport, setShowImport]     = useState(false);
-      const [importText, setImportText]     = useState("");
+      const [selected, setSelected]       = useState(null);
+      const [editing, setEditing]         = useState(false);
+      const [editData, setEditData]       = useState(null);
+      const [showAdd, setShowAdd]         = useState(false);
+      const [showImport, setShowImport]   = useState(false);
+      const [importText, setImportText]   = useState("");
       const [importPreview, setImportPreview] = useState([]);
-      const [importError, setImportError]   = useState("");
+      const [importError, setImportError] = useState("");
       const [importDefaultCountry, setImportDefaultCountry] = useState("");
-      const [newC, setNewC] = useState({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable" });
+      const [newC, setNewC]               = useState({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable" });
 
-      // ── Apply view ──
+      // ── Apply view ─────────────────────────────────────────────────────────
       React.useEffect(() => {
         const view = views.find(v => v.id === activeView);
         if (view) { setFilters(view.filters || {}); setPage(1); }
       }, [activeView]);
 
-      // ── Filter & sort logic ──
+      // ── Filter ─────────────────────────────────────────────────────────────
       const filtered = churches.filter(c => {
         const q = search.toLowerCase();
-        if (q && !c.pastor?.toLowerCase().includes(q) && !c.location?.toLowerCase().includes(q) && !c.region?.toLowerCase().includes(q) && !c.church_name?.toLowerCase().includes(q)) return false;
+        if (q && !c.pastor?.toLowerCase().includes(q) && !c.location?.toLowerCase().includes(q) &&
+            !c.region?.toLowerCase().includes(q) && !c.church_name?.toLowerCase().includes(q)) return false;
         if (filters.country && c.country !== filters.country) return false;
         if (filters.region  && c.region  !== filters.region)  return false;
         if (filters.standing && c.standing !== filters.standing) return false;
         if (filters.internet === "Available" && c.internet !== "Available" && c.internet !== "Yes") return false;
         if (filters.internet === "No" && (c.internet === "Available" || c.internet === "Yes")) return false;
         if (filters.hasDeployOrder && !c.deploy_order) return false;
-        if (filters.minMembers && (c.members || 0) < Number(filters.minMembers)) return false;
+        if (filters.minMembers && (c.members||0) < Number(filters.minMembers)) return false;
         return true;
       });
 
+      // ── Sort ───────────────────────────────────────────────────────────────
       const sorted = [...filtered].sort((a, b) => {
         let av = a[sortCol], bv = b[sortCol];
         if (sortCol === "deploy_order") { av = av ? Number(av) : 9999; bv = bv ? Number(bv) : 9999; }
         else if (sortCol === "members" || sortCol === "priority") { av = Number(av)||0; bv = Number(bv)||0; }
         else { av = String(av||"").toLowerCase(); bv = String(bv||"").toLowerCase(); }
-        if (av < bv) return sortDir === "asc" ? -1 : 1;
-        if (av > bv) return sortDir === "asc" ? 1 : -1;
+        if (av < bv) return sortDir==="asc" ? -1 : 1;
+        if (av > bv) return sortDir==="asc" ?  1 : -1;
         return 0;
       });
 
@@ -1417,30 +1417,88 @@
       const pageRows   = sorted.slice((page-1)*pageSize, page*pageSize);
       const deployedCount = churches.filter(c => c.deploy_order).length;
 
-      const setSort = (col) => {
-        if (sortCol === col) setSortDir(d => d === "asc" ? "desc" : "asc");
+      const toggleSort = (col) => {
+        if (sortCol === col) setSortDir(d => d==="asc" ? "desc" : "asc");
         else { setSortCol(col); setSortDir("asc"); }
       };
 
-      const sColor = s => s==="STRONG"?"tag-green":s==="Growing"?"tag-warn":"tag-gray";
+      // ── Helpers ────────────────────────────────────────────────────────────
+      const sColor   = s => s==="STRONG"?"tag-green":s==="Growing"?"tag-warn":"tag-gray";
       const openEdit = (c, e) => { e?.stopPropagation(); setEditData({...c}); setEditing(true); setSelected(null); };
       const saveEdit = () => { onUpdate(editData); setEditing(false); setEditData(null); };
 
       const saveView = () => {
         if (!newViewName.trim()) return;
-        const id = "custom_" + Date.now();
-        setViews(vs => [...vs, { id, name: newViewName.trim(), filters: {...filters} }]);
-        setActiveView(id);
-        setShowNewView(false);
-        setNewViewName("");
+        setViews(vs => [...vs, { id:"custom_"+Date.now(), name:newViewName.trim(), filters:{...filters} }]);
+        setActiveView("custom_"+Date.now());
+        setShowNewView(false); setNewViewName("");
       };
 
       const uniqueCountries = [...new Set(churches.map(c=>c.country).filter(Boolean))].sort();
-      const uniqueRegions   = [...new Set(churches.filter(c => !filters.country || c.country===filters.country).map(c=>c.region).filter(Boolean))].sort();
+      const uniqueRegions   = [...new Set(churches.filter(c=>!filters.country||c.country===filters.country).map(c=>c.region).filter(Boolean))].sort();
 
-      const YN_OPTS = ["Yes","No","Unknown"];
-      const CELL_QUALITY_OPTS = ["Strong","Moderate","Weak","None","Unknown"];
-      const FIELDS = [
+      // ── Cell renderer ──────────────────────────────────────────────────────
+      // Given a column key and row, return the <td>
+      const renderCell = (col, c) => {
+        const v = c[col.key];
+        switch(col.key) {
+          case "_deploy":
+            return (
+              <td key={col.key} onClick={e => e.stopPropagation()} style={{ padding:"6px 8px" }}>
+                <input type="number" min="1" max="999" defaultValue={c.deploy_order||""} placeholder="—"
+                  onFocus={e => e.target.style.borderColor="var(--accent)"}
+                  onBlur={e => {
+                    e.target.style.borderColor="var(--border-strong)";
+                    const val = e.target.value ? Number(e.target.value) : null;
+                    if (val !== (c.deploy_order||null)) onUpdate({...c, deploy_order:val});
+                  }}
+                  style={{ width:44, padding:"4px 6px", border:"1px solid var(--border-strong)", borderRadius:7, fontSize:13, fontWeight:700, textAlign:"center", background:c.deploy_order?"rgba(0,122,255,0.07)":"var(--surface2)", color:c.deploy_order?"var(--accent)":"var(--text-placeholder)", outline:"none" }}
+                />
+              </td>
+            );
+          case "_edit":
+            return (
+              <td key={col.key} onClick={e => openEdit(c,e)} style={{ padding:"6px 8px" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, background:"var(--surface2)", border:"1px solid var(--border-strong)", cursor:"pointer" }}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                </div>
+              </td>
+            );
+          case "_order":
+            return (
+              <td key={col.key} onClick={e => { e.stopPropagation(); onPlaceOrder && onPlaceOrder(c); }} style={{ padding:"6px 6px" }}>
+                <div style={{ padding:"5px 10px", borderRadius:7, background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", cursor:"pointer", fontSize:11, fontWeight:600, color:"var(--accent)", whiteSpace:"nowrap" }}>Order</div>
+              </td>
+            );
+          case "_delete":
+            return (
+              <td key={col.key} onClick={e => { e.stopPropagation(); if (confirm("Delete "+(c.pastor||"this church")+"? Cannot be undone.")) onUpdate({...c,_delete:true}); }} style={{ padding:"6px 4px" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:7, background:"var(--danger-light)", cursor:"pointer" }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
+                </div>
+              </td>
+            );
+          case "standing":
+            return <td key={col.key}>{v ? <span className={`tag ${sColor(v)}`}>{v}</span> : "—"}</td>;
+          case "internet":
+            return <td key={col.key}>{v ? <span className={`tag ${v==="Available"||v==="Yes"?"tag-green":"tag-gray"}`}>{v}</span> : "—"}</td>;
+          case "members":
+            return <td key={col.key} style={{ fontWeight:600, color:"var(--accent)" }}>{v||"—"}</td>;
+          case "priority":
+            return <td key={col.key} style={{ fontWeight:700, color:Number(v)>=8?"var(--success)":Number(v)>=5?"var(--warn)":"var(--text-muted)" }}>{v||"—"}</td>;
+          case "pastor":
+            return <td key={col.key} style={{ fontWeight:600 }}>{v||"—"}</td>;
+          case "language":
+            return <td key={col.key} style={{ color:"var(--text-muted)", fontSize:12, maxWidth:140, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{v||"—"}</td>;
+          default:
+            return <td key={col.key} style={{ color:"var(--text-muted)", fontSize:13 }}>{v||"—"}</td>;
+        }
+      };
+
+      // ── Field defs for forms ───────────────────────────────────────────────
+      const YN_OPTS  = ["Yes","No","Unknown"];
+      const CQ_OPTS  = ["Strong","Moderate","Weak","None","Unknown"];
+      const FIELDS   = [
         ["Pastor Name","pastor","text"],["Church Name","church_name","text"],
         ["Location","location","text"],["Region","region","text"],
         ["Country","country","text"],["Distance from Kampala","distKampala","text"],
@@ -1456,57 +1514,53 @@
         ["Sound System","sound_system"],["TV Screen","tv_screen"],
       ];
 
+      // ── CSV import ─────────────────────────────────────────────────────────
       const parseImportCSV = (text) => {
         setImportError("");
-        const lines = text.trim().split(/\r?\n/).filter(l => l.trim());
-        if (lines.length < 2) { setImportError("Need at least a header row and one data row."); setImportPreview([]); return; }
-        const headers = lines[0].split(",").map(h => h.trim().toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,""));
-        const rows = lines.slice(1).map((line, i) => {
-          const vals = line.split(",").map(v => v.trim().replace(/^"|"$/g,""));
-          const obj = { id: 900000 + Math.floor(Math.random() * 99999) + (i * 100), lat:0, lng:0, standing:"Stable" };
-          headers.forEach((h, j) => { if (vals[j] !== undefined) obj[h] = vals[j]; });
+        const lines = text.trim().split(/\r?\n/).filter(l=>l.trim());
+        if (lines.length < 2) { setImportError("Need a header row and at least one data row."); setImportPreview([]); return; }
+        const headers = lines[0].split(",").map(h=>h.trim().toLowerCase().replace(/\s+/g,"_").replace(/[^a-z0-9_]/g,""));
+        const rows = lines.slice(1).map((line,i) => {
+          const vals = line.split(",").map(v=>v.trim().replace(/^"|"$/g,""));
+          const obj = { id:900000+Math.floor(Math.random()*99999)+(i*100), lat:0, lng:0, standing:"Stable" };
+          headers.forEach((h,j) => { if (vals[j]!==undefined) obj[h]=vals[j]; });
           if (!obj.pastor && obj.pastor_name) obj.pastor = obj.pastor_name;
-          if (!obj.pastor && obj.name) obj.pastor = obj.name;
+          if (!obj.pastor && obj.name)        obj.pastor = obj.name;
           if (!obj.church_name && obj.church) obj.church_name = obj.church;
-          if (!obj.phone && obj.contact) obj.phone = obj.contact;
+          if (!obj.phone && obj.contact)      obj.phone = obj.contact;
           if (!obj.phone && obj.phone_number) obj.phone = obj.phone_number;
-          if (!obj.region && obj.district) obj.region = obj.district;
-          if (!obj.distKampala && obj.distance) obj.distKampala = obj.distance;
-          if (!obj.distKampala && obj.dist_kampala) obj.distKampala = obj.dist_kampala;
+          if (!obj.region && obj.district)    obj.region = obj.district;
           if (!obj.country && importDefaultCountry) obj.country = importDefaultCountry;
           return obj;
         });
-        const valid = rows.filter(r => r.pastor?.trim());
-        if (!valid.length) { setImportError("No valid rows found. Need a 'Name' or 'pastor_name' column."); setImportPreview([]); return; }
+        const valid = rows.filter(r=>r.pastor?.trim());
+        if (!valid.length) { setImportError("No valid rows — need a 'Name' or 'pastor_name' column."); setImportPreview([]); return; }
         setImportPreview(valid);
       };
+      const commitImport = () => { importPreview.forEach(r=>onAdd(r)); setShowImport(false); setImportText(""); setImportPreview([]); setImportDefaultCountry(""); };
 
-      const commitImport = () => { importPreview.forEach(r => onAdd(r)); setShowImport(false); setImportText(""); setImportPreview([]); setImportDefaultCountry(""); };
+      // ── Sort icon ──────────────────────────────────────────────────────────
+      const SortIcon = ({ col }) => sortCol!==col ? null : <span style={{ marginLeft:3, fontSize:10, opacity:0.7 }}>{sortDir==="asc"?"↑":"↓"}</span>;
 
-      const SortIcon = ({ col }) => sortCol !== col ? null : (
-        <span style={{ marginLeft:4, fontSize:10, opacity:0.7 }}>{sortDir==="asc"?"↑":"↓"}</span>
-      );
-
+      // ── Render ─────────────────────────────────────────────────────────────
       return (
         <div style={{ display:"flex", flexDirection:"column", height:"100%", minHeight:0 }}>
 
-          {/* ── Top bar ── */}
+          {/* Top bar */}
           <div style={{ padding:"20px 24px 0", flexShrink:0 }}>
-            {/* Stats row */}
             <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, flexWrap:"wrap", gap:10 }}>
-              <div style={{ display:"flex", gap:16, alignItems:"center", flexWrap:"wrap" }}>
+              <div style={{ display:"flex", gap:14, alignItems:"center", flexWrap:"wrap" }}>
                 <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Churches</div>
-                <div style={{ display:"flex", gap:12 }}>
-                  {[
-                    [churches.length, "total", "var(--text)"],
-                    [churches.reduce((s,c)=>s+(c.members||0),0), "members", "var(--accent)"],
-                    [deployedCount, "in queue", "var(--success)"],
-                  ].map(([val, label, color]) => (
-                    <div key={label} style={{ fontSize:13, color:"var(--text-muted)" }}>
-                      <span style={{ fontWeight:700, color, marginRight:3 }}>{val}</span>{label}
-                    </div>
-                  ))}
-                </div>
+                {[
+                  [churches.length, "total", "var(--text)"],
+                  [churches.reduce((s,c)=>s+(c.members||0),0), "members", "var(--accent)"],
+                  [deployedCount, "in queue", "var(--success)"],
+                  [filtered.length !== churches.length ? filtered.length : null, "filtered", "var(--warn)"],
+                ].filter(([v])=>v!=null).map(([val,label,color]) => (
+                  <div key={label} style={{ fontSize:13, color:"var(--text-muted)" }}>
+                    <span style={{ fontWeight:700, color, marginRight:3 }}>{val}</span>{label}
+                  </div>
+                ))}
               </div>
               <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                 <button onClick={() => exportDeployQueue(churches)} style={{ display:"flex", alignItems:"center", gap:5, padding:"8px 12px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:9, fontSize:12, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
@@ -1525,10 +1579,10 @@
               </div>
             </div>
 
-            {/* Saved views tabs */}
-            <div style={{ display:"flex", gap:0, borderBottom:"1px solid var(--border)", overflowX:"auto", scrollbarWidth:"none" }}>
+            {/* Saved view tabs */}
+            <div style={{ display:"flex", borderBottom:"1px solid var(--border)", overflowX:"auto", scrollbarWidth:"none" }}>
               {views.map(v => (
-                <button key={v.id} onClick={() => setActiveView(v.id)} style={{ padding:"9px 16px", border:"none", background:"transparent", borderBottom: activeView===v.id?"2px solid var(--accent)":"2px solid transparent", fontSize:13, fontWeight: activeView===v.id?600:400, color: activeView===v.id?"var(--accent)":"var(--text-muted)", cursor:"pointer", whiteSpace:"nowrap", marginBottom:-1, transition:"all 0.15s" }}>
+                <button key={v.id} onClick={() => { setActiveView(v.id); setPage(1); }} style={{ padding:"9px 16px", border:"none", background:"transparent", borderBottom:activeView===v.id?"2px solid var(--accent)":"2px solid transparent", fontSize:13, fontWeight:activeView===v.id?600:400, color:activeView===v.id?"var(--accent)":"var(--text-muted)", cursor:"pointer", whiteSpace:"nowrap", marginBottom:-1, transition:"color 0.15s" }}>
                   {v.name}
                 </button>
               ))}
@@ -1536,187 +1590,155 @@
             </div>
           </div>
 
-          {/* ── Search + filter toolbar ── */}
+          {/* Search + toolbar */}
           <div style={{ padding:"12px 24px", display:"flex", gap:8, alignItems:"center", borderBottom:"1px solid var(--border)", flexShrink:0, flexWrap:"wrap" }}>
             <div style={{ position:"relative", flex:1, minWidth:200 }}>
-              <svg style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="text" placeholder="Search pastor, church, location…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ paddingLeft:32, fontSize:13, padding:"8px 13px 8px 32px" }} />
+              <svg style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+              <input type="text" placeholder="Search pastor, church, location…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ paddingLeft:34, fontSize:13, padding:"8px 13px 8px 34px", width:"100%", boxSizing:"border-box" }} />
             </div>
-            <button onClick={() => setShowFilters(f => !f)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", transition:"all 0.15s", borderColor: Object.keys(filters).length?"var(--accent)":"var(--border-strong)", background: Object.keys(filters).length?"rgba(0,122,255,0.07)":"var(--surface)", color: Object.keys(filters).length?"var(--accent)":"var(--text-secondary)" }}>
+            <button onClick={() => setShowFilters(f=>!f)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", transition:"all 0.15s", borderColor:Object.values(filters).some(Boolean)?"var(--accent)":"var(--border-strong)", background:Object.values(filters).some(Boolean)?"rgba(0,122,255,0.07)":"var(--surface)", color:Object.values(filters).some(Boolean)?"var(--accent)":"var(--text-secondary)" }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
-              Filters {Object.keys(filters).filter(k=>filters[k]).length > 0 && <span style={{ background:"var(--accent)", color:"#fff", borderRadius:100, fontSize:10, fontWeight:700, padding:"1px 6px" }}>{Object.keys(filters).filter(k=>filters[k]).length}</span>}
+              Filters {Object.values(filters).filter(Boolean).length > 0 && <span style={{ background:"var(--accent)", color:"#fff", borderRadius:100, fontSize:10, fontWeight:700, padding:"1px 6px" }}>{Object.values(filters).filter(Boolean).length}</span>}
             </button>
-            <button onClick={() => setShowColPicker(s => !s)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
-              Columns
-            </button>
+            {/* Column picker button */}
+            <div style={{ position:"relative" }}>
+              <button onClick={() => setShowColPicker(s=>!s)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface)", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                Columns
+              </button>
+              {showColPicker && (
+                <div style={{ position:"absolute", top:"calc(100% + 6px)", right:0, background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:14, padding:16, boxShadow:"var(--shadow-lg)", zIndex:200, minWidth:180 }} onClick={e=>e.stopPropagation()}>
+                  <div style={{ fontSize:13, fontWeight:700, marginBottom:12, color:"var(--text)" }}>Show / Hide Columns</div>
+                  {ALL_COLS.filter(c=>!c.always && c.label).map(col => (
+                    <label key={col.key} style={{ display:"flex", alignItems:"center", gap:10, fontSize:13, padding:"6px 0", cursor:"pointer", color:"var(--text)" }}>
+                      <input type="checkbox"
+                        checked={visibleOptional.includes(col.key)}
+                        onChange={e => setVisibleOptional(vc => e.target.checked ? [...vc, col.key] : vc.filter(k=>k!==col.key))}
+                      />
+                      {col.label}
+                    </label>
+                  ))}
+                  <button onClick={() => setShowColPicker(false)} style={{ marginTop:10, width:"100%", padding:"7px", border:"none", background:"var(--surface3)", borderRadius:8, fontSize:13, cursor:"pointer" }}>Done</button>
+                </div>
+              )}
+            </div>
             <div style={{ fontSize:13, color:"var(--text-muted)", whiteSpace:"nowrap" }}>
               {filtered.length} of {churches.length}
             </div>
           </div>
 
-          {/* ── Filter sidebar + table ── */}
+          {/* Filter sidebar + table */}
           <div style={{ display:"flex", flex:1, minHeight:0, overflow:"hidden" }}>
 
             {/* Filter panel */}
             {showFilters && (
-              <div style={{ width:220, flexShrink:0, borderRight:"1px solid var(--border)", padding:"16px 16px", overflowY:"auto", background:"var(--surface2)" }}>
+              <div style={{ width:220, flexShrink:0, borderRight:"1px solid var(--border)", padding:"16px", overflowY:"auto", background:"var(--surface2)" }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
                   <div style={{ fontSize:13, fontWeight:700 }}>Filters</div>
-                  <button onClick={() => { setFilters({}); setPage(1); }} style={{ fontSize:11, color:"var(--accent)", border:"none", background:"transparent", cursor:"pointer", fontWeight:500 }}>Clear all</button>
+                  <button onClick={() => { setFilters({}); setPage(1); setActiveView("all"); }} style={{ fontSize:11, color:"var(--accent)", border:"none", background:"transparent", cursor:"pointer", fontWeight:500 }}>Clear all</button>
                 </div>
                 {[
-                  { label:"Country", key:"country", opts:["", ...uniqueCountries] },
-                  { label:"Region",  key:"region",  opts:["", ...uniqueRegions] },
-                  { label:"Standing",key:"standing", opts:["","STRONG","Stable","Growing"] },
-                  { label:"Internet",key:"internet", opts:["","Available","No"] },
+                  { label:"Country",  key:"country",  opts:["", ...uniqueCountries] },
+                  { label:"Region",   key:"region",   opts:["", ...uniqueRegions]   },
+                  { label:"Standing", key:"standing",  opts:["","STRONG","Stable","Growing"] },
+                  { label:"Internet", key:"internet",  opts:["","Available","No"] },
                 ].map(({label,key,opts}) => (
                   <div key={key} style={{ marginBottom:14 }}>
                     <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:6 }}>{label}</div>
                     <select value={filters[key]||""} onChange={e => { setFilters(f=>({...f,[key]:e.target.value||undefined})); setPage(1); }} style={{ fontSize:13, padding:"7px 10px", width:"100%" }}>
-                      {opts.map(o => <option key={o} value={o}>{o||`All ${label}s`}</option>)}
+                      {opts.map(o=><option key={o} value={o}>{o||`All ${label}s`}</option>)}
                     </select>
                   </div>
                 ))}
                 <div style={{ marginBottom:14 }}>
                   <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:6 }}>Min Members</div>
-                  <input type="number" placeholder="e.g. 50" value={filters.minMembers||""} onChange={e => { setFilters(f=>({...f,minMembers:e.target.value||undefined})); setPage(1); }} style={{ fontSize:13, padding:"7px 10px", width:"100%" }} />
+                  <input type="number" placeholder="e.g. 50" value={filters.minMembers||""} onChange={e => { setFilters(f=>({...f,minMembers:e.target.value||undefined})); setPage(1); }} style={{ fontSize:13, padding:"7px 10px", width:"100%", boxSizing:"border-box" }} />
                 </div>
-                <div>
-                  <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, cursor:"pointer" }}>
-                    <input type="checkbox" checked={!!filters.hasDeployOrder} onChange={e => { setFilters(f=>({...f,hasDeployOrder:e.target.checked||undefined})); setPage(1); }} />
-                    Deploy order set
-                  </label>
-                </div>
-                <div style={{ marginTop:16 }}>
-                  <button onClick={saveView} style={{ width:"100%", padding:"9px", border:"1px solid var(--accent)", background:"rgba(0,122,255,0.07)", borderRadius:9, fontSize:13, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>Save as View…</button>
-                </div>
-              </div>
-            )}
-
-            {/* Column picker dropdown */}
-            {showColPicker && (
-              <div style={{ position:"absolute", top:200, right:24, background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:14, padding:16, boxShadow:"var(--shadow-lg)", zIndex:100, minWidth:200 }} onClick={e => e.stopPropagation()}>
-                <div style={{ fontSize:13, fontWeight:700, marginBottom:12 }}>Visible Columns</div>
-                {ALL_COLS.filter(c => !c.always).map(col => (
-                  <label key={col.key} style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, padding:"5px 0", cursor:"pointer" }}>
-                    <input type="checkbox" checked={visibleCols.includes(col.key)} onChange={e => setVisibleCols(vc => e.target.checked ? [...vc, col.key] : vc.filter(k=>k!==col.key))} />
-                    {col.label}
-                  </label>
-                ))}
-                <button onClick={() => setShowColPicker(false)} style={{ marginTop:12, width:"100%", padding:"7px", border:"none", background:"var(--surface3)", borderRadius:8, fontSize:13, cursor:"pointer" }}>Done</button>
+                <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, cursor:"pointer", marginBottom:16 }}>
+                  <input type="checkbox" checked={!!filters.hasDeployOrder} onChange={e => { setFilters(f=>({...f,hasDeployOrder:e.target.checked||undefined})); setPage(1); }} />
+                  Deploy order set
+                </label>
+                <button onClick={() => setShowNewView(true)} style={{ width:"100%", padding:"9px", border:"1px solid var(--accent)", background:"rgba(0,122,255,0.07)", borderRadius:9, fontSize:13, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>Save as View…</button>
               </div>
             )}
 
             {/* Table */}
             <div style={{ flex:1, overflowX:"auto", overflowY:"auto" }}>
-              <table className="responses-table" style={{ minWidth:600, borderRadius:0 }}>
+              <table className="responses-table" style={{ borderRadius:0, tableLayout:"fixed" }}>
+                <colgroup>
+                  {shownCols.map(col => <col key={col.key} style={{ width:col.w }} />)}
+                </colgroup>
                 <thead style={{ position:"sticky", top:0, zIndex:10 }}>
                   <tr>
-                    <th style={{ width:70, cursor:"pointer" }} onClick={() => setSort("deploy_order")}>Deploy<SortIcon col="deploy_order"/></th>
-                    {ALL_COLS.filter(c => !c.always && visibleCols.includes(c.key)).map(col => (
-                      <th key={col.key} style={{ cursor:"pointer", whiteSpace:"nowrap" }} onClick={() => setSort(col.key)}>{col.label}<SortIcon col={col.key}/></th>
+                    {shownCols.map(col => (
+                      <th key={col.key}
+                        style={{ cursor: col.key.startsWith("_") ? "default" : "pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}
+                        onClick={() => !col.key.startsWith("_") && toggleSort(col.key)}
+                      >
+                        {col.label}
+                        {sortCol === col.key && <span style={{ marginLeft:3, fontSize:10, opacity:0.7 }}>{sortDir==="asc"?"↑":"↓"}</span>}
+                      </th>
                     ))}
-                    <th style={{ width:40 }}></th>
-                    <th style={{ width:60 }}></th>
-                    <th style={{ width:36 }}></th>
                   </tr>
                 </thead>
                 <tbody>
                   {pageRows.map(c => (
                     <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer" }}>
-                      <td onClick={e => e.stopPropagation()} style={{ padding:"6px 8px" }}>
-                        <input type="number" min="1" max="999" defaultValue={c.deploy_order||""} placeholder="—"
-                          onFocus={e => e.target.style.borderColor="var(--accent)"}
-                          onBlur={e => { e.target.style.borderColor="var(--border-strong)"; const val = e.target.value ? Number(e.target.value) : null; if (val !== (c.deploy_order||null)) onUpdate({...c, deploy_order: val}); }}
-                          style={{ width:44, padding:"4px 6px", border:"1px solid var(--border-strong)", borderRadius:7, fontSize:13, fontWeight:700, textAlign:"center", background: c.deploy_order?"rgba(0,122,255,0.07)":"var(--surface2)", color: c.deploy_order?"var(--accent)":"var(--text-placeholder)", outline:"none" }}
-                        />
-                      </td>
-                      {/* Render columns in the SAME order as headers — prevents mismatch when toggling */}
-                      {ALL_COLS.filter(col => !col.always && visibleCols.includes(col.key)).map(col => {
-                        const v = c[col.key];
-                        if (col.key === "standing") return <td key={col.key}>{v ? <span className={`tag ${sColor(v)}`}>{v}</span> : "—"}</td>;
-                        if (col.key === "internet") return <td key={col.key}>{v ? <span className={`tag ${v==="Available"||v==="Yes"?"tag-green":"tag-gray"}`}>{v}</span> : "—"}</td>;
-                        if (col.key === "members")  return <td key={col.key} style={{ fontWeight:600, color:"var(--accent)" }}>{v||"—"}</td>;
-                        if (col.key === "priority") return <td key={col.key} style={{ fontWeight:700, color:Number(v)>=8?"var(--success)":Number(v)>=5?"var(--warn)":"var(--text-muted)" }}>{v||"—"}</td>;
-                        if (col.key === "pastor")   return <td key={col.key} style={{ fontWeight:600, minWidth:120 }}>{v||"—"}</td>;
-                        if (col.key === "language") return <td key={col.key} style={{ color:"var(--text-muted)", fontSize:12, maxWidth:140, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{v||"—"}</td>;
-                        return <td key={col.key} style={{ color:"var(--text-muted)", fontSize:13 }}>{v||"—"}</td>;
-                      })}
-                      <td onClick={e => openEdit(c,e)} style={{ padding:"6px 8px" }}>
-                        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, background:"var(--surface2)", border:"1px solid var(--border-strong)", cursor:"pointer" }}>
-                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                        </div>
-                      </td>
-                      <td onClick={e => { e.stopPropagation(); onPlaceOrder && onPlaceOrder(c); }} style={{ padding:"6px 6px" }}>
-                        <div style={{ padding:"5px 10px", borderRadius:7, background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", cursor:"pointer", fontSize:11, fontWeight:600, color:"var(--accent)", whiteSpace:"nowrap" }}>Order</div>
-                      </td>
-                      <td onClick={e => { e.stopPropagation(); if (confirm("Delete " + (c.pastor||"this church") + "? This cannot be undone.")) { onUpdate({...c, _delete:true}); } }} style={{ padding:"6px 4px" }}>
-                        <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:7, background:"var(--danger-light)", cursor:"pointer" }} title="Delete">
-                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                        </div>
-                      </td>
+                      {shownCols.map(col => renderCell(col, c))}
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {pageRows.length === 0 && <div style={{ padding:"60px 24px", textAlign:"center", color:"var(--text-muted)", fontSize:14 }}>No churches match your filters.</div>}
+              {pageRows.length===0 && <div style={{ padding:"60px 24px", textAlign:"center", color:"var(--text-muted)", fontSize:14 }}>No churches match your filters.</div>}
             </div>
           </div>
 
-          {/* ── Pagination ── */}
-          <div style={{ padding:"12px 24px", borderTop:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, flexWrap:"wrap", gap:10, background:"var(--surface)" }}>
-            <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <span style={{ fontSize:13, color:"var(--text-muted)" }}>Rows per page:</span>
+          {/* Pagination */}
+          <div style={{ padding:"10px 24px", borderTop:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, flexWrap:"wrap", gap:10, background:"var(--surface)" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <span style={{ fontSize:12, color:"var(--text-muted)" }}>Rows:</span>
               {[10,25,50].map(n => (
-                <button key={n} onClick={() => { setPageSize(n); setPage(1); }} style={{ padding:"4px 10px", borderRadius:7, border:"1px solid", fontSize:12, fontWeight:500, cursor:"pointer", borderColor: pageSize===n?"var(--accent)":"var(--border-strong)", background: pageSize===n?"rgba(0,122,255,0.09)":"transparent", color: pageSize===n?"var(--accent)":"var(--text-muted)" }}>{n}</button>
+                <button key={n} onClick={() => { setPageSize(n); setPage(1); }} style={{ padding:"3px 9px", borderRadius:7, border:"1px solid", fontSize:12, cursor:"pointer", borderColor:pageSize===n?"var(--accent)":"var(--border-strong)", background:pageSize===n?"rgba(0,122,255,0.09)":"transparent", color:pageSize===n?"var(--accent)":"var(--text-muted)", fontWeight:pageSize===n?600:400 }}>{n}</button>
               ))}
             </div>
-            <div style={{ fontSize:13, color:"var(--text-muted)" }}>
-              {(page-1)*pageSize+1}–{Math.min(page*pageSize, sorted.length)} of {sorted.length}
+            <div style={{ fontSize:12, color:"var(--text-muted)" }}>
+              {sorted.length === 0 ? "0 results" : `${(page-1)*pageSize+1}–${Math.min(page*pageSize,sorted.length)} of ${sorted.length}`}
             </div>
-            <div style={{ display:"flex", gap:6 }}>
-              <button onClick={() => setPage(1)} disabled={page===1} style={{ padding:"5px 10px", borderRadius:7, border:"1px solid var(--border-strong)", background:"var(--surface2)", fontSize:12, cursor:"pointer", color:"var(--text-muted)" }}>«</button>
-              <button onClick={() => setPage(p => Math.max(1,p-1))} disabled={page===1} style={{ padding:"5px 10px", borderRadius:7, border:"1px solid var(--border-strong)", background:"var(--surface2)", fontSize:12, cursor:"pointer", color:"var(--text-muted)" }}>‹</button>
-              {Array.from({length:Math.min(5,totalPages)}, (_,i) => {
-                const p = Math.max(1, Math.min(totalPages-4, page-2)) + i;
-                return <button key={p} onClick={() => setPage(p)} style={{ padding:"5px 10px", borderRadius:7, border:"1px solid", fontSize:12, fontWeight:500, cursor:"pointer", borderColor: page===p?"var(--accent)":"var(--border-strong)", background: page===p?"var(--accent)":"var(--surface2)", color: page===p?"#fff":"var(--text-muted)" }}>{p}</button>;
-              })}
-              <button onClick={() => setPage(p => Math.min(totalPages,p+1))} disabled={page===totalPages} style={{ padding:"5px 10px", borderRadius:7, border:"1px solid var(--border-strong)", background:"var(--surface2)", fontSize:12, cursor:"pointer", color:"var(--text-muted)" }}>›</button>
-              <button onClick={() => setPage(totalPages)} disabled={page===totalPages} style={{ padding:"5px 10px", borderRadius:7, border:"1px solid var(--border-strong)", background:"var(--surface2)", fontSize:12, cursor:"pointer", color:"var(--text-muted)" }}>»</button>
+            <div style={{ display:"flex", gap:4 }}>
+              {[["«",()=>setPage(1)],["‹",()=>setPage(p=>Math.max(1,p-1))],["›",()=>setPage(p=>Math.min(totalPages,p+1))],["»",()=>setPage(totalPages)]].map(([lbl,fn],i) => (
+                <button key={i} onClick={fn} style={{ padding:"4px 9px", borderRadius:7, border:"1px solid var(--border-strong)", background:"var(--surface2)", fontSize:12, cursor:"pointer", color:"var(--text-muted)" }}>{lbl}</button>
+              ))}
             </div>
           </div>
 
-          {/* ── Detail modal ── */}
+          {/* Detail modal */}
           {selected && !editing && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setSelected(null)}>
-              <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                 <div style={{ display:"flex", alignItems:"flex-start", justifyContent:"space-between", marginBottom:18 }}>
                   <div>
-                    <div style={{ fontSize:17, fontWeight:700, letterSpacing:"-0.02em" }}>{selected.pastor}</div>
+                    <div style={{ fontSize:17, fontWeight:700 }}>{selected.pastor}</div>
                     <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:3 }}>{selected.church_name||selected.location}</div>
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
-                    <button onClick={e => openEdit(selected,e)} style={{ border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontSize:13, fontWeight:500 }}>Edit</button>
+                    <button onClick={e=>openEdit(selected,e)} style={{ border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontSize:13, fontWeight:500 }}>Edit</button>
                     <button onClick={() => setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
                   </div>
                 </div>
-                {(selected.phone || selected.whatsapp || selected.email || selected.church_name) && (
-                  <>
-                    <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Contact</div>
-                    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:16 }}>
-                      {[["Church Name",selected.church_name],["Phone",selected.phone],["WhatsApp",selected.whatsapp],["Email",selected.email]].filter(([,v])=>v).map(([k,v]) => (
-                        <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
-                          <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
-                          <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
+                {(selected.phone||selected.whatsapp||selected.email||selected.church_name) && <>
+                  <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Contact</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
+                    {[["Church",selected.church_name],["Phone",selected.phone],["WhatsApp",selected.whatsapp],["Email",selected.email]].filter(([,v])=>v).map(([k,v])=>(
+                      <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
+                        <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
+                        <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </>}
                 <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Church Info</div>
-                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:16 }}>
-                  {[["Region",selected.region],["Country",selected.country],["Members",selected.members||"—"],["Standing",selected.standing||"—"],["Spiritual Standing",selected.spiritual_standing||"—"],["Language",selected.language||"—"],["Building Type",selected.bldg_type||"—"],["From Kampala",selected.distKampala||"—"],["Score",selected.priority||"—"],["Deploy Order",selected.deploy_order||"Not set"]].map(([k,v]) => (
+                <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginBottom:14 }}>
+                  {[["Region",selected.region],["Country",selected.country],["Members",selected.members||"—"],["Standing",selected.standing||"—"],["Spiritual Standing",selected.spiritual_standing||"—"],["Language",selected.language||"—"],["Building Type",selected.bldg_type||"—"],["From Kampala",selected.distKampala||"—"],["Score",selected.priority||"—"],["Deploy Order",selected.deploy_order||"Not set"]].map(([k,v])=>(
                     <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
                       <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
                       <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
@@ -1725,13 +1747,12 @@
                 </div>
                 <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:8 }}>Infrastructure</div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:8 }}>
-                  {[["Internet",selected.internet],["Cell Signal",selected.cell_signal],["Cell Quality",selected.cell_quality],["Cell Phone",selected.cell_phone],["Tablet",selected.tablet],["Electric Power",selected.elect_power],["Laptop",selected.laptop],["Sound System",selected.sound_system],["TV Screen",selected.tv_screen]].map(([k,v]) => {
-                    const isYes = v==="Yes"||v==="Available"||v==="Strong";
-                    const isNo  = v==="No"||v==="None"||v==="Weak";
+                  {[["Internet",selected.internet],["Cell Signal",selected.cell_signal],["Cell Quality",selected.cell_quality],["Cell Phone",selected.cell_phone],["Tablet",selected.tablet],["Electric Power",selected.elect_power],["Laptop",selected.laptop],["Sound System",selected.sound_system],["TV Screen",selected.tv_screen]].map(([k,v])=>{
+                    const isYes=v==="Yes"||v==="Available"||v==="Strong", isNo=v==="No"||v==="None"||v==="Weak";
                     return (
                       <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
                         <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
-                        <div style={{ fontSize:12, fontWeight:600, color: isYes?"var(--success)":isNo?"var(--danger)":"var(--text-muted)" }}>{v||"—"}</div>
+                        <div style={{ fontSize:12, fontWeight:600, color:isYes?"var(--success)":isNo?"var(--danger)":"var(--text-muted)" }}>{v||"—"}</div>
                       </div>
                     );
                   })}
@@ -1740,9 +1761,10 @@
             </div>
           )}
 
+          {/* Edit modal */}
           {editing && editData && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setEditing(false)}>
-              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:720, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:720, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20 }}>
                   <div style={{ fontSize:17, fontWeight:700 }}>Edit Church</div>
                   <button onClick={() => setEditing(false)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
@@ -1751,13 +1773,13 @@
                   {FIELDS.map(([label,key,type]) => (
                     <div key={key} className="field-group">
                       <div className="field-label">{label}</div>
-                      <input type={type} value={editData[key]||""} onChange={e => setEditData(d=>({...d,[key]:e.target.value}))} />
+                      <input type={type} value={editData[key]||""} onChange={e=>setEditData(d=>({...d,[key]:e.target.value}))} />
                     </div>
                   ))}
                   <div className="field-group">
                     <div className="field-label">Standing</div>
-                    <select value={editData.standing||""} onChange={e => setEditData(d=>({...d,standing:e.target.value}))}>
-                      {["STRONG","Stable","Growing",""].map(s => <option key={s} value={s}>{s||"(none)"}</option>)}
+                    <select value={editData.standing||""} onChange={e=>setEditData(d=>({...d,standing:e.target.value}))}>
+                      {["STRONG","Stable","Growing",""].map(s=><option key={s} value={s}>{s||"(none)"}</option>)}
                     </select>
                   </div>
                 </div>
@@ -1767,17 +1789,17 @@
                     {YN_FIELDS.map(([label,key]) => (
                       <div key={key} className="field-group">
                         <div className="field-label">{label}</div>
-                        <select value={editData[key]||""} onChange={e => setEditData(d=>({...d,[key]:e.target.value}))}>
+                        <select value={editData[key]||""} onChange={e=>setEditData(d=>({...d,[key]:e.target.value}))}>
                           <option value="">—</option>
-                          {YN_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                          {YN_OPTS.map(o=><option key={o} value={o}>{o}</option>)}
                         </select>
                       </div>
                     ))}
                     <div className="field-group">
                       <div className="field-label">Cell Quality</div>
-                      <select value={editData.cell_quality||""} onChange={e => setEditData(d=>({...d,cell_quality:e.target.value}))}>
+                      <select value={editData.cell_quality||""} onChange={e=>setEditData(d=>({...d,cell_quality:e.target.value}))}>
                         <option value="">—</option>
-                        {CELL_QUALITY_OPTS.map(o => <option key={o} value={o}>{o}</option>)}
+                        {CQ_OPTS.map(o=><option key={o} value={o}>{o}</option>)}
                       </select>
                     </div>
                   </div>
@@ -1786,29 +1808,31 @@
                   <button className="btn-back" onClick={() => setEditing(false)} style={{ flex:1 }}>Cancel</button>
                   <button onClick={async () => {
                     const coords = await geocode(editData);
-                    if (coords.lat !== 0) { setEditData(d => ({...d, lat: coords.lat, lng: coords.lng})); alert("📍 Found: " + coords.lat.toFixed(4) + ", " + coords.lng.toFixed(4)); }
+                    if (coords.lat!==0) { setEditData(d=>({...d,...coords})); alert("📍 Found: "+coords.lat.toFixed(4)+", "+coords.lng.toFixed(4)); }
                     else alert("Could not find location. Try adding Region or Country.");
-                  }} style={{ flex:"none", padding:"11px 14px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
-                    📍 Get Location
-                  </button>
+                  }} style={{ flex:"none", padding:"11px 14px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>📍 Get Location</button>
                   <button className="btn-next" onClick={saveEdit}>Save Changes</button>
                 </div>
               </div>
             </div>
           )}
 
+          {/* Add modal */}
           {showAdd && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setShowAdd(false)}>
-              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:720, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:720, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                 <div style={{ fontSize:17, fontWeight:700, marginBottom:20 }}>Add New Church</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
                   {[["Pastor Name","pastor","text"],["Church Name","church_name","text"],["Location","location","text"],["Region","region","text"],["Country","country","text"],["Distance from Kampala","distKampala","text"],["Language","language","text"],["Phone","phone","text"],["WhatsApp","whatsapp","text"],["Email","email","text"],["Members","members","number"],["Score (1-9)","priority","number"]].map(([label,key,type]) => (
-                    <div key={key} className="field-group"><div className="field-label">{label}</div><input type={type} placeholder={label} value={newC[key]||""} onChange={e => setNewC(p=>({...p,[key]:e.target.value}))} /></div>
+                    <div key={key} className="field-group">
+                      <div className="field-label">{label}</div>
+                      <input type={type} placeholder={label} value={newC[key]||""} onChange={e=>setNewC(p=>({...p,[key]:e.target.value}))} />
+                    </div>
                   ))}
                   <div className="field-group">
                     <div className="field-label">Standing</div>
-                    <select value={newC.standing||"Stable"} onChange={e => setNewC(p=>({...p,standing:e.target.value}))}>
-                      {["STRONG","Stable","Growing"].map(s => <option key={s} value={s}>{s}</option>)}
+                    <select value={newC.standing||"Stable"} onChange={e=>setNewC(p=>({...p,standing:e.target.value}))}>
+                      {["STRONG","Stable","Growing"].map(s=><option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>
@@ -1820,35 +1844,35 @@
             </div>
           )}
 
-          {/* ── Import modal ── */}
+          {/* Import modal */}
           {showImport && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => { setShowImport(false); setImportPreview([]); setImportText(""); setImportError(""); setImportDefaultCountry(""); }}>
-              <div style={{ background:"var(--surface)", borderRadius:20, padding:26, maxWidth:560, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e => e.stopPropagation()}>
+              <div style={{ background:"var(--surface)", borderRadius:20, padding:26, maxWidth:560, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
                   <div style={{ fontSize:17, fontWeight:700 }}>Import Churches from CSV</div>
                   <button onClick={() => { setShowImport(false); setImportPreview([]); setImportText(""); setImportError(""); setImportDefaultCountry(""); }} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
                 </div>
                 <div className="info-box blue" style={{ marginBottom:14, fontSize:13 }}>
-                  <strong>Only Pastor Name is required.</strong> Supported columns: pastor_name (or Name), church_name (or Church), contact (→ phone), location, region, country, members, language, standing.
+                  <strong>Pastor Name is required.</strong> Supported: Name/pastor_name, Church/church_name, Contact/phone, location, region, country, members, language, standing.
                 </div>
                 <div className="field-group" style={{ marginBottom:12 }}>
-                  <div className="field-label">Default Country (applied if row has no country)</div>
-                  <select value={importDefaultCountry} onChange={e => setImportDefaultCountry(e.target.value)} style={{ fontSize:14 }}>
+                  <div className="field-label">Default Country (for rows without one)</div>
+                  <select value={importDefaultCountry} onChange={e=>setImportDefaultCountry(e.target.value)}>
                     <option value="">— none —</option>
-                    {Object.keys(COUNTRIES).map(c => <option key={c} value={c}>{c}</option>)}
+                    {Object.keys(COUNTRIES).map(c=><option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
-                <button onClick={() => { const t = "pastor_name,church_name,location,region,country,members,language,phone,whatsapp,email,internet,standing\nJohn Doe,Grace Church,Kampala,Kampala,Uganda,50,Luganda,+256700000000,+256700000000,john@example.com,Yes,Stable"; downloadCSV(t, "church-import-template.csv"); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", marginBottom:14 }}>
+                <button onClick={() => { const t="pastor_name,church_name,location,region,country,members,language,phone,whatsapp,email,internet,standing\nJohn Doe,Grace Church,Kampala,Kampala,Uganda,50,Luganda,+256700000000,+256700000000,john@example.com,Yes,Stable"; downloadCSV(t,"church-import-template.csv"); }} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)", marginBottom:14 }}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   Download Template
                 </button>
                 <label style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:10, padding:"18px", border:"2px dashed var(--border-strong)", borderRadius:12, cursor:"pointer", background:"var(--surface2)", marginBottom:14 }}
-                  onDragOver={e => { e.preventDefault(); e.currentTarget.style.borderColor="var(--accent)"; }}
-                  onDragLeave={e => e.currentTarget.style.borderColor="var(--border-strong)"}
-                  onDrop={e => { e.preventDefault(); e.currentTarget.style.borderColor="var(--border-strong)"; const file = e.dataTransfer.files[0]; if (file) { const r = new FileReader(); r.onload = ev => { setImportText(ev.target.result); parseImportCSV(ev.target.result); }; r.readAsText(file); } }}>
+                  onDragOver={e=>{e.preventDefault();e.currentTarget.style.borderColor="var(--accent)";}}
+                  onDragLeave={e=>e.currentTarget.style.borderColor="var(--border-strong)"}
+                  onDrop={e=>{e.preventDefault();e.currentTarget.style.borderColor="var(--border-strong)";const file=e.dataTransfer.files[0];if(file){const r=new FileReader();r.onload=ev=>{setImportText(ev.target.result);parseImportCSV(ev.target.result);};r.readAsText(file);}}}>
                   <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                   <span style={{ fontSize:14, color:"var(--text-muted)" }}>Drop CSV here or <span style={{ color:"var(--accent)", fontWeight:600 }}>browse</span></span>
-                  <input type="file" accept=".csv,text/csv" style={{ display:"none" }} onChange={e => { const file = e.target.files[0]; if (file) { const r = new FileReader(); r.onload = ev => { setImportText(ev.target.result); parseImportCSV(ev.target.result); }; r.readAsText(file); } }} />
+                  <input type="file" accept=".csv,text/csv" style={{ display:"none" }} onChange={e=>{const file=e.target.files[0];if(file){const r=new FileReader();r.onload=ev=>{setImportText(ev.target.result);parseImportCSV(ev.target.result);};r.readAsText(file);}}} />
                 </label>
                 <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
                   <div style={{ flex:1, height:1, background:"var(--border)" }} />
@@ -1857,18 +1881,18 @@
                 </div>
                 <div className="field-group" style={{ marginBottom:12 }}>
                   <div className="field-label">Paste CSV</div>
-                  <textarea value={importText} onChange={e => { setImportText(e.target.value); if (e.target.value) parseImportCSV(e.target.value); else { setImportPreview([]); setImportError(""); } }} placeholder={"pastor_name,location,region\nJohn Doe,Kampala,Kampala"} style={{ minHeight:100, fontSize:13, fontFamily:"monospace" }} />
+                  <textarea value={importText} onChange={e=>{setImportText(e.target.value);if(e.target.value)parseImportCSV(e.target.value);else{setImportPreview([]);setImportError("");};}} placeholder={"pastor_name,location,region\nJohn Doe,Kampala,Kampala"} style={{ minHeight:80, fontSize:13, fontFamily:"monospace" }} />
                 </div>
                 {importError && <div className="info-box danger" style={{ marginBottom:12, fontSize:13 }}>{importError}</div>}
                 {importPreview.length > 0 && (
                   <div style={{ marginBottom:14 }}>
-                    <div style={{ fontSize:12, fontWeight:600, color:"var(--success)", marginBottom:8 }}>✓ {importPreview.length} church{importPreview.length!==1?"es":""} ready to import</div>
+                    <div style={{ fontSize:12, fontWeight:600, color:"var(--success)", marginBottom:8 }}>✓ {importPreview.length} church{importPreview.length!==1?"es":""} ready</div>
                     <div style={{ background:"var(--surface2)", borderRadius:10, border:"1px solid var(--border)", overflow:"hidden", maxHeight:160, overflowY:"auto" }}>
-                      {importPreview.map((r,i) => (
-                        <div key={i} style={{ padding:"8px 13px", borderBottom: i<importPreview.length-1?"1px solid var(--border)":"none", fontSize:13 }}>
+                      {importPreview.map((r,i)=>(
+                        <div key={i} style={{ padding:"8px 13px", borderBottom:i<importPreview.length-1?"1px solid var(--border)":"none", fontSize:13 }}>
                           <span style={{ fontWeight:600 }}>{r.pastor}</span>
-                          {r.church_name && <span style={{ color:"var(--text-muted)", marginLeft:8 }}>{r.church_name}</span>}
-                          {r.country && <span style={{ color:"var(--text-muted)", marginLeft:4 }}>· {r.country}</span>}
+                          {r.church_name&&<span style={{ color:"var(--text-muted)", marginLeft:8 }}>{r.church_name}</span>}
+                          {r.country&&<span style={{ color:"var(--text-muted)", marginLeft:4 }}>· {r.country}</span>}
                         </div>
                       ))}
                     </div>
@@ -1876,20 +1900,20 @@
                 )}
                 <div style={{ display:"flex", gap:8 }}>
                   <button className="btn-back" onClick={() => { setShowImport(false); setImportPreview([]); setImportText(""); setImportError(""); setImportDefaultCountry(""); }} style={{ flex:1 }}>Cancel</button>
-                  <button className="btn-next" onClick={commitImport} disabled={!importPreview.length}>Import {importPreview.length > 0 ? importPreview.length + " Church" + (importPreview.length!==1?"es":"") : ""}</button>
+                  <button className="btn-next" onClick={commitImport} disabled={!importPreview.length}>Import {importPreview.length > 0 ? importPreview.length+" Church"+(importPreview.length!==1?"es":"") : ""}</button>
                 </div>
               </div>
             </div>
           )}
 
-          {/* ── Save view modal ── */}
+          {/* Save view modal */}
           {showNewView && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }} onClick={() => setShowNewView(false)}>
-              <div style={{ background:"var(--surface)", borderRadius:16, padding:24, maxWidth:340, width:"100%", boxShadow:"var(--shadow-lg)" }} onClick={e => e.stopPropagation()}>
+              <div style={{ background:"var(--surface)", borderRadius:16, padding:24, maxWidth:340, width:"100%", boxShadow:"var(--shadow-lg)" }} onClick={e=>e.stopPropagation()}>
                 <div style={{ fontSize:16, fontWeight:700, marginBottom:14 }}>Save as View</div>
                 <div className="field-group" style={{ marginBottom:14 }}>
                   <div className="field-label">View Name</div>
-                  <input type="text" placeholder="e.g. Kenya Churches" value={newViewName} onChange={e => setNewViewName(e.target.value)} onKeyDown={e => e.key==="Enter" && saveView()} autoFocus />
+                  <input type="text" placeholder="e.g. Kenya Churches" value={newViewName} onChange={e=>setNewViewName(e.target.value)} onKeyDown={e=>e.key==="Enter"&&saveView()} autoFocus />
                 </div>
                 <div style={{ display:"flex", gap:8 }}>
                   <button className="btn-back" onClick={() => setShowNewView(false)} style={{ flex:1 }}>Cancel</button>
@@ -1901,6 +1925,7 @@
         </div>
       );
     }
+
 
 
     // ─── Church Map (Leaflet) ────────────────────────────────────────────────
