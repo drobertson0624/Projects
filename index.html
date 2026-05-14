@@ -1928,8 +1928,10 @@
       }, []);
       const [showRallyPanel, setShowRallyPanel] = useState(false);
       const [editingRally, setEditingRally]     = useState(null);
-      const [newRally, setNewRally]             = useState({ name:"", lat:"", lng:"", radiusMiles:50, color:"#FF6B35" });
+      const [newRally, setNewRally]             = useState({ name:"", city:"", country:"Kenya", radiusMiles:50, color:"#FF6B35" });
       const [showAddRally, setShowAddRally]     = useState(false);
+      const [rallyGeocoding, setRallyGeocoding] = useState(false);
+      const [rallyGeoError, setRallyGeoError]   = useState("");
 
       const MILES_TO_METERS = 1609.34;
       const RALLY_COLORS = ["#FF6B35","#9B59B6","#E74C3C","#27AE60","#F39C12","#1ABC9C","#2980B9","#E91E63"];
@@ -2147,6 +2149,12 @@
                       ))}
                     </div>
 
+                    {/* Edit */}
+                    <button onClick={() => setEditingRally({...rp, _city:"", _country:"Kenya"})}
+                      style={{ border:"1px solid var(--border-strong)", background:"var(--surface)", color:"var(--text-secondary)", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:500, cursor:"pointer" }}>
+                      Edit
+                    </button>
+
                     {/* Remove */}
                     <button onClick={() => { setRallyPoints(pts => pts.filter(p => p.id!==rp.id)); deleteRallyPoint(rp.id); }}
                       style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:600, cursor:"pointer" }}>
@@ -2158,46 +2166,132 @@
 
               {/* Add Rally Point form */}
               {showAddRally && (
-                <div style={{ marginTop:16, padding:16, background:"var(--surface3)", borderRadius:12, border:"1px solid var(--border)" }}>
-                  <div style={{ fontSize:13, fontWeight:700, marginBottom:12 }}>New Rally Point</div>
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr 1fr", gap:10, marginBottom:12 }}>
-                    {[["Name","name","text"],["Latitude","lat","number"],["Longitude","lng","number"],["Radius (mi)","radiusMiles","number"]].map(([label,key,type]) => (
-                      <div key={key} className="field-group">
-                        <div className="field-label">{label}</div>
-                        <input type={type} placeholder={label} value={newRally[key]} onChange={e => setNewRally(p=>({...p,[key]:e.target.value}))} />
+                <div style={{ marginTop:16, padding:18, background:"var(--surface3)", borderRadius:12, border:"1px solid var(--border)" }}>
+                  <div style={{ fontSize:13, fontWeight:700, marginBottom:14 }}>New Rally Point</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+                    <div className="field-group">
+                      <div className="field-label">City Name <span style={{ color:"var(--text-muted)", fontWeight:400 }}>(becomes the label)</span></div>
+                      <input type="text" placeholder="e.g. Nairobi" value={newRally.city} onChange={e => { setNewRally(p=>({...p, city:e.target.value, name:e.target.value})); setRallyGeoError(""); }} />
+                    </div>
+                    <div className="field-group">
+                      <div className="field-label">Country</div>
+                      <select value={newRally.country} onChange={e => setNewRally(p=>({...p,country:e.target.value}))}>
+                        {Object.keys(COUNTRIES).filter(c=>c!=="Other").map(c => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                    <div className="field-group">
+                      <div className="field-label">Radius (miles)</div>
+                      <input type="number" min="10" max="500" value={newRally.radiusMiles} onChange={e => setNewRally(p=>({...p,radiusMiles:Number(e.target.value)}))} />
+                    </div>
+                    <div className="field-group">
+                      <div className="field-label">Color</div>
+                      <div style={{ display:"flex", gap:7, marginTop:6 }}>
+                        {RALLY_COLORS.map(col => (
+                          <button key={col} onClick={() => setNewRally(p=>({...p,color:col}))}
+                            style={{ width:26, height:26, borderRadius:"50%", background:col, border: newRally.color===col?"3px solid #1d1d1f":"2px solid transparent", cursor:"pointer" }} />
+                        ))}
                       </div>
-                    ))}
-                  </div>
-                  <div style={{ marginBottom:12 }}>
-                    <div className="field-label">Color</div>
-                    <div style={{ display:"flex", gap:8, marginTop:6 }}>
-                      {RALLY_COLORS.map(col => (
-                        <button key={col} onClick={() => setNewRally(p=>({...p,color:col}))}
-                          style={{ width:24, height:24, borderRadius:"50%", background:col, border: newRally.color===col?"3px solid #1d1d1f":"2px solid transparent", cursor:"pointer" }} />
-                      ))}
                     </div>
                   </div>
+                  {rallyGeoError && <div style={{ fontSize:12, color:"var(--danger)", marginBottom:10 }}>{rallyGeoError}</div>}
                   <div style={{ display:"flex", gap:8 }}>
-                    <button className="btn-back" onClick={() => setShowAddRally(false)} style={{ flex:1 }}>Cancel</button>
-                    <button className="btn-next" onClick={async () => {
-                      if (!newRally.name || !newRally.lat || !newRally.lng) return;
-                      const newRp = { name:newRally.name, lat:parseFloat(newRally.lat), lng:parseFloat(newRally.lng), radiusMiles:Number(newRally.radiusMiles)||50, color:newRally.color };
-                      // Save to Supabase and get back the real UUID
+                    <button className="btn-back" onClick={() => { setShowAddRally(false); setRallyGeoError(""); }} style={{ flex:1 }}>Cancel</button>
+                    <button className="btn-next" disabled={rallyGeocoding || !newRally.city.trim()} onClick={async () => {
+                      setRallyGeocoding(true); setRallyGeoError("");
+                      // Geocode city + country
+                      const query = encodeURIComponent(`${newRally.city}, ${newRally.country}`);
                       try {
-                        const res = await fetch(`${SUPABASE_URL}/rest/v1/rally_points`, {
+                        const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${query}&format=json&limit=1`, { headers:{"Accept-Language":"en","User-Agent":"EastAfricaChurchApp/1.0"} });
+                        const data = await res.json();
+                        if (!data?.[0]) { setRallyGeoError(`Could not find "${newRally.city}, ${newRally.country}". Check spelling.`); setRallyGeocoding(false); return; }
+                        const lat = parseFloat(data[0].lat), lng = parseFloat(data[0].lon);
+                        const newRp = { name:`${newRally.city}, ${newRally.country}`, lat, lng, radiusMiles:Number(newRally.radiusMiles)||50, color:newRally.color };
+                        const saveRes = await fetch(`${SUPABASE_URL}/rest/v1/rally_points`, {
                           method:"POST",
                           headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=representation"},
                           body:JSON.stringify({ name:newRp.name, lat:newRp.lat, lng:newRp.lng, radius_miles:newRp.radiusMiles, color:newRp.color }),
                         });
-                        const rows = await res.json();
-                        const saved = rows?.[0];
-                        setRallyPoints(pts => [...pts, { ...newRp, id: saved?.id || Date.now() }]);
-                      } catch(e) {
-                        setRallyPoints(pts => [...pts, { ...newRp, id: Date.now() }]);
-                      }
-                      setNewRally({ name:"", lat:"", lng:"", radiusMiles:50, color:"#FF6B35" });
-                      setShowAddRally(false);
-                    }}>Add Rally Point</button>
+                        const rows = await saveRes.json();
+                        setRallyPoints(pts => [...pts, { ...newRp, id: rows?.[0]?.id || Date.now() }]);
+                        setNewRally({ name:"", city:"", country:"Kenya", radiusMiles:50, color:"#FF6B35" });
+                        setShowAddRally(false);
+                      } catch(e) { setRallyGeoError("Network error. Try again."); }
+                      setRallyGeocoding(false);
+                    }}>
+                      {rallyGeocoding ? "Finding location…" : "Add Rally Point"}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Edit Rally Point modal */}
+              {editingRally && (
+                <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }} onClick={() => setEditingRally(null)}>
+                  <div style={{ background:"var(--surface)", borderRadius:20, padding:26, maxWidth:480, width:"100%", boxShadow:"var(--shadow-lg)" }} onClick={e => e.stopPropagation()}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:18 }}>
+                      <div style={{ fontSize:16, fontWeight:700 }}>Edit Rally Point</div>
+                      <button onClick={() => setEditingRally(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                    </div>
+                    <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
+                      <div className="field-group">
+                        <div className="field-label">Name / Label</div>
+                        <input type="text" value={editingRally.name} onChange={e => setEditingRally(r=>({...r,name:e.target.value}))} />
+                      </div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                        <div className="field-group">
+                          <div className="field-label">Re-geocode City</div>
+                          <input type="text" placeholder="e.g. Kisumu" value={editingRally._city||""} onChange={e => setEditingRally(r=>({...r,_city:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Country</div>
+                          <select value={editingRally._country||"Kenya"} onChange={e => setEditingRally(r=>({...r,_country:e.target.value}))}>
+                            {Object.keys(COUNTRIES).filter(c=>c!=="Other").map(c => <option key={c} value={c}>{c}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                      {editingRally._city && (
+                        <button onClick={async () => {
+                          setRallyGeocoding(true);
+                          const q = encodeURIComponent(`${editingRally._city}, ${editingRally._country||"Kenya"}`);
+                          const res = await fetch(`https://nominatim.openstreetmap.org/search?q=${q}&format=json&limit=1`, { headers:{"Accept-Language":"en","User-Agent":"EastAfricaChurchApp/1.0"} });
+                          const data = await res.json();
+                          if (data?.[0]) setEditingRally(r=>({...r, lat:parseFloat(data[0].lat), lng:parseFloat(data[0].lon), name:r._city+", "+(r._country||"Kenya")}));
+                          setRallyGeocoding(false);
+                        }} style={{ padding:"8px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>
+                          {rallyGeocoding ? "Finding…" : "📍 Update Location"}
+                        </button>
+                      )}
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+                        <div className="field-group">
+                          <div className="field-label">Latitude</div>
+                          <input type="number" value={editingRally.lat} onChange={e => setEditingRally(r=>({...r,lat:parseFloat(e.target.value)}))} style={{ fontSize:13 }} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Longitude</div>
+                          <input type="number" value={editingRally.lng} onChange={e => setEditingRally(r=>({...r,lng:parseFloat(e.target.value)}))} style={{ fontSize:13 }} />
+                        </div>
+                      </div>
+                      <div className="field-group">
+                        <div className="field-label">Radius (miles)</div>
+                        <input type="number" min="10" max="500" value={editingRally.radiusMiles} onChange={e => setEditingRally(r=>({...r,radiusMiles:Number(e.target.value)}))} />
+                      </div>
+                      <div>
+                        <div className="field-label">Color</div>
+                        <div style={{ display:"flex", gap:8, marginTop:8 }}>
+                          {RALLY_COLORS.map(col => (
+                            <button key={col} onClick={() => setEditingRally(r=>({...r,color:col}))}
+                              style={{ width:26, height:26, borderRadius:"50%", background:col, border: editingRally.color===col?"3px solid #1d1d1f":"2px solid transparent", cursor:"pointer" }} />
+                          ))}
+                        </div>
+                      </div>
+                      <div style={{ display:"flex", gap:8, marginTop:4 }}>
+                        <button className="btn-back" onClick={() => setEditingRally(null)} style={{ flex:1 }}>Cancel</button>
+                        <button className="btn-next" onClick={() => {
+                          updateRally(editingRally.id, { name:editingRally.name, lat:editingRally.lat, lng:editingRally.lng, radiusMiles:editingRally.radiusMiles, color:editingRally.color });
+                          setEditingRally(null);
+                        }}>Save Changes</button>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
