@@ -2822,11 +2822,22 @@
       const [newItemName, setNewItemName]     = useState("");
       const [newItemCat, setNewItemCat]       = useState("General");
       const [refreshing, setRefreshing]       = useState(false);
+      const [toast, setToast]                 = useState(""); // copy toast
+      // Controlled state for carrier/tracking inputs per order
+      const [carriers, setCarriers]           = useState({});
+      const [trackingNums, setTrackingNums]   = useState({});
 
       const load = (spinner) => {
         if (spinner) setRefreshing(true);
         Promise.all([fetchOrders(), fetchInventory()]).then(([o, inv]) => {
-          setOrders(o); setInventory(inv); setRefreshing(false);
+          setOrders(o);
+          setInventory(inv);
+          // Seed controlled inputs from loaded data
+          const c = {}, t = {};
+          o.forEach(order => { c[order.id] = order.carrier||""; t[order.id] = order.tracking_number||""; });
+          setCarriers(c);
+          setTrackingNums(t);
+          setRefreshing(false);
         });
       };
       React.useEffect(() => { load(false); }, []);
@@ -2940,20 +2951,27 @@
                         <div style={{ marginTop:12, display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
                           <div className="field-group">
                             <div className="field-label">Carrier</div>
-                            <input type="text" placeholder="e.g. DHL, FedEx, Local" defaultValue={order.carrier||""} onBlur={async e => {
-                              const val = e.target.value.trim();
-                              await updateOrderStatus(order.id, order.status); // keep status
-                              await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`, { method:"PATCH", headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=minimal"}, body:JSON.stringify({carrier:val}) });
-                              setOrders(os => os.map(o => o.id===order.id ? {...o,carrier:val} : o));
-                            }} style={{ fontSize:13 }} />
+                            <input type="text" placeholder="e.g. DHL, FedEx, Local"
+                              value={carriers[order.id]||""}
+                              onChange={e => setCarriers(p => ({...p, [order.id]: e.target.value}))}
+                              onBlur={async e => {
+                                const val = e.target.value.trim();
+                                await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`, { method:"PATCH", headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=minimal"}, body:JSON.stringify({carrier:val}) });
+                                setOrders(os => os.map(o => o.id===order.id ? {...o,carrier:val} : o));
+                              }}
+                              style={{ fontSize:13 }} />
                           </div>
                           <div className="field-group">
                             <div className="field-label">Tracking Number</div>
-                            <input type="text" placeholder="e.g. 1Z999AA10123456784" defaultValue={order.tracking_number||""} onBlur={async e => {
-                              const val = e.target.value.trim();
-                              await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`, { method:"PATCH", headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=minimal"}, body:JSON.stringify({tracking_number:val}) });
-                              setOrders(os => os.map(o => o.id===order.id ? {...o,tracking_number:val} : o));
-                            }} style={{ fontSize:13 }} />
+                            <input type="text" placeholder="e.g. 1Z999AA10123456784"
+                              value={trackingNums[order.id]||""}
+                              onChange={e => setTrackingNums(p => ({...p, [order.id]: e.target.value}))}
+                              onBlur={async e => {
+                                const val = e.target.value.trim();
+                                await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`, { method:"PATCH", headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=minimal"}, body:JSON.stringify({tracking_number:val}) });
+                                setOrders(os => os.map(o => o.id===order.id ? {...o,tracking_number:val} : o));
+                              }}
+                              style={{ fontSize:13 }} />
                           </div>
                         </div>
 
@@ -2962,14 +2980,14 @@
                           <button onClick={() => {
                             const url = `${window.location.origin}${window.location.pathname}?track=${order.order_number}`;
                             navigator.clipboard?.writeText(url).catch(()=>{});
-                            // Show brief confirmation
-                            const btn = document.getElementById(`copy-${order.id}`);
-                            if (btn) { btn.textContent = "✓ Copied!"; setTimeout(() => btn.textContent = "📋 Copy Tracking Link", 2000); }
-                          }} id={`copy-${order.id}`} style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", border:"none", background:"linear-gradient(135deg,#4fc3f7,#0288d1)", color:"#fff", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", width:"100%" }}>
-                            📋 Copy Tracking Link — {order.order_number}
+                            setToast("✓ Tracking link copied!");
+                            setTimeout(() => setToast(""), 3000);
+                          }} style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:7, padding:"11px 18px", border:"none", background:"var(--accent)", color:"#fff", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", width:"100%" }}>
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                            Copy Tracking Link — {order.order_number}
                           </button>
                           <div style={{ fontSize:11, color:"var(--text-muted)", marginTop:5, textAlign:"center" }}>
-                            Paste this link in WhatsApp to share with {order.church_name||order.pastor_name}
+                            Paste in WhatsApp to share with {order.church_name||order.pastor_name}
                           </div>
                         </div>
                       </div>
@@ -3008,6 +3026,14 @@
                 ))}
                 {inventory.length === 0 && <div style={{ fontSize:14, color:"var(--text-muted)", textAlign:"center", padding:"20px 0" }}>No inventory items yet.</div>}
               </div>
+            </div>
+          )}
+
+          {/* Copy toast */}
+          {toast && (
+            <div style={{ position:"fixed", bottom:32, left:"50%", transform:"translateX(-50%)", background:"#1d1d1f", color:"#fff", padding:"12px 22px", borderRadius:100, fontSize:14, fontWeight:600, boxShadow:"0 4px 24px rgba(0,0,0,0.22)", zIndex:500, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+              {toast}
             </div>
           )}
         </div>
@@ -3262,11 +3288,14 @@
       );
     }
 
-    // ─── Mission Control Tracking Page ────────────────────────────────────────
+    // ─── Order Tracking Page ──────────────────────────────────────────────────
     function TrackingPage({ orderNumber }) {
       const [order, setOrder]     = useState(null);
       const [error, setError]     = useState(false);
       const [loading, setLoading] = useState(true);
+
+      // Inline color constants — works without CSS vars
+      const C = { bg:"#f7f7f7", surface:"#fff", border:"#e5e5e5", text:"#1d1d1f", muted:"#86868b", accent:"#007AFF", success:"#34C759", shadow:"0 1px 4px rgba(0,0,0,0.08)" };
 
       React.useEffect(() => {
         fetch(`${SUPABASE_URL}/rest/v1/orders?order_number=eq.${encodeURIComponent(orderNumber)}&select=*&limit=1`, {
@@ -3275,30 +3304,30 @@
           .then(r => r.json())
           .then(rows => { if (rows?.[0]) setOrder(rows[0]); else setError(true); setLoading(false); })
           .catch(() => { setError(true); setLoading(false); });
-      }, [orderNumber]);
+      }, []);
 
       const STEPS = [
         { key:"New",         label:"Order Received", desc:"Your order has been logged and is awaiting processing." },
-        { key:"In Progress", label:"Being Prepared",  desc:"Your order is being prepared and packed for shipment." },
-        { key:"Shipped",     label:"On Its Way",      desc:"Your order is on its way. Check the tracking info below." },
+        { key:"In Progress", label:"Being Prepared",  desc:"Your order is being prepared and packed." },
+        { key:"Shipped",     label:"On Its Way",      desc:"Your order is on its way. Check tracking info below." },
       ];
-      const stepIndex = order ? STEPS.findIndex(s => s.key === order.status) : -1;
+      const si = order ? STEPS.findIndex(s => s.key === order.status) : -1;
 
       if (loading) return (
-        <div style={{ minHeight:"100vh", background:"var(--bg)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"-apple-system,'Inter',BlinkMacSystemFont,sans-serif" }}>
+        <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"-apple-system,sans-serif" }}>
           <div style={{ textAlign:"center" }}>
-            <div style={{ width:36, height:36, border:"2px solid var(--border)", borderTopColor:"var(--accent)", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 14px" }} />
-            <div style={{ color:"var(--text-muted)", fontSize:13 }}>Loading order…</div>
+            <div style={{ width:34, height:34, border:`2px solid ${C.border}`, borderTopColor:C.accent, borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 12px" }} />
+            <div style={{ color:C.muted, fontSize:13 }}>Loading order…</div>
           </div>
         </div>
       );
 
       if (error || !order) return (
-        <div style={{ minHeight:"100vh", background:"var(--bg)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"-apple-system,'Inter',BlinkMacSystemFont,sans-serif", padding:24 }}>
-          <div style={{ textAlign:"center", maxWidth:400 }}>
-            <div style={{ width:64, height:64, borderRadius:18, background:"var(--surface3)", display:"flex", alignItems:"center", justifyContent:"center", margin:"0 auto 20px", fontSize:28 }}>🔍</div>
-            <div style={{ color:"var(--text)", fontSize:20, fontWeight:700, marginBottom:8 }}>Order Not Found</div>
-            <div style={{ color:"var(--text-muted)", fontSize:14, lineHeight:1.6 }}>No order found for <span style={{ color:"var(--accent)", fontFamily:"monospace" }}>{orderNumber}</span>.<br/>Check the link and try again.</div>
+        <div style={{ minHeight:"100vh", background:C.bg, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"-apple-system,sans-serif", padding:24 }}>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>🔍</div>
+            <div style={{ fontSize:20, fontWeight:700, marginBottom:8 }}>Order Not Found</div>
+            <div style={{ color:C.muted, fontSize:14, lineHeight:1.6 }}>No order found for <strong>{orderNumber}</strong>.<br/>Check the link and try again.</div>
           </div>
         </div>
       );
@@ -3307,62 +3336,43 @@
       const orderedAt = new Date(order.created_at).toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
 
       return (
-        <div style={{ minHeight:"100vh", background:"var(--bg)", fontFamily:"-apple-system,'Inter',BlinkMacSystemFont,sans-serif", color:"var(--text)", paddingBottom:80 }}>
-          {/* Nav */}
-          <nav style={{ background:"var(--surface)", borderBottom:"1px solid var(--border)", padding:"0 24px", height:56, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        <div style={{ minHeight:"100vh", background:C.bg, fontFamily:"-apple-system,'Inter',BlinkMacSystemFont,sans-serif", color:C.text, paddingBottom:80 }}>
+          <nav style={{ background:C.surface, borderBottom:`1px solid ${C.border}`, padding:"0 24px", height:56, display:"flex", alignItems:"center", justifyContent:"space-between" }}>
             <div style={{ display:"flex", alignItems:"center", gap:10 }}>
-              <div style={{ width:28, height:28, borderRadius:8, background:"rgba(0,122,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14 }}>🌍</div>
-              <span style={{ fontSize:14, fontWeight:600, color:"var(--text)", letterSpacing:"-0.01em" }}>LCA East Africa</span>
+              <div style={{ width:28, height:28, borderRadius:8, background:"rgba(0,122,255,0.1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🌍</div>
+              <span style={{ fontSize:14, fontWeight:600, letterSpacing:"-0.01em" }}>LCA East Africa</span>
             </div>
-            <span style={{ fontSize:12, color:"var(--text-muted)", letterSpacing:"0.04em", textTransform:"uppercase" }}>Order Tracking</span>
+            <span style={{ fontSize:12, color:C.muted, letterSpacing:"0.04em", textTransform:"uppercase" }}>Order Tracking</span>
           </nav>
 
           <div style={{ maxWidth:640, margin:"0 auto", padding:"44px 20px 0" }}>
-
-            {/* Order number hero */}
+            {/* Hero */}
             <div style={{ textAlign:"center", marginBottom:40 }}>
-              <div style={{ display:"inline-flex", alignItems:"center", gap:8, padding:"6px 14px", background:"rgba(0,122,255,0.08)", borderRadius:100, border:"1px solid rgba(0,122,255,0.2)", marginBottom:16 }}>
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M20 7H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2z"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-                <span style={{ fontSize:12, fontWeight:600, color:"var(--accent)", letterSpacing:"0.06em", textTransform:"uppercase" }}>Order Reference</span>
-              </div>
-              <div style={{ fontSize:34, fontWeight:800, letterSpacing:"0.06em", fontFamily:"monospace", color:"var(--text)", marginBottom:8 }}>{order.order_number}</div>
-              <div style={{ fontSize:14, color:"var(--text-muted)" }}>{order.church_name || order.pastor_name} · {orderedAt}</div>
+              <div style={{ display:"inline-block", padding:"5px 14px", background:"rgba(0,122,255,0.08)", borderRadius:100, border:"1px solid rgba(0,122,255,0.2)", fontSize:12, fontWeight:600, color:C.accent, letterSpacing:"0.06em", textTransform:"uppercase", marginBottom:14 }}>Order Reference</div>
+              <div style={{ fontSize:32, fontWeight:800, letterSpacing:"0.06em", fontFamily:"monospace", marginBottom:8 }}>{order.order_number}</div>
+              <div style={{ fontSize:14, color:C.muted }}>{order.church_name||order.pastor_name} · {orderedAt}</div>
             </div>
 
-            {/* Progress tracker */}
-            <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:20, padding:"28px 24px", marginBottom:16, boxShadow:"var(--shadow-sm)" }}>
+            {/* Progress */}
+            <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:20, padding:"28px 24px", marginBottom:14, boxShadow:C.shadow }}>
               <div style={{ position:"relative" }}>
-                {/* Background line */}
-                <div style={{ position:"absolute", top:19, left:"16%", right:"16%", height:2, background:"var(--border)", zIndex:0 }} />
-                {/* Progress line */}
-                <div style={{ position:"absolute", top:19, left:"16%", height:2, zIndex:1, transition:"width 0.8s ease", background:"var(--accent)", width: stepIndex===0?"0%":stepIndex===1?"50%":"100%" }} />
-
+                <div style={{ position:"absolute", top:19, left:"16%", right:"16%", height:2, background:C.border, zIndex:0 }} />
+                <div style={{ position:"absolute", top:19, left:"16%", height:2, zIndex:1, background:C.accent, transition:"width 0.8s ease", width: si<=0?"0%":si===1?"50%":"100%" }} />
                 <div style={{ display:"flex", justifyContent:"space-between", position:"relative", zIndex:2 }}>
                   {STEPS.map((step, i) => {
-                    const done    = i < stepIndex;
-                    const current = i === stepIndex;
-                    const future  = i > stepIndex;
+                    const done=i<si, cur=i===si, fut=i>si;
                     return (
                       <div key={step.key} style={{ display:"flex", flexDirection:"column", alignItems:"center", flex:1 }}>
-                        <div style={{
-                          width:38, height:38, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12, fontSize:14, fontWeight:700, transition:"all 0.4s",
-                          background: done ? "var(--accent)" : current ? "var(--surface)" : "var(--surface3)",
-                          border: done ? "none" : current ? "2px solid var(--accent)" : "2px solid var(--border-strong)",
-                          color: done ? "#fff" : current ? "var(--accent)" : "var(--text-muted)",
-                          boxShadow: current ? "0 0 0 4px rgba(0,122,255,0.12)" : "none",
-                        }}>
-                          {done ? (
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
-                          ) : i === 0 ? (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
-                          ) : i === 1 ? (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
-                          ) : (
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
-                          )}
+                        <div style={{ width:38, height:38, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:12, transition:"all 0.4s", background:done?C.accent:cur?C.surface:"#f5f5f5", border:done?"none":cur?`2px solid ${C.accent}`:`2px solid ${C.border}`, color:done?"#fff":cur?C.accent:C.muted, boxShadow:cur?`0 0 0 4px rgba(0,122,255,0.12)`:"none" }}>
+                          {done
+                            ? <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+                            : i===0 ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                            : i===1 ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+                            : <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+                          }
                         </div>
-                        <div style={{ fontSize:12, fontWeight:600, color: future?"var(--text-muted)":current?"var(--accent)":"var(--text)", textAlign:"center", marginBottom:4 }}>{step.label}</div>
-                        {current && <div style={{ fontSize:11, color:"var(--text-muted)", textAlign:"center", maxWidth:120, lineHeight:1.5 }}>{step.desc}</div>}
+                        <div style={{ fontSize:12, fontWeight:600, color:fut?C.muted:cur?C.accent:C.text, textAlign:"center", marginBottom:4 }}>{step.label}</div>
+                        {cur && <div style={{ fontSize:11, color:C.muted, textAlign:"center", maxWidth:120, lineHeight:1.5 }}>{step.desc}</div>}
                       </div>
                     );
                   })}
@@ -3371,55 +3381,53 @@
             </div>
 
             {/* Status callout */}
-            <div style={{ background: stepIndex===2?"rgba(52,199,89,0.07)":"var(--surface)", border:"1px solid", borderColor: stepIndex===2?"rgba(52,199,89,0.25)":"var(--border)", borderRadius:14, padding:"16px 20px", marginBottom:14, display:"flex", alignItems:"center", gap:14, boxShadow:"var(--shadow-sm)" }}>
-              <div style={{ width:40, height:40, borderRadius:12, background: stepIndex===2?"rgba(52,199,89,0.12)":"rgba(0,122,255,0.09)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
-                {stepIndex === 0 && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
-                {stepIndex === 1 && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>}
-                {stepIndex === 2 && <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>}
+            <div style={{ background:si===2?"rgba(52,199,89,0.07)":C.surface, border:`1px solid ${si===2?"rgba(52,199,89,0.25)":C.border}`, borderRadius:14, padding:"16px 20px", marginBottom:14, display:"flex", alignItems:"center", gap:14, boxShadow:C.shadow }}>
+              <div style={{ width:40, height:40, borderRadius:12, background:si===2?"rgba(52,199,89,0.1)":"rgba(0,122,255,0.09)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                {si===0&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>}
+                {si===1&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.accent} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>}
+                {si===2&&<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.success} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>}
               </div>
               <div>
-                <div style={{ fontSize:15, fontWeight:700, marginBottom:2, color: stepIndex===2?"var(--success)":"var(--text)" }}>{STEPS[Math.max(0,stepIndex)]?.label}</div>
-                <div style={{ fontSize:13, color:"var(--text-muted)" }}>{STEPS[Math.max(0,stepIndex)]?.desc}</div>
+                <div style={{ fontSize:15, fontWeight:700, marginBottom:2, color:si===2?C.success:C.text }}>{STEPS[Math.max(0,si)]?.label}</div>
+                <div style={{ fontSize:13, color:C.muted }}>{STEPS[Math.max(0,si)]?.desc}</div>
               </div>
             </div>
 
-            {/* Tracking number */}
+            {/* Carrier/tracking */}
             {order.tracking_number && (
               <div style={{ background:"rgba(0,122,255,0.06)", border:"1px solid rgba(0,122,255,0.18)", borderRadius:14, padding:"16px 20px", marginBottom:14 }}>
-                <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--accent)", marginBottom:10 }}>Shipment Tracking</div>
+                <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", color:C.accent, marginBottom:10 }}>Shipment Tracking</div>
                 <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
-                  {order.carrier && <div style={{ fontSize:13, color:"var(--text-muted)" }}>{order.carrier}</div>}
-                  <div style={{ fontFamily:"monospace", fontSize:15, fontWeight:700, color:"var(--text)", letterSpacing:"0.06em" }}>{order.tracking_number}</div>
+                  {order.carrier && <div style={{ fontSize:13, color:C.muted }}>{order.carrier}</div>}
+                  <div style={{ fontFamily:"monospace", fontSize:15, fontWeight:700, letterSpacing:"0.06em" }}>{order.tracking_number}</div>
                 </div>
               </div>
             )}
 
             {/* Items */}
-            <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, overflow:"hidden", marginBottom:14, boxShadow:"var(--shadow-sm)" }}>
-              <div style={{ padding:"13px 18px", borderBottom:"1px solid var(--border)", fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--text-muted)" }}>Order Contents</div>
-              {items.map((item, i) => (
-                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 18px", borderBottom:i<items.length-1?"1px solid var(--border)":"none" }}>
-                  <span style={{ fontSize:14, color:"var(--text)" }}>{item.name}</span>
-                  <span style={{ fontSize:13, fontWeight:600, color:"var(--accent)", fontFamily:"monospace" }}>×{item.qty}</span>
+            <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, overflow:"hidden", marginBottom:14, boxShadow:C.shadow }}>
+              <div style={{ padding:"13px 18px", borderBottom:`1px solid ${C.border}`, fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", color:C.muted }}>Order Contents</div>
+              {items.map((item,i) => (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"12px 18px", borderBottom:i<items.length-1?`1px solid ${C.border}`:"none" }}>
+                  <span style={{ fontSize:14 }}>{item.name}</span>
+                  <span style={{ fontSize:13, fontWeight:600, color:C.accent, fontFamily:"monospace" }}>×{item.qty}</span>
                 </div>
               ))}
             </div>
 
-            {/* Delivery info */}
-            <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, padding:"16px 18px", boxShadow:"var(--shadow-sm)" }}>
-              <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", color:"var(--text-muted)", marginBottom:12 }}>Delivery Info</div>
+            {/* Delivery */}
+            <div style={{ background:C.surface, border:`1px solid ${C.border}`, borderRadius:14, padding:"16px 18px", boxShadow:C.shadow }}>
+              <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.06em", textTransform:"uppercase", color:C.muted, marginBottom:12 }}>Delivery Info</div>
               <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
                 {[["Church",order.church_name||order.pastor_name],["Region",order.region],["Country",order.country],["Ordered",orderedAt]].filter(([,v])=>v).map(([k,v]) => (
-                  <div key={k}>
-                    <div style={{ fontSize:11, color:"var(--text-muted)", marginBottom:3 }}>{k}</div>
-                    <div style={{ fontSize:14, fontWeight:500, color:"var(--text)" }}>{v}</div>
-                  </div>
+                  <div key={k}><div style={{ fontSize:11, color:C.muted, marginBottom:3 }}>{k}</div><div style={{ fontSize:14, fontWeight:500 }}>{v}</div></div>
                 ))}
               </div>
             </div>
-
           </div>
         </div>
+      );
+    }
     // ─── App ──────────────────────────────────────────────────────────────────
     function App() {
       const [view, setView] = useState(() => {
