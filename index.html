@@ -2935,6 +2935,43 @@
                           ))}
                         </div>
                         {order.notes && <div style={{ padding:"10px 13px", background:"var(--surface2)", borderRadius:9, fontSize:13, color:"var(--text-secondary)", border:"1px solid var(--border)" }}><strong>Notes:</strong> {order.notes}</div>}
+
+                        {/* Tracking number + carrier */}
+                        <div style={{ marginTop:12, display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                          <div className="field-group">
+                            <div className="field-label">Carrier</div>
+                            <input type="text" placeholder="e.g. DHL, FedEx, Local" defaultValue={order.carrier||""} onBlur={async e => {
+                              const val = e.target.value.trim();
+                              await updateOrderStatus(order.id, order.status); // keep status
+                              await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`, { method:"PATCH", headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=minimal"}, body:JSON.stringify({carrier:val}) });
+                              setOrders(os => os.map(o => o.id===order.id ? {...o,carrier:val} : o));
+                            }} style={{ fontSize:13 }} />
+                          </div>
+                          <div className="field-group">
+                            <div className="field-label">Tracking Number</div>
+                            <input type="text" placeholder="e.g. 1Z999AA10123456784" defaultValue={order.tracking_number||""} onBlur={async e => {
+                              const val = e.target.value.trim();
+                              await fetch(`${SUPABASE_URL}/rest/v1/orders?id=eq.${order.id}`, { method:"PATCH", headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=minimal"}, body:JSON.stringify({tracking_number:val}) });
+                              setOrders(os => os.map(o => o.id===order.id ? {...o,tracking_number:val} : o));
+                            }} style={{ fontSize:13 }} />
+                          </div>
+                        </div>
+
+                        {/* Copy tracking link */}
+                        <div style={{ marginTop:10 }}>
+                          <button onClick={() => {
+                            const url = `${window.location.origin}${window.location.pathname}?track=${order.order_number}`;
+                            navigator.clipboard?.writeText(url).catch(()=>{});
+                            // Show brief confirmation
+                            const btn = document.getElementById(`copy-${order.id}`);
+                            if (btn) { btn.textContent = "✓ Copied!"; setTimeout(() => btn.textContent = "📋 Copy Tracking Link", 2000); }
+                          }} id={`copy-${order.id}`} style={{ display:"flex", alignItems:"center", gap:7, padding:"10px 18px", border:"none", background:"linear-gradient(135deg,#4fc3f7,#0288d1)", color:"#fff", borderRadius:10, fontSize:13, fontWeight:600, cursor:"pointer", width:"100%" }}>
+                            📋 Copy Tracking Link — {order.order_number}
+                          </button>
+                          <div style={{ fontSize:11, color:"var(--text-muted)", marginTop:5, textAlign:"center" }}>
+                            Paste this link in WhatsApp to share with {order.church_name||order.pastor_name}
+                          </div>
+                        </div>
                       </div>
                     )}
                   </div>
@@ -3225,12 +3262,165 @@
       );
     }
 
+    // ─── Mission Control Tracking Page ────────────────────────────────────────
+    function TrackingPage({ orderNumber }) {
+      const [order, setOrder]   = useState(null);
+      const [error, setError]   = useState(false);
+      const [loading, setLoading] = useState(true);
+
+      React.useEffect(() => {
+        fetch(`${SUPABASE_URL}/rest/v1/orders?order_number=eq.${encodeURIComponent(orderNumber)}&select=*&limit=1`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        })
+          .then(r => r.json())
+          .then(rows => {
+            if (rows && rows[0]) setOrder(rows[0]);
+            else setError(true);
+            setLoading(false);
+          })
+          .catch(() => { setError(true); setLoading(false); });
+      }, [orderNumber]);
+
+      const STEPS = [
+        { key:"New",         label:"Order Received",  icon:"📋", desc:"Your order has been logged and is awaiting processing." },
+        { key:"In Progress", label:"Being Prepared",  icon:"📦", desc:"Your order is being prepared and packed for shipment." },
+        { key:"Shipped",     label:"On Its Way",      icon:"🚀", desc:"Your order is on its way. Check the tracking info below." },
+      ];
+      const stepIndex = order ? STEPS.findIndex(s => s.key === order.status) : -1;
+
+      if (loading) return (
+        <div style={{ minHeight:"100vh", background:"#0a0a0f", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"-apple-system,sans-serif" }}>
+          <div style={{ textAlign:"center" }}>
+            <div style={{ width:40, height:40, border:"2px solid #ffffff22", borderTopColor:"#4fc3f7", borderRadius:"50%", animation:"spin 0.8s linear infinite", margin:"0 auto 16px" }} />
+            <div style={{ color:"#ffffff44", fontSize:13, letterSpacing:"0.1em", textTransform:"uppercase" }}>Connecting…</div>
+          </div>
+        </div>
+      );
+
+      if (error || !order) return (
+        <div style={{ minHeight:"100vh", background:"#0a0a0f", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"-apple-system,sans-serif", padding:24 }}>
+          <div style={{ textAlign:"center", maxWidth:400 }}>
+            <div style={{ fontSize:48, marginBottom:16 }}>🔍</div>
+            <div style={{ color:"#fff", fontSize:20, fontWeight:700, marginBottom:8 }}>Order Not Found</div>
+            <div style={{ color:"#ffffff66", fontSize:14, lineHeight:1.6 }}>No order found for <span style={{ color:"#4fc3f7", fontFamily:"monospace" }}>{orderNumber}</span>.<br/>Check the link and try again.</div>
+          </div>
+        </div>
+      );
+
+      const items = typeof order.items === "string" ? JSON.parse(order.items) : (order.items || []);
+      const orderedAt = new Date(order.created_at).toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+
+      return (
+        <div style={{ minHeight:"100vh", background:"#0a0a0f", fontFamily:"-apple-system,'Inter',BlinkMacSystemFont,sans-serif", color:"#fff", padding:"0 0 80px" }}>
+          {/* Top bar */}
+          <div style={{ borderBottom:"1px solid #ffffff0f", padding:"20px 32px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12 }}>
+              <div style={{ width:32, height:32, borderRadius:8, background:"linear-gradient(135deg,#4fc3f7,#0288d1)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:16 }}>🌍</div>
+              <div style={{ fontSize:14, fontWeight:600, color:"#ffffff99", letterSpacing:"0.05em", textTransform:"uppercase" }}>LCA East Africa</div>
+            </div>
+            <div style={{ fontSize:12, color:"#ffffff33", letterSpacing:"0.08em", textTransform:"uppercase" }}>Order Tracking</div>
+          </div>
+
+          <div style={{ maxWidth:720, margin:"0 auto", padding:"48px 24px 0" }}>
+            {/* Order number */}
+            <div style={{ marginBottom:48, textAlign:"center" }}>
+              <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.2em", textTransform:"uppercase", color:"#4fc3f7", marginBottom:12 }}>Mission Reference</div>
+              <div style={{ fontSize:36, fontWeight:800, letterSpacing:"0.06em", fontFamily:"monospace", color:"#fff", textShadow:"0 0 40px rgba(79,195,247,0.4)" }}>{order.order_number}</div>
+              <div style={{ fontSize:14, color:"#ffffff55", marginTop:8 }}>{order.church_name || order.pastor_name} · {orderedAt}</div>
+            </div>
+
+            {/* Progress tracker */}
+            <div style={{ background:"#ffffff08", border:"1px solid #ffffff12", borderRadius:20, padding:"32px 28px", marginBottom:28 }}>
+              <div style={{ position:"relative" }}>
+                {/* Connector line */}
+                <div style={{ position:"absolute", top:20, left:"16.66%", right:"16.66%", height:2, background:"#ffffff12", zIndex:0 }} />
+                <div style={{ position:"absolute", top:20, left:"16.66%", width: stepIndex === 0 ? "0%" : stepIndex === 1 ? "50%" : "100%", height:2, background:"linear-gradient(90deg,#4fc3f7,#0288d1)", zIndex:1, transition:"width 0.8s ease" }} />
+
+                <div style={{ display:"flex", justifyContent:"space-between", position:"relative", zIndex:2 }}>
+                  {STEPS.map((step, i) => {
+                    const done    = i < stepIndex;
+                    const current = i === stepIndex;
+                    const future  = i > stepIndex;
+                    return (
+                      <div key={step.key} style={{ display:"flex", flexDirection:"column", alignItems:"center", flex:1 }}>
+                        {/* Circle */}
+                        <div style={{
+                          width:40, height:40, borderRadius:"50%", display:"flex", alignItems:"center", justifyContent:"center",
+                          fontSize:18, marginBottom:14,
+                          background: done ? "linear-gradient(135deg,#4fc3f7,#0288d1)" : current ? "#0a0a0f" : "#0a0a0f",
+                          border: done ? "none" : current ? "2px solid #4fc3f7" : "2px solid #ffffff22",
+                          boxShadow: current ? "0 0 24px rgba(79,195,247,0.5)" : done ? "0 0 16px rgba(79,195,247,0.3)" : "none",
+                          transition:"all 0.5s",
+                        }}>
+                          {done ? "✓" : step.icon}
+                        </div>
+                        <div style={{ fontSize:12, fontWeight:600, color: future?"#ffffff33":current?"#4fc3f7":"#ffffffcc", letterSpacing:"0.02em", textAlign:"center", marginBottom:6 }}>{step.label}</div>
+                        {current && <div style={{ fontSize:11, color:"#ffffff55", textAlign:"center", maxWidth:140, lineHeight:1.5 }}>{step.desc}</div>}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Current status callout */}
+            <div style={{ background: stepIndex === 2 ? "linear-gradient(135deg,rgba(79,195,247,0.12),rgba(2,136,209,0.08))" : "rgba(255,255,255,0.04)", border:"1px solid", borderColor: stepIndex === 2 ? "rgba(79,195,247,0.3)" : "#ffffff12", borderRadius:14, padding:"18px 22px", marginBottom:20, display:"flex", alignItems:"center", gap:14 }}>
+              <div style={{ fontSize:28, flexShrink:0 }}>{STEPS[Math.max(0,stepIndex)]?.icon}</div>
+              <div>
+                <div style={{ fontSize:15, fontWeight:700, marginBottom:3 }}>{STEPS[Math.max(0,stepIndex)]?.label}</div>
+                <div style={{ fontSize:13, color:"#ffffff66" }}>{STEPS[Math.max(0,stepIndex)]?.desc}</div>
+              </div>
+            </div>
+
+            {/* Tracking number if shipped */}
+            {order.tracking_number && (
+              <div style={{ background:"rgba(79,195,247,0.08)", border:"1px solid rgba(79,195,247,0.25)", borderRadius:14, padding:"18px 22px", marginBottom:20 }}>
+                <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:"#4fc3f7", marginBottom:8 }}>Shipment Tracking</div>
+                <div style={{ display:"flex", alignItems:"center", gap:16, flexWrap:"wrap" }}>
+                  {order.carrier && <div style={{ fontSize:13, color:"#ffffff88" }}><span style={{ color:"#ffffff55" }}>Carrier: </span>{order.carrier}</div>}
+                  <div style={{ fontFamily:"monospace", fontSize:16, fontWeight:700, color:"#fff", letterSpacing:"0.08em" }}>{order.tracking_number}</div>
+                </div>
+              </div>
+            )}
+
+            {/* Items */}
+            <div style={{ background:"rgba(255,255,255,0.04)", border:"1px solid #ffffff0f", borderRadius:14, overflow:"hidden", marginBottom:20 }}>
+              <div style={{ padding:"14px 20px", borderBottom:"1px solid #ffffff0a", fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:"#ffffff55" }}>Order Contents</div>
+              {items.map((item, i) => (
+                <div key={i} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"13px 20px", borderBottom: i<items.length-1?"1px solid #ffffff0a":"none" }}>
+                  <span style={{ fontSize:14, color:"#ffffffcc" }}>{item.name}</span>
+                  <span style={{ fontSize:13, fontWeight:600, color:"#4fc3f7", fontFamily:"monospace" }}>×{item.qty}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Contact info */}
+            <div style={{ background:"rgba(255,255,255,0.03)", border:"1px solid #ffffff0a", borderRadius:14, padding:"16px 20px" }}>
+              <div style={{ fontSize:11, fontWeight:600, letterSpacing:"0.12em", textTransform:"uppercase", color:"#ffffff44", marginBottom:10 }}>Delivery Info</div>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                {[["Church",order.church_name||order.pastor_name],["Region",order.region],["Country",order.country],["Ordered",orderedAt]].filter(([,v])=>v).map(([k,v]) => (
+                  <div key={k}>
+                    <div style={{ fontSize:11, color:"#ffffff33", marginBottom:2 }}>{k}</div>
+                    <div style={{ fontSize:13, color:"#ffffffaa" }}>{v}</div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
+
     // ─── App ──────────────────────────────────────────────────────────────────
     function App() {
       const [view, setView] = useState(() => {
         try { return localStorage.getItem("ea_view") || "survey"; } catch(e) { return "survey"; }
       });
       const [rssLink, setRssLink] = useState(DEFAULT_RSS);
+
+      // Check for tracking URL param — ?track=EAO-00001
+      const trackParam = new URLSearchParams(window.location.search).get("track");
+      if (trackParam) return <TrackingPage orderNumber={trackParam} />;
 
       const switchView = (v) => {
         try { localStorage.setItem("ea_view", v); } catch(e) {}
