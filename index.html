@@ -1912,11 +1912,20 @@
       const [viewMode, setViewMode] = useState("map");
       const [mapReady, setMapReady] = useState(false);
 
-      // Rally points state
+      // Rally points state — load from Supabase, fall back to defaults
       const [rallyPoints, setRallyPoints] = useState([
-        { id:1, name:"Bomet",  lat:-0.7820, lng:35.3420, radiusMiles:50, color:"#FF6B35" },
-        { id:2, name:"Nakuru", lat:-0.3031, lng:36.0800, radiusMiles:50, color:"#9B59B6" },
+        { id:"default-bomet",  name:"Bomet",  lat:-0.7820, lng:35.3420, radiusMiles:50, color:"#FF6B35" },
+        { id:"default-nakuru", name:"Nakuru", lat:-0.3031, lng:36.0800, radiusMiles:50, color:"#9B59B6" },
       ]);
+      const [rallyLoaded, setRallyLoaded] = useState(false);
+
+      // Load from Supabase once
+      React.useEffect(() => {
+        fetchRallyPoints().then(rows => {
+          if (rows) setRallyPoints(rows);
+          setRallyLoaded(true);
+        });
+      }, []);
       const [showRallyPanel, setShowRallyPanel] = useState(false);
       const [editingRally, setEditingRally]     = useState(null);
       const [newRally, setNewRally]             = useState({ name:"", lat:"", lng:"", radiusMiles:50, color:"#FF6B35" });
@@ -2054,8 +2063,17 @@
         }
       }, [rallyPoints, drawRallyPoints]);
 
+      const updateRally = (id, changes) => {
+        setRallyPoints(pts => {
+          const updated = pts.map(p => p.id===id ? {...p, ...changes} : p);
+          const rp = updated.find(p => p.id===id);
+          if (rp) upsertRallyPoint(rp);
+          return updated;
+        });
+      };
+
       const updateRadius = (id, miles) => {
-        setRallyPoints(pts => pts.map(p => p.id===id ? {...p, radiusMiles: Math.max(10, Math.min(500, miles))} : p));
+        updateRally(id, { radiusMiles: Math.max(10, Math.min(500, miles)) });
       };
 
       return (
@@ -2085,7 +2103,7 @@
             <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:16, padding:20, marginBottom:16, boxShadow:"var(--shadow-sm)" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:16 }}>
                 <div style={{ fontSize:15, fontWeight:700 }}>📡 Rally Points</div>
-                <button onClick={() => setShowAddRally(true)} className="btn-next" style={{ padding:"7px 16px", fontSize:12 }}>+ Add Rally Point</button>
+                <button onClick={() => setShowAddRally(true)} className="btn-next" style={{ flex:"none", padding:"7px 16px", fontSize:12 }}>+ Add Rally Point</button>
               </div>
 
               <div style={{ display:"flex", flexDirection:"column", gap:12 }}>
@@ -2124,13 +2142,13 @@
                     {/* Color picker */}
                     <div style={{ display:"flex", gap:5 }}>
                       {RALLY_COLORS.map(col => (
-                        <button key={col} onClick={() => setRallyPoints(pts => pts.map(p => p.id===rp.id ? {...p,color:col} : p))}
+                        <button key={col} onClick={() => updateRally(rp.id, { color:col })}
                           style={{ width:20, height:20, borderRadius:"50%", background:col, border: rp.color===col?"2px solid #1d1d1f":"2px solid transparent", cursor:"pointer", transition:"transform 0.1s" }} />
                       ))}
                     </div>
 
                     {/* Remove */}
-                    <button onClick={() => setRallyPoints(pts => pts.filter(p => p.id!==rp.id))}
+                    <button onClick={() => { setRallyPoints(pts => pts.filter(p => p.id!==rp.id)); deleteRallyPoint(rp.id); }}
                       style={{ border:"none", background:"var(--danger-light)", color:"var(--danger)", borderRadius:8, padding:"6px 12px", fontSize:12, fontWeight:600, cursor:"pointer" }}>
                       Remove
                     </button>
@@ -2161,9 +2179,22 @@
                   </div>
                   <div style={{ display:"flex", gap:8 }}>
                     <button className="btn-back" onClick={() => setShowAddRally(false)} style={{ flex:1 }}>Cancel</button>
-                    <button className="btn-next" onClick={() => {
+                    <button className="btn-next" onClick={async () => {
                       if (!newRally.name || !newRally.lat || !newRally.lng) return;
-                      setRallyPoints(pts => [...pts, { id:Date.now(), name:newRally.name, lat:parseFloat(newRally.lat), lng:parseFloat(newRally.lng), radiusMiles:Number(newRally.radiusMiles)||50, color:newRally.color }]);
+                      const newRp = { name:newRally.name, lat:parseFloat(newRally.lat), lng:parseFloat(newRally.lng), radiusMiles:Number(newRally.radiusMiles)||50, color:newRally.color };
+                      // Save to Supabase and get back the real UUID
+                      try {
+                        const res = await fetch(`${SUPABASE_URL}/rest/v1/rally_points`, {
+                          method:"POST",
+                          headers:{"Content-Type":"application/json",apikey:SUPABASE_KEY,Authorization:`Bearer ${SUPABASE_KEY}`,Prefer:"return=representation"},
+                          body:JSON.stringify({ name:newRp.name, lat:newRp.lat, lng:newRp.lng, radius_miles:newRp.radiusMiles, color:newRp.color }),
+                        });
+                        const rows = await res.json();
+                        const saved = rows?.[0];
+                        setRallyPoints(pts => [...pts, { ...newRp, id: saved?.id || Date.now() }]);
+                      } catch(e) {
+                        setRallyPoints(pts => [...pts, { ...newRp, id: Date.now() }]);
+                      }
                       setNewRally({ name:"", lat:"", lng:"", radiusMiles:50, color:"#FF6B35" });
                       setShowAddRally(false);
                     }}>Add Rally Point</button>
@@ -3427,7 +3458,35 @@
       );
     }
 
-    // ─── Order Tracking Page ──────────────────────────────────────────────────
+    async function fetchRallyPoints() {
+      try {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/rally_points?select=*&order=name`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const rows = await res.json();
+        if (Array.isArray(rows) && rows.length) {
+          return rows.map(r => ({ id:r.id, name:r.name, lat:parseFloat(r.lat), lng:parseFloat(r.lng), radiusMiles:r.radius_miles||50, color:r.color||"#FF6B35" }));
+        }
+      } catch(e) { console.warn("fetchRallyPoints:", e.message); }
+      return null;
+    }
+
+    async function upsertRallyPoint(rp) {
+      await fetch(`${SUPABASE_URL}/rest/v1/rally_points`, {
+        method: "POST",
+        headers: { "Content-Type":"application/json", apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, Prefer:"resolution=merge-duplicates,return=minimal" },
+        body: JSON.stringify({ id: typeof rp.id === "string" ? rp.id : undefined, name:rp.name, lat:rp.lat, lng:rp.lng, radius_miles:rp.radiusMiles, color:rp.color, updated_at:new Date().toISOString() }),
+      });
+    }
+
+    async function deleteRallyPoint(id) {
+      await fetch(`${SUPABASE_URL}/rest/v1/rally_points?id=eq.${id}`, {
+        method: "DELETE",
+        headers: { apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}` },
+      });
+    }
+
+    
     function TrackingPage({ orderNumber }) {
       const [order, setOrder]     = useState(null);
       const [error, setError]     = useState(false);
