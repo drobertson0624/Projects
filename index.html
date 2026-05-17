@@ -1322,6 +1322,15 @@
     }
 
     // ─── Church Database ───────────────────────────────────────────────────────
+    const DEFAULT_VIEWS = [
+      { id:"all",      name:"All Churches",  filters:{} },
+      { id:"uganda",   name:"Uganda",        filters:{ country:"Uganda" } },
+      { id:"kenya",    name:"Kenya",         filters:{ country:"Kenya" } },
+      { id:"strong",   name:"STRONG",        filters:{ standing:"STRONG" } },
+      { id:"deploy",   name:"Deploy Queue",  filters:{ hasDeployOrder:true } },
+      { id:"internet", name:"Has Internet",  filters:{ internet:"Available" } },
+    ];
+
     function ChurchDatabase({ churches, onAdd, onUpdate, onPlaceOrder }) {
 
       // ── Column definitions ─────────────────────────────────────────────────
