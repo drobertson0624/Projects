@@ -1347,7 +1347,7 @@
       // The table header and body BOTH iterate this same array — no mismatch possible.
       const ALL_COLS = [
         { key:"_deploy",      label:"Deploy",   always:true,  w:70  },
-        { key:"pastor",       label:"Pastor",   always:true,  w:140 },
+        { key:"pastor",       label:"Member Name",   always:true,  w:140 },
         { key:"church_name",  label:"Church",   always:false, w:130 },
         { key:"location",     label:"Location", always:false, w:120 },
         { key:"region",       label:"Region",   always:false, w:110 },
@@ -1516,7 +1516,7 @@
       const YN_OPTS  = ["Yes","No","Unknown"];
       const CQ_OPTS  = ["Strong","Moderate","Weak","None","Unknown"];
       const FIELDS   = [
-        ["Pastor Name","pastor","text"],["Church Name","church_name","text"],
+        ["Member Name","pastor","text"],["Church Name","church_name","text"],
         ["Location","location","text"],["Region","region","text"],
         ["Country","country","text"],["Distance from Kampala","distKampala","text"],
         ["Language","language","text"],["Phone","phone","text"],
@@ -1611,7 +1611,7 @@
           <div style={{ padding:"12px 24px", display:"flex", gap:8, alignItems:"center", borderBottom:"1px solid var(--border)", flexShrink:0, flexWrap:"wrap" }}>
             <div style={{ position:"relative", flex:1, minWidth:200 }}>
               <svg style={{ position:"absolute", left:10, top:"50%", transform:"translateY(-50%)", pointerEvents:"none" }} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
-              <input type="text" placeholder="Search pastor, church, location…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ paddingLeft:34, fontSize:13, padding:"8px 13px 8px 34px", width:"100%", boxSizing:"border-box" }} />
+              <input type="text" placeholder="Search member name, church, location…" value={search} onChange={e => { setSearch(e.target.value); setPage(1); }} style={{ paddingLeft:34, fontSize:13, padding:"8px 13px 8px 34px", width:"100%", boxSizing:"border-box" }} />
             </div>
             <button onClick={() => setShowFilters(f=>!f)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"1px solid", borderRadius:9, fontSize:13, fontWeight:500, cursor:"pointer", transition:"all 0.15s", borderColor:Object.values(filters).some(Boolean)?"var(--accent)":"var(--border-strong)", background:Object.values(filters).some(Boolean)?"rgba(0,122,255,0.07)":"var(--surface)", color:Object.values(filters).some(Boolean)?"var(--accent)":"var(--text-secondary)" }}>
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polygon points="22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"/></svg>
@@ -1840,7 +1840,7 @@
               <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:720, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
                 <div style={{ fontSize:17, fontWeight:700, marginBottom:20 }}>Add New Church</div>
                 <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
-                  {[["Pastor Name","pastor","text"],["Church Name","church_name","text"],["Location","location","text"],["Region","region","text"],["Country","country","text"],["Distance from Kampala","distKampala","text"],["Language","language","text"],["Phone","phone","text"],["WhatsApp","whatsapp","text"],["Email","email","text"],["Members","members","number"],["Score (1-9)","priority","number"]].map(([label,key,type]) => (
+                  {[["Member Name","pastor","text"],["Church Name","church_name","text"],["Location","location","text"],["Region","region","text"],["Country","country","text"],["Distance from Kampala","distKampala","text"],["Language","language","text"],["Phone","phone","text"],["WhatsApp","whatsapp","text"],["Email","email","text"],["Members","members","number"],["Score (1-9)","priority","number"]].map(([label,key,type]) => (
                     <div key={key} className="field-group">
                       <div className="field-label">{label}</div>
                       <input type={type} placeholder={label} value={newC[key]||""} onChange={e=>setNewC(p=>({...p,[key]:e.target.value}))} />
@@ -2455,7 +2455,7 @@
       if (!queue.length) { alert("No churches have a deploy order set yet."); return; }
       const headers = [
         ["Deploy #",       "deploy_order"],
-        ["Pastor",         "pastor"],
+        ["Member Name",    "pastor"],
         ["Location",       "location"],
         ["Region",         "region"],
         ["Country",        "country"],
@@ -2475,7 +2475,7 @@
 
     function exportChurchAssessment(churches) {
       const headers = [
-        ["Pastor",              "pastor"],
+        ["Member Name",         "pastor"],
         ["Location",            "location"],
         ["Region",              "region"],
         ["Country",             "country"],
@@ -3235,7 +3235,7 @@
                     {isSelected && (
                       <div onClick={e => e.stopPropagation()} style={{ marginTop:16, paddingTop:16, borderTop:"1px solid var(--border)" }}>
                         <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8, marginBottom:14 }}>
-                          {[["Pastor",order.pastor_name],["Church",order.church_name],["Region",order.region],["Country",order.country],["Phone",order.phone],["WhatsApp",order.whatsapp],["Email",order.email]].filter(([,v])=>v).map(([k,v]) => (
+                          {[["Member",order.pastor_name],["Church",order.church_name],["Region",order.region],["Country",order.country],["Phone",order.phone],["WhatsApp",order.whatsapp],["Email",order.email]].filter(([,v])=>v).map(([k,v]) => (
                             <div key={k} style={{ padding:"8px 11px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
                               <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:2 }}>{k}</div>
                               <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
