@@ -1956,7 +1956,7 @@
 
       // Rally points state — load from Supabase, fall back to defaults
       const [rallyPoints, setRallyPoints] = useState([
-        { id:"default-bomet",  name:"Bomet",  lat:-0.7820, lng:35.3420, radiusMiles:50, color:"#FF6B35" },
+        { id:"default-bomet",  name:"Bomet",  lat:-0.7820, lng:35.3420, radiusMiles:50, color:"#87CEEB" },
         { id:"default-nakuru", name:"Nakuru", lat:-0.3031, lng:36.0800, radiusMiles:50, color:"#9B59B6" },
       ]);
       const [rallyLoaded, setRallyLoaded] = useState(false);
@@ -1970,13 +1970,13 @@
       }, []);
       const [showRallyPanel, setShowRallyPanel] = useState(false);
       const [editingRally, setEditingRally]     = useState(null);
-      const [newRally, setNewRally]             = useState({ name:"", city:"", country:"Kenya", radiusMiles:50, color:"#FF6B35" });
+      const [newRally, setNewRally]             = useState({ name:"", city:"", country:"Kenya", radiusMiles:50, color:"#87CEEB" });
       const [showAddRally, setShowAddRally]     = useState(false);
       const [rallyGeocoding, setRallyGeocoding] = useState(false);
       const [rallyGeoError, setRallyGeoError]   = useState("");
 
       const MILES_TO_METERS = 1609.34;
-      const RALLY_COLORS = ["#FF6B35","#9B59B6","#E74C3C","#27AE60","#F39C12","#1ABC9C","#2980B9","#E91E63"];
+      const RALLY_COLORS = ["#87CEEB","#9B59B6","#E74C3C","#27AE60","#F39C12","#1ABC9C","#2980B9","#E91E63"];
 
       const byRegion = {};
       churches.forEach(c => {
@@ -2255,7 +2255,7 @@
                         });
                         const rows = await saveRes.json();
                         setRallyPoints(pts => [...pts, { ...newRp, id: rows?.[0]?.id || Date.now() }]);
-                        setNewRally({ name:"", city:"", country:"Kenya", radiusMiles:50, color:"#FF6B35" });
+                        setNewRally({ name:"", city:"", country:"Kenya", radiusMiles:50, color:"#87CEEB" });
                         setShowAddRally(false);
                       } catch(e) { setRallyGeoError("Network error. Try again."); }
                       setRallyGeocoding(false);
@@ -3601,7 +3601,7 @@
         });
         const rows = await res.json();
         if (Array.isArray(rows) && rows.length) {
-          return rows.map(r => ({ id:r.id, name:r.name, lat:parseFloat(r.lat), lng:parseFloat(r.lng), radiusMiles:r.radius_miles||50, color:r.color||"#FF6B35" }));
+          return rows.map(r => ({ id:r.id, name:r.name, lat:parseFloat(r.lat), lng:parseFloat(r.lng), radiusMiles:r.radius_miles||50, color:r.color||"#87CEEB" }));
         }
       } catch(e) { console.warn("fetchRallyPoints:", e.message); }
       return null;
