@@ -1282,23 +1282,31 @@
       { id:40, pastor:"Daniel Omella",         location:"Morukebu Tororo",         region:"Tororo",      country:"Uganda", members:56,  standing:"Stable", spiritual_standing:"Stable", language:"Ateso",                       priority:1, distKampala:"222 km", internet:"No",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.7000,  lng:34.1500 },
     ];
 
-    const ADMIN_EMAIL = "drobertson0624@gmail.com";
-    const ADMIN_PASS  = "LCAEastAfrica2024!";
-
     // ─── Portal Login ──────────────────────────────────────────────────────────
     function PortalLogin({ onLogin }) {
       const [email, setEmail] = useState("");
       const [pass, setPass]   = useState("");
       const [error, setError] = useState("");
       const [loading, setLoading] = useState(false);
-      const submit = () => {
+      const submit = async () => {
         setLoading(true);
-        setTimeout(() => {
-          if (email.trim().toLowerCase() === ADMIN_EMAIL && pass === ADMIN_PASS) {
-            onLogin({ email: ADMIN_EMAIL, name: "David Robertson" });
-          } else { setError("Invalid email or password."); }
-          setLoading(false);
-        }, 600);
+        setError("");
+        try {
+          const res = await fetch(`${SUPABASE_URL}/auth/v1/token?grant_type=password`, {
+            method: "POST",
+            headers: { "apikey": SUPABASE_KEY, "Content-Type": "application/json" },
+            body: JSON.stringify({ email: email.trim(), password: pass })
+          });
+          const data = await res.json();
+          if (data.access_token) {
+            onLogin({ email: email.trim(), name: "Admin" });
+          } else {
+            setError("Invalid email or password.");
+          }
+        } catch (e) {
+          setError("Login failed. Please try again.");
+        }
+        setLoading(false);
       };
       return (
         <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"32px 16px" }}>
