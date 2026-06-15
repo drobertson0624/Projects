@@ -1535,6 +1535,9 @@
       const [importDefaultCountry, setImportDefaultCountry] = useState("");
       const [newC, setNewC]               = useState({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable" });
       const [showQueue, setShowQueue]     = useState(false);
+      const [mergeSelection, setMergeSelection] = useState([]);
+      const [showMergeModal, setShowMergeModal] = useState(false);
+      const [mergePrimary, setMergePrimary]   = useState(null);
       const [mergeTargets, setMergeTargets] = useState({});
       const [queueWorking, setQueueWorking] = useState({});
 
@@ -1546,6 +1549,7 @@
 
       // ── Filter ─────────────────────────────────────────────────────────────
       const filtered = churches.filter(c => {
+        if (c.archived) return false;
         const q = search.toLowerCase();
         if (q && !c.pastor?.toLowerCase().includes(q) && !c.location?.toLowerCase().includes(q) &&
             !c.region?.toLowerCase().includes(q) && !c.church_name?.toLowerCase().includes(q)) return false;
@@ -1571,7 +1575,8 @@
 
       const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
       const pageRows   = sorted.slice((page-1)*pageSize, page*pageSize);
-      const deployedCount = churches.filter(c => c.deploy_order).length;
+      const deployedCount = churches.filter(c => c.deploy_order && !c.archived).length;
+      const archivedCount = churches.filter(c => c.archived).length;
 
       const toggleSort = (col) => {
         if (sortCol === col) setSortDir(d => d==="asc" ? "desc" : "asc");
@@ -1837,10 +1842,11 @@
               <div style={{ display:"flex", gap:14, alignItems:"center", flexWrap:"wrap" }}>
                 <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Churches</div>
                 {[
-                  [churches.length, "total", "var(--text)"],
-                  [churches.reduce((s,c)=>s+(c.members||0),0), "members", "var(--accent)"],
+                  [churches.filter(c=>!c.archived).length, "total", "var(--text)"],
+                  [churches.reduce((s,c)=>s+(c.archived?0:(c.members||0)),0), "members", "var(--accent)"],
                   [deployedCount, "in queue", "var(--success)"],
-                  [filtered.length !== churches.length ? filtered.length : null, "filtered", "var(--warn)"],
+                  [archivedCount || null, "archived", "var(--text-muted)"],
+                  [filtered.length !== churches.filter(c=>!c.archived).length ? filtered.length : null, "filtered", "var(--warn)"],
                 ].filter(([v])=>v!=null).map(([val,label,color]) => (
                   <div key={label} style={{ fontSize:13, color:"var(--text-muted)" }}>
                     <span style={{ fontWeight:700, color, marginRight:3 }}>{val}</span>{label}
@@ -1860,7 +1866,12 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   Import
                 </button>
-                <button className="btn-next" style={{ flex:"none", padding:"8px 16px", fontSize:13 }} onClick={() => setShowAdd(true)}>+ Add</button>
+                {mergeSelection.length === 2 && (
+              <button onClick={() => setShowMergeModal(true)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"none", borderRadius:9, fontSize:13, fontWeight:600, cursor:"pointer", background:"#FF9500", color:"#fff" }}>
+                Merge {mergeSelection.length} Selected
+              </button>
+            )}
+            <button className="btn-next" style={{ flex:"none", padding:"8px 16px", fontSize:13 }} onClick={() => setShowAdd(true)}>+ Add</button>
               </div>
             </div>
 
@@ -1955,6 +1966,7 @@
                 </colgroup>
                 <thead style={{ position:"sticky", top:0, zIndex:10 }}>
                   <tr>
+                    <th style={{ width:36, cursor:"default" }}></th>
                     {shownCols.map(col => (
                       <th key={col.key}
                         style={{ cursor: col.key.startsWith("_") ? "default" : "pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}
@@ -1967,11 +1979,24 @@
                   </tr>
                 </thead>
                 <tbody>
-                  {pageRows.map(c => (
-                    <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer" }}>
-                      {shownCols.map(col => renderCell(col, c))}
-                    </tr>
-                  ))}
+                  {pageRows.map(c => {
+                    const isChecked = mergeSelection.includes(c.id);
+                    return (
+                      <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer", background: isChecked ? "rgba(255,149,0,0.07)" : undefined }}>
+                        <td style={{ textAlign:"center", padding:"0 8px" }} onClick={e => {
+                          e.stopPropagation();
+                          setMergeSelection(sel => {
+                            if (sel.includes(c.id)) return sel.filter(id => id !== c.id);
+                            if (sel.length >= 2) return sel;
+                            return [...sel, c.id];
+                          });
+                        }}>
+                          <input type="checkbox" checked={isChecked} readOnly style={{ cursor:"pointer", accentColor:"#FF9500" }} />
+                        </td>
+                        {shownCols.map(col => renderCell(col, c))}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               {pageRows.length===0 && <div style={{ padding:"60px 24px", textAlign:"center", color:"var(--text-muted)", fontSize:14 }}>No churches match your filters.</div>}
@@ -1996,7 +2021,90 @@
             </div>
           </div>
 
-          {/* Detail modal */}
+          {/* Merge modal */}
+          {showMergeModal && mergeSelection.length === 2 && (() => {
+            const cA = churches.find(c => c.id === mergeSelection[0]);
+            const cB = churches.find(c => c.id === mergeSelection[1]);
+            if (!cA || !cB) return null;
+            const primary = mergePrimary === cA.id ? cA : mergePrimary === cB.id ? cB : null;
+            const secondary = primary ? (primary.id === cA.id ? cB : cA) : null;
+            const INFO_ROWS = [
+              ["Location", "location"], ["Region", "region"], ["Country", "country"],
+              ["Members", "members"], ["Language", "language"], ["Standing", "standing"],
+              ["Internet", "internet"], ["Phone", "phone"], ["WhatsApp", "whatsapp"],
+            ];
+            return (
+              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }} onClick={() => { setShowMergeModal(false); setMergePrimary(null); }}>
+                <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:780, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"92vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                    <div style={{ fontSize:17, fontWeight:700 }}>Merge Churches</div>
+                    <button onClick={() => { setShowMergeModal(false); setMergePrimary(null); }} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                  </div>
+                  <div style={{ fontSize:13, color:"var(--text-muted)", marginBottom:20 }}>
+                    {!primary ? "Select which record to keep. The other will be absorbed into it." : `Keeping "${primary.pastor}" — the other record's data will fill any blanks, then it will be removed.`}
+                  </div>
+
+                  {/* Side-by-side cards */}
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:22 }}>
+                    {[cA, cB].map(c => {
+                      const isPrimary = primary?.id === c.id;
+                      const isSecondary = secondary?.id === c.id;
+                      return (
+                        <div key={c.id} style={{ border: isPrimary ? "2px solid var(--accent)" : isSecondary ? "2px solid var(--danger)" : "1px solid var(--border-strong)", borderRadius:14, padding:16, position:"relative", transition:"border 0.2s" }}>
+                          {isPrimary && <div style={{ position:"absolute", top:-10, left:16, background:"var(--accent)", color:"#fff", fontSize:11, fontWeight:700, padding:"2px 10px", borderRadius:20 }}>KEEP</div>}
+                          {isSecondary && <div style={{ position:"absolute", top:-10, left:16, background:"var(--danger)", color:"#fff", fontSize:11, fontWeight:700, padding:"2px 10px", borderRadius:20 }}>REMOVE</div>}
+                          <div style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>{c.pastor}</div>
+                          <div style={{ fontSize:12, color:"var(--text-muted)", marginBottom:12 }}>{c.church_name || c.location}</div>
+                          {INFO_ROWS.filter(([,k]) => c[k]).map(([label, key]) => (
+                            <div key={key} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"3px 0", borderBottom:"1px solid var(--border)" }}>
+                              <span style={{ color:"var(--text-muted)" }}>{label}</span>
+                              <span style={{ fontWeight:500, maxWidth:"55%", textAlign:"right" }}>{c[key]}</span>
+                            </div>
+                          ))}
+                          {!isPrimary && (
+                            <button onClick={() => setMergePrimary(c.id)} style={{ marginTop:14, width:"100%", padding:"9px", border:"none", borderRadius:9, fontSize:13, fontWeight:600, cursor:"pointer", background: isSecondary ? "var(--surface2)" : "var(--accent)", color: isSecondary ? "var(--text-muted)" : "#fff" }}>
+                              {isSecondary ? "Switch — Keep this one" : "Keep this one"}
+                            </button>
+                          )}
+                          {isPrimary && (
+                            <div style={{ marginTop:14, padding:"9px", borderRadius:9, fontSize:13, fontWeight:600, textAlign:"center", background:"rgba(0,122,255,0.08)", color:"var(--accent)" }}>✓ Keeping this record</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  {/* Confirm button */}
+                  <div style={{ display:"flex", gap:8 }}>
+                    <button onClick={() => { setShowMergeModal(false); setMergePrimary(null); }} style={{ flex:1, padding:"11px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>Cancel</button>
+                    <button
+                      disabled={!primary}
+                      onClick={async () => {
+                        if (!primary || !secondary) return;
+                        // Build merged primary: fill blanks from secondary
+                        const merged = { ...primary };
+                        Object.entries(secondary).forEach(([k,v]) => {
+                          if (v && !merged[k] && k !== "id") merged[k] = v;
+                        });
+                        // Save updated primary
+                        onUpdate(merged);
+                        // Small delay then delete secondary
+                        setTimeout(() => onUpdate({ ...secondary, _archive: true, _mergedInto: primary.id }), 400);
+                        setMergeSelection([]);
+                        setShowMergeModal(false);
+                        setMergePrimary(null);
+                      }}
+                      style={{ flex:2, padding:"11px", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor: primary ? "pointer" : "not-allowed", background: primary ? "var(--accent)" : "var(--surface3)", color: primary ? "#fff" : "var(--text-muted)", opacity: primary ? 1 : 0.5 }}
+                    >
+                      {primary ? `Confirm Merge — Remove "${secondary.pastor}"` : "Select a record to keep first"}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+
+                    {/* Detail modal */}
           {selected && !editing && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setSelected(null)}>
               <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
@@ -3744,6 +3852,13 @@
 
       // Update church locally and persist override to Supabase
       const updateChurch = (updated) => {
+        // Handle archive (merge secondary)
+        if (updated._archive) {
+          setChurches(cs => cs.map(c => c.id === updated.id ? { ...c, archived: true, merged_into: updated._mergedInto } : c));
+          saveChurchOverride(updated.id, { archived: true, merged_into: updated._mergedInto })
+            .catch(e => console.warn("archive church override:", e));
+          return;
+        }
         // Handle delete
         if (updated._delete) {
           setChurches(cs => cs.filter(c => c.id !== updated.id));
