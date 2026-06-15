@@ -316,7 +316,7 @@
 
     async function loadChurchQueue() {
       try {
-        const res = await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue?status=eq.pending&order=submission_count.desc`, {
+        const res = await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue?select=*&status=eq.pending&order=submission_count.desc`, {
           headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
         });
         if (!res.ok) return [];
@@ -373,7 +373,53 @@
       }).catch(() => {});
     }
 
-    async function insertResponse(data) {
+    async function syncSurveyNamesToQueue() {
+      try {
+        // Fetch all survey church_name values
+        const survRes = await fetch(`${SUPABASE_URL}/rest/v1/survey_responses?select=church_name`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const survRows = await survRes.json();
+
+        // Count occurrences per trimmed name (min 4 chars)
+        const counts = {};
+        survRows.forEach(r => {
+          const n = (r.church_name || "").trim();
+          if (n.length >= 4) counts[n] = (counts[n] || 0) + 1;
+        });
+
+        // Fetch all existing queue entries (any status) to avoid duplicates
+        const qRes = await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue?select=raw_name`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const queueNames = new Set((await qRes.json()).map(q => q.raw_name));
+
+        // Fetch approved churches (name + aliases)
+        const cRes = await fetch(`${SUPABASE_URL}/rest/v1/churches?select=name,aliases`, {
+          headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+        });
+        const approvedNames = new Set();
+        (await cRes.json()).forEach(c => {
+          if (c.name) approvedNames.add(c.name.toLowerCase().trim());
+          (c.aliases || []).forEach(a => { if (a) approvedNames.add(a.toLowerCase().trim()); });
+        });
+
+        // Insert only names not already in queue or approved
+        const toInsert = Object.entries(counts).filter(([name]) =>
+          !queueNames.has(name) && !approvedNames.has(name.toLowerCase())
+        );
+
+        for (const [name, count] of toInsert) {
+          await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue`, {
+            method: "POST",
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify({ raw_name: name, submission_count: count, status: "pending", source: "survey" })
+          }).catch(() => {});
+        }
+      } catch(e) { console.warn("syncSurveyNamesToQueue:", e); }
+    }
+
+        async function insertResponse(data) {
       const res = await fetch(`${SUPABASE_URL}/rest/v1/survey_responses`, {
         method: "POST",
         headers: {
@@ -1716,7 +1762,10 @@
                 <div style={{ display:"flex", alignItems:"center", gap:10 }}>
                   <span style={{ background:"#FF9500", color:"#fff", borderRadius:10, fontSize:11, fontWeight:700, padding:"2px 8px" }}>{churchQueue.length}</span>
                   <span style={{ fontWeight:600, fontSize:14 }}>Church Names to Review</span>
-                  <span style={{ fontSize:12, color:"var(--text-muted)" }}>from survey submissions</span>
+                  <span style={{ fontSize:12, color:"var(--text-muted)" }}>
+                    {churchQueue.filter(i=>i.source==="survey").length > 0 && `${churchQueue.filter(i=>i.source==="survey").length} from survey · `}
+                    {churchQueue.filter(i=>i.source!=="survey").length > 0 && `${churchQueue.filter(i=>i.source!=="survey").length} from forms`}
+                  </span>
                 </div>
                 <span style={{ fontSize:13, color:"var(--text-muted)" }}>{showQueue ? "▲ Hide" : "▼ Review"}</span>
               </div>
@@ -1730,6 +1779,9 @@
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
                           <div>
                             <span style={{ fontWeight:600, fontSize:14 }}>{item.raw_name}</span>
+                            {item.source === "survey" && (
+                              <span style={{ marginLeft:6, background:"#87CEEB", color:"#1a5f7a", borderRadius:6, fontSize:10, fontWeight:700, padding:"2px 7px", verticalAlign:"middle" }}>Survey</span>
+                            )}
                             <span style={{ marginLeft:8, fontSize:12, color:"var(--text-muted)" }}>{item.submission_count} submission{item.submission_count!==1?"s":""}</span>
                             {matches.length > 0 && (
                               <div style={{ marginTop:4 }}>
@@ -3684,8 +3736,10 @@
       }, []);
 
       React.useEffect(() => {
-        loadApprovedChurches().then(setApprovedChurches);
-        loadChurchQueue().then(setChurchQueue);
+        syncSurveyNamesToQueue().then(() => {
+          loadApprovedChurches().then(setApprovedChurches);
+          loadChurchQueue().then(setChurchQueue);
+        });
       }, []);
 
       // Update church locally and persist override to Supabase
