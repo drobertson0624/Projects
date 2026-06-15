@@ -1535,10 +1535,10 @@
       const [importDefaultCountry, setImportDefaultCountry] = useState("");
       const [newC, setNewC]               = useState({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable" });
       const [showQueue, setShowQueue]     = useState(false);
-      const [mergeSelection, setMergeSelection] = useState([]);
-      const [showMergeModal, setShowMergeModal] = useState(false);
-      const [mergePrimary, setMergePrimary]   = useState(null);
       const [mergeTargets, setMergeTargets] = useState({});
+      const [queueMergeSel, setQueueMergeSel] = useState([]);
+      const [showQueueMerge, setShowQueueMerge] = useState(false);
+      const [queueMergePrimary, setQueueMergePrimary] = useState(null);
       const [queueWorking, setQueueWorking] = useState({});
 
       // ── Apply view ─────────────────────────────────────────────────────────
@@ -1763,8 +1763,8 @@
           {/* Church Name Review Queue */}
           {churchQueue && churchQueue.length > 0 && (
             <div style={{ margin:"12px 16px 0", background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:14, overflow:"hidden" }}>
-              <div onClick={() => setShowQueue(q=>!q)} style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", cursor:"pointer", background:"rgba(255,149,0,0.06)" }}>
-                <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", background:"rgba(255,149,0,0.06)" }}>
+                <div onClick={() => setShowQueue(q=>!q)} style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer", flex:1 }}>
                   <span style={{ background:"#FF9500", color:"#fff", borderRadius:10, fontSize:11, fontWeight:700, padding:"2px 8px" }}>{churchQueue.length}</span>
                   <span style={{ fontWeight:600, fontSize:14 }}>Church Names to Review</span>
                   <span style={{ fontSize:12, color:"var(--text-muted)" }}>
@@ -1772,7 +1772,19 @@
                     {churchQueue.filter(i=>i.source!=="survey").length > 0 && `${churchQueue.filter(i=>i.source!=="survey").length} from forms`}
                   </span>
                 </div>
-                <span style={{ fontSize:13, color:"var(--text-muted)" }}>{showQueue ? "▲ Hide" : "▼ Review"}</span>
+                <div style={{ display:"flex", gap:8, alignItems:"center" }}>
+                  {queueMergeSel.length === 2 && (
+                    <button onClick={() => setShowQueueMerge(true)} style={{ fontSize:12, padding:"5px 12px", border:"none", borderRadius:7, background:"#FF9500", color:"#fff", fontWeight:600, cursor:"pointer" }}>
+                      Merge Selected
+                    </button>
+                  )}
+                  {queueMergeSel.length > 0 && (
+                    <button onClick={() => setQueueMergeSel([])} style={{ fontSize:12, padding:"5px 10px", border:"1px solid var(--border-strong)", borderRadius:7, background:"var(--surface)", color:"var(--text-muted)", cursor:"pointer" }}>
+                      Clear
+                    </button>
+                  )}
+                  <span onClick={() => setShowQueue(q=>!q)} style={{ fontSize:13, color:"var(--text-muted)", cursor:"pointer" }}>{showQueue ? "▲ Hide" : "▼ Review"}</span>
+                </div>
               </div>
               {showQueue && (
                 <div style={{ padding:"0 16px 16px", display:"flex", flexDirection:"column", gap:10 }}>
@@ -1780,8 +1792,17 @@
                     const matches = getFuzzyMatches(item.raw_name, approvedChurches||[]);
                     const working = queueWorking[item.id];
                     return (
-                      <div key={item.id} style={{ background:"var(--surface2)", borderRadius:10, padding:"12px 14px", border:"1px solid var(--border)" }}>
+                      <div key={item.id} style={{ background: queueMergeSel.includes(item.id) ? "rgba(255,149,0,0.07)" : "var(--surface2)", borderRadius:10, padding:"12px 14px", border: queueMergeSel.includes(item.id) ? "1px solid #FF9500" : "1px solid var(--border)" }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
+                          <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
+                            <input type="checkbox" checked={queueMergeSel.includes(item.id)} onChange={e => {
+                              e.stopPropagation();
+                              setQueueMergeSel(sel => {
+                                if (sel.includes(item.id)) return sel.filter(id => id !== item.id);
+                                if (sel.length >= 2) return sel;
+                                return [...sel, item.id];
+                              });
+                            }} style={{ marginTop:3, cursor:"pointer", accentColor:"#FF9500", flexShrink:0 }} />
                           <div>
                             <span style={{ fontWeight:600, fontSize:14 }}>{item.raw_name}</span>
                             {item.source === "survey" && (
@@ -1828,11 +1849,81 @@
                             }} style={{ fontSize:12, padding:"5px 10px", borderRadius:7, border:"1px solid var(--border-strong)", background:"var(--surface)", color:"var(--text-muted)", fontWeight:500, cursor:"pointer", opacity:working?0.5:1 }}>Ignore</button>
                           </div>
                         </div>
+                          </div>
                       </div>
                     );
                   })}
                 </div>
               )}
+
+              {/* Queue Merge Modal */}
+              {showQueueMerge && queueMergeSel.length === 2 && (() => {
+                const qA = churchQueue.find(i => i.id === queueMergeSel[0]);
+                const qB = churchQueue.find(i => i.id === queueMergeSel[1]);
+                if (!qA || !qB) return null;
+                const primary = queueMergePrimary === qA.id ? qA : queueMergePrimary === qB.id ? qB : null;
+                const secondary = primary ? (primary.id === qA.id ? qB : qA) : null;
+                const closeModal = () => { setShowQueueMerge(false); setQueueMergePrimary(null); };
+                return (
+                  <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }} onClick={closeModal}>
+                    <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:600, width:"100%", boxShadow:"var(--shadow-lg)" }} onClick={e=>e.stopPropagation()}>
+                      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
+                        <div style={{ fontSize:17, fontWeight:700 }}>Merge Queue Items</div>
+                        <button onClick={closeModal} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
+                      </div>
+                      <div style={{ fontSize:13, color:"var(--text-muted)", marginBottom:20 }}>
+                        {!primary ? "These look like duplicates. Select which name to keep." : `Keeping "${primary.raw_name}" — the other entry will be removed.`}
+                      </div>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:22 }}>
+                        {[qA, qB].map(q => {
+                          const isPrimary = primary?.id === q.id;
+                          const isSecondary = secondary?.id === q.id;
+                          return (
+                            <div key={q.id} style={{ border: isPrimary ? "2px solid var(--accent)" : isSecondary ? "2px solid var(--danger)" : "1px solid var(--border-strong)", borderRadius:14, padding:16, position:"relative" }}>
+                              {isPrimary && <div style={{ position:"absolute", top:-10, left:16, background:"var(--accent)", color:"#fff", fontSize:11, fontWeight:700, padding:"2px 10px", borderRadius:20 }}>KEEP</div>}
+                              {isSecondary && <div style={{ position:"absolute", top:-10, left:16, background:"var(--danger)", color:"#fff", fontSize:11, fontWeight:700, padding:"2px 10px", borderRadius:20 }}>REMOVE</div>}
+                              <div style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>{q.raw_name}</div>
+                              <div style={{ fontSize:12, color:"var(--text-muted)", marginBottom:12 }}>
+                                {q.submission_count} submission{q.submission_count!==1?"s":""}
+                                {q.source === "survey" && <span style={{ marginLeft:6, background:"#87CEEB", color:"#1a5f7a", borderRadius:6, fontSize:10, fontWeight:700, padding:"2px 7px" }}>Survey</span>}
+                              </div>
+                              {!isPrimary && (
+                                <button onClick={() => setQueueMergePrimary(q.id)} style={{ width:"100%", padding:"8px", border:"none", borderRadius:9, fontSize:13, fontWeight:600, cursor:"pointer", background: isSecondary ? "var(--surface2)" : "var(--accent)", color: isSecondary ? "var(--text-muted)" : "#fff" }}>
+                                  {isSecondary ? "Switch — Keep this one" : "Keep this one"}
+                                </button>
+                              )}
+                              {isPrimary && <div style={{ padding:"8px", borderRadius:9, fontSize:13, fontWeight:600, textAlign:"center", background:"rgba(0,122,255,0.08)", color:"var(--accent)" }}>✓ Keeping this name</div>}
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ display:"flex", gap:8 }}>
+                        <button onClick={closeModal} style={{ flex:1, padding:"11px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:10, fontSize:13, cursor:"pointer", color:"var(--text-secondary)" }}>Cancel</button>
+                        <button
+                          disabled={!primary}
+                          onClick={async () => {
+                            if (!primary || !secondary) return;
+                            // Combine submission counts onto primary
+                            const combinedCount = (primary.submission_count||0) + (secondary.submission_count||0);
+                            await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue?id=eq.${primary.id}`, {
+                              method:"PATCH",
+                              headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json", Prefer:"return=minimal" },
+                              body: JSON.stringify({ submission_count: combinedCount })
+                            });
+                            await ignoreQueueItem(secondary.id);
+                            setQueueMergeSel([]);
+                            closeModal();
+                            onQueueAction && onQueueAction();
+                          }}
+                          style={{ flex:2, padding:"11px", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:primary?"pointer":"not-allowed", background:primary?"var(--accent)":"var(--surface3)", color:primary?"#fff":"var(--text-muted)", opacity:primary?1:0.5 }}
+                        >
+                          {primary ? `Confirm — Remove "${secondary.raw_name}"` : "Select a name to keep first"}
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
             </div>
           )}
 
@@ -1866,11 +1957,7 @@
                   <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
                   Import
                 </button>
-                {mergeSelection.length === 2 && (
-              <button onClick={() => setShowMergeModal(true)} style={{ display:"flex", alignItems:"center", gap:6, padding:"8px 14px", border:"none", borderRadius:9, fontSize:13, fontWeight:600, cursor:"pointer", background:"#FF9500", color:"#fff" }}>
-                Merge {mergeSelection.length} Selected
-              </button>
-            )}
+
             <button className="btn-next" style={{ flex:"none", padding:"8px 16px", fontSize:13 }} onClick={() => setShowAdd(true)}>+ Add</button>
               </div>
             </div>
@@ -1966,7 +2053,6 @@
                 </colgroup>
                 <thead style={{ position:"sticky", top:0, zIndex:10 }}>
                   <tr>
-                    <th style={{ width:36, cursor:"default" }}></th>
                     {shownCols.map(col => (
                       <th key={col.key}
                         style={{ cursor: col.key.startsWith("_") ? "default" : "pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}
@@ -1980,19 +2066,8 @@
                 </thead>
                 <tbody>
                   {pageRows.map(c => {
-                    const isChecked = mergeSelection.includes(c.id);
                     return (
-                      <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer", background: isChecked ? "rgba(255,149,0,0.07)" : undefined }}>
-                        <td style={{ textAlign:"center", padding:"0 8px" }} onClick={e => {
-                          e.stopPropagation();
-                          setMergeSelection(sel => {
-                            if (sel.includes(c.id)) return sel.filter(id => id !== c.id);
-                            if (sel.length >= 2) return sel;
-                            return [...sel, c.id];
-                          });
-                        }}>
-                          <input type="checkbox" checked={isChecked} readOnly style={{ cursor:"pointer", accentColor:"#FF9500" }} />
-                        </td>
+                      <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer" }}>
                         {shownCols.map(col => renderCell(col, c))}
                       </tr>
                     );
@@ -2021,90 +2096,7 @@
             </div>
           </div>
 
-          {/* Merge modal */}
-          {showMergeModal && mergeSelection.length === 2 && (() => {
-            const cA = churches.find(c => c.id === mergeSelection[0]);
-            const cB = churches.find(c => c.id === mergeSelection[1]);
-            if (!cA || !cB) return null;
-            const primary = mergePrimary === cA.id ? cA : mergePrimary === cB.id ? cB : null;
-            const secondary = primary ? (primary.id === cA.id ? cB : cA) : null;
-            const INFO_ROWS = [
-              ["Location", "location"], ["Region", "region"], ["Country", "country"],
-              ["Members", "members"], ["Language", "language"], ["Standing", "standing"],
-              ["Internet", "internet"], ["Phone", "phone"], ["WhatsApp", "whatsapp"],
-            ];
-            return (
-              <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }} onClick={() => { setShowMergeModal(false); setMergePrimary(null); }}>
-                <div style={{ background:"var(--surface)", borderRadius:20, padding:28, maxWidth:780, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"92vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
-                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:6 }}>
-                    <div style={{ fontSize:17, fontWeight:700 }}>Merge Churches</div>
-                    <button onClick={() => { setShowMergeModal(false); setMergePrimary(null); }} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 10px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>✕</button>
-                  </div>
-                  <div style={{ fontSize:13, color:"var(--text-muted)", marginBottom:20 }}>
-                    {!primary ? "Select which record to keep. The other will be absorbed into it." : `Keeping "${primary.pastor}" — the other record's data will fill any blanks, then it will be removed.`}
-                  </div>
-
-                  {/* Side-by-side cards */}
-                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:16, marginBottom:22 }}>
-                    {[cA, cB].map(c => {
-                      const isPrimary = primary?.id === c.id;
-                      const isSecondary = secondary?.id === c.id;
-                      return (
-                        <div key={c.id} style={{ border: isPrimary ? "2px solid var(--accent)" : isSecondary ? "2px solid var(--danger)" : "1px solid var(--border-strong)", borderRadius:14, padding:16, position:"relative", transition:"border 0.2s" }}>
-                          {isPrimary && <div style={{ position:"absolute", top:-10, left:16, background:"var(--accent)", color:"#fff", fontSize:11, fontWeight:700, padding:"2px 10px", borderRadius:20 }}>KEEP</div>}
-                          {isSecondary && <div style={{ position:"absolute", top:-10, left:16, background:"var(--danger)", color:"#fff", fontSize:11, fontWeight:700, padding:"2px 10px", borderRadius:20 }}>REMOVE</div>}
-                          <div style={{ fontWeight:700, fontSize:15, marginBottom:4 }}>{c.pastor}</div>
-                          <div style={{ fontSize:12, color:"var(--text-muted)", marginBottom:12 }}>{c.church_name || c.location}</div>
-                          {INFO_ROWS.filter(([,k]) => c[k]).map(([label, key]) => (
-                            <div key={key} style={{ display:"flex", justifyContent:"space-between", fontSize:12, padding:"3px 0", borderBottom:"1px solid var(--border)" }}>
-                              <span style={{ color:"var(--text-muted)" }}>{label}</span>
-                              <span style={{ fontWeight:500, maxWidth:"55%", textAlign:"right" }}>{c[key]}</span>
-                            </div>
-                          ))}
-                          {!isPrimary && (
-                            <button onClick={() => setMergePrimary(c.id)} style={{ marginTop:14, width:"100%", padding:"9px", border:"none", borderRadius:9, fontSize:13, fontWeight:600, cursor:"pointer", background: isSecondary ? "var(--surface2)" : "var(--accent)", color: isSecondary ? "var(--text-muted)" : "#fff" }}>
-                              {isSecondary ? "Switch — Keep this one" : "Keep this one"}
-                            </button>
-                          )}
-                          {isPrimary && (
-                            <div style={{ marginTop:14, padding:"9px", borderRadius:9, fontSize:13, fontWeight:600, textAlign:"center", background:"rgba(0,122,255,0.08)", color:"var(--accent)" }}>✓ Keeping this record</div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-
-                  {/* Confirm button */}
-                  <div style={{ display:"flex", gap:8 }}>
-                    <button onClick={() => { setShowMergeModal(false); setMergePrimary(null); }} style={{ flex:1, padding:"11px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:10, fontSize:13, fontWeight:500, cursor:"pointer", color:"var(--text-secondary)" }}>Cancel</button>
-                    <button
-                      disabled={!primary}
-                      onClick={async () => {
-                        if (!primary || !secondary) return;
-                        // Build merged primary: fill blanks from secondary
-                        const merged = { ...primary };
-                        Object.entries(secondary).forEach(([k,v]) => {
-                          if (v && !merged[k] && k !== "id") merged[k] = v;
-                        });
-                        // Save updated primary
-                        onUpdate(merged);
-                        // Small delay then delete secondary
-                        setTimeout(() => onUpdate({ ...secondary, _archive: true, _mergedInto: primary.id }), 400);
-                        setMergeSelection([]);
-                        setShowMergeModal(false);
-                        setMergePrimary(null);
-                      }}
-                      style={{ flex:2, padding:"11px", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor: primary ? "pointer" : "not-allowed", background: primary ? "var(--accent)" : "var(--surface3)", color: primary ? "#fff" : "var(--text-muted)", opacity: primary ? 1 : 0.5 }}
-                    >
-                      {primary ? `Confirm Merge — Remove "${secondary.pastor}"` : "Select a record to keep first"}
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })()}
-
-                    {/* Detail modal */}
+          {/* Detail modal */}
           {selected && !editing && (
             <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.3)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:200, padding:16 }} onClick={() => setSelected(null)}>
               <div style={{ background:"var(--surface)", borderRadius:20, padding:24, maxWidth:520, width:"100%", boxShadow:"var(--shadow-lg)", maxHeight:"90vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
