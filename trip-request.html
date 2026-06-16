@@ -116,20 +116,29 @@
 
     .field textarea { resize: vertical; min-height: 80px; }
 
-    .rate-bar {
+    /* ── Currency bar ── */
+    .currency-bar {
+      background: #f8fafc; border: 1px solid #e2e8f0;
+      border-radius: 10px; padding: 14px 16px;
+      margin-bottom: 20px;
+    }
+
+    .currency-bar select {
+      padding: 9px 12px; border: 1.5px solid #dce3ec;
+      border-radius: 8px; font-size: 14px; background: white;
+      color: #1a1a1a; cursor: pointer; font-family: inherit;
+      min-width: 260px;
+    }
+
+    .currency-bar select:focus { outline: none; border-color: #42C6EE; }
+
+    .rate-info-box {
       background: #f0f9ff; border: 1px solid #bae6fd;
       border-radius: 8px; padding: 10px 14px;
-      font-size: 12px; color: #0369a1;
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 20px; flex-wrap: wrap; gap: 8px;
+      font-size: 13px; color: #0369a1;
     }
 
-    .rate-bar input[type="number"] {
-      width: 100px; padding: 4px 8px;
-      border: 1.5px solid #7dd3fc; border-radius: 6px;
-      font-size: 12px; text-align: right; background: white;
-    }
-
+    /* ── Stop cards ── */
     .stop-card {
       border: 1.5px solid #e2e8f0; border-radius: 12px;
       padding: 20px; margin-bottom: 12px; background: #fafbfc;
@@ -152,6 +161,7 @@
     }
     .btn-remove:hover { background: #fee2e2; color: #dc2626; }
 
+    /* ── Expense table ── */
     .expense-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
 
     .expense-table th {
@@ -169,7 +179,7 @@
       font-size: 13px; background: white; font-family: inherit;
     }
     .expense-table input:focus { outline: none; border-color: #42C6EE; }
-    .expense-table input.ugx { text-align: right; }
+    .expense-table input.local-amt { text-align: right; }
 
     .expense-table .usd-cell {
       font-size: 13px; font-weight: 600; color: #065f46;
@@ -181,6 +191,7 @@
       font-weight: 700; font-size: 13px;
     }
 
+    /* ── Totals ── */
     .totals-box {
       background: #f0fdf8; border: 1.5px solid #a7f3d0;
       border-radius: 10px; padding: 16px 20px; margin-top: 20px;
@@ -196,6 +207,7 @@
       padding-top: 10px; font-weight: 800; font-size: 17px; color: #065f46;
     }
 
+    /* ── Buttons ── */
     .btn-row { display: flex; gap: 10px; margin-top: 20px; }
 
     .btn {
@@ -210,14 +222,14 @@
     .btn-outline  { background: white; color: #42C6EE; border: 2px solid #42C6EE; }
     .btn-ghost    { background: #f1f5f9; color: #475569; }
 
+    /* ── Success ── */
     .success-screen {
       display: none;
       background: white; border: 1px solid #e2e8f0;
-      border-radius: 14px; padding: 60px 32px;
-      text-align: center; margin-top: 0;
+      border-radius: 0 0 14px 14px;
       border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;
       border-bottom: 1px solid #e2e8f0;
-      border-radius: 0 0 14px 14px;
+      padding: 60px 32px; text-align: center;
     }
 
     .success-icon {
@@ -236,7 +248,8 @@
       .field-grid.cols-2 { grid-template-columns: 1fr; }
       .header { padding: 20px; }
       .card { padding: 20px; }
-      .rate-bar { flex-direction: column; align-items: flex-start; }
+      .currency-bar { flex-direction: column; align-items: flex-start; }
+      .currency-bar select { min-width: 100%; }
     }
   </style>
 </head>
@@ -246,10 +259,10 @@
   <!-- Header -->
   <div class="header">
     <div class="logo-circle">
-      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="50" cy="50" r="46" fill="#42C6EE"/>
-        <text x="50" y="57" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="800" font-size="22" fill="white">JOSHWAY</text>
-        <ellipse cx="50" cy="72" rx="28" ry="4" stroke="white" stroke-width="2" fill="none" opacity="0.6"/>
+      <svg viewBox="0 0 90 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20,5 L68,5 L72,20 L74,34 L82,38 L74,43 L76,62 L64,84 L45,96 L26,84 L16,62 L14,52 L18,44 L12,36 L8,28 L14,16 Z"
+              fill="#42C6EE"/>
+        <ellipse cx="80" cy="64" rx="4" ry="8" fill="#42C6EE" transform="rotate(-15,80,64)"/>
       </svg>
     </div>
     <div class="header-text">
@@ -258,7 +271,7 @@
     </div>
   </div>
 
-  <!-- Form (hidden after submit) -->
+  <!-- Form -->
   <div id="form-wrap">
 
     <!-- Section 1: Requester Info -->
@@ -296,13 +309,22 @@
     <div class="card">
       <div class="section-title">Stops &amp; Expense Breakdown</div>
 
-      <div class="rate-bar">
-        <span>Exchange rate: &nbsp;<strong>1 USD =</strong></span>
-        <div style="display:flex;align-items:center;gap:8px;">
-          <input type="number" id="ugx-rate" value="3700" min="1" oninput="recalcAll()" />
-          <span><strong>UGX</strong> &nbsp;(update as needed)</span>
+      <!-- Currency picker -->
+      <div class="currency-bar">
+        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:10px;">Currency</div>
+        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
+          <select id="currency-select" onchange="onCurrencyChange()">
+            <option value="">Loading…</option>
+          </select>
+          <div class="rate-info-box" id="rate-info-box">
+            <div id="rate-loading" style="color:#94a3b8;">Fetching live rates…</div>
+            <div id="rate-info" style="display:none;">
+              <div id="rate-line-1" style="font-weight:700;font-size:14px;"></div>
+              <div id="rate-line-2" style="font-size:12px;margin-top:2px;opacity:0.75;"></div>
+            </div>
+          </div>
+          <div id="rate-error" style="display:none;font-size:12px;color:#dc2626;">Could not load live rates — using estimates.</div>
         </div>
-        <span style="color:#64748b;font-size:11px;">USD figures auto-convert.</span>
       </div>
 
       <div id="stops-container"></div>
@@ -312,7 +334,7 @@
       </div>
 
       <div class="totals-box">
-        <div class="total-line"><span>Total (UGX)</span><span id="grand-ugx">0 UGX</span></div>
+        <div class="total-line"><span id="grand-local-label">Total (local)</span><span id="grand-local">0</span></div>
         <div class="total-line"><span>Total (USD)</span><span id="grand-usd">$0.00</span></div>
         <div class="total-line grand"><span>Total Requested</span><span id="grand-both">$0.00 USD</span></div>
       </div>
@@ -362,6 +384,7 @@
 </div><!-- /page -->
 
 <script>
+  /* ── Config ── */
   const EXPENSE_TYPES = [
     { key:"transport", label:"Transport / Car Hire" },
     { key:"lodging",   label:"Lodging / Accommodation" },
@@ -370,18 +393,93 @@
     { key:"other",     label:"Other" },
   ];
 
-  let stopCount = 0;
+  const EA_CURRENCIES = [
+    { code:"UGX", name:"Ugandan Shilling",      country:"Uganda",       fallback:3700  },
+    { code:"KES", name:"Kenyan Shilling",        country:"Kenya",        fallback:129   },
+    { code:"TZS", name:"Tanzanian Shilling",     country:"Tanzania",     fallback:2600  },
+    { code:"RWF", name:"Rwandan Franc",          country:"Rwanda",       fallback:1350  },
+    { code:"ETB", name:"Ethiopian Birr",         country:"Ethiopia",     fallback:57    },
+    { code:"BIF", name:"Burundian Franc",        country:"Burundi",      fallback:2900  },
+    { code:"SSP", name:"South Sudanese Pound",   country:"South Sudan",  fallback:1300  },
+    { code:"DJF", name:"Djiboutian Franc",       country:"Djibouti",     fallback:178   },
+    { code:"SOS", name:"Somali Shilling",        country:"Somalia",      fallback:571   },
+    { code:"MGA", name:"Malagasy Ariary",        country:"Madagascar",   fallback:4500  },
+    { code:"MZN", name:"Mozambican Metical",     country:"Mozambique",   fallback:64    },
+    { code:"ERN", name:"Eritrean Nakfa",         country:"Eritrea",      fallback:15    },
+  ];
 
-  // Set today's date
+  let stopCount          = 0;
+  let liveRates          = {};
+  let currentCurrencyCode = "UGX";
+  let currentRate        = 3700;
+
+  /* ── Populate currency dropdown ── */
+  const sel = document.getElementById("currency-select");
+  sel.innerHTML = "";
+  EA_CURRENCIES.forEach(c => {
+    const opt = document.createElement("option");
+    opt.value = c.code;
+    opt.textContent = `${c.country} — ${c.name} (${c.code})`;
+    if (c.code === "UGX") opt.selected = true;
+    sel.appendChild(opt);
+  });
+
+  /* ── Fetch live rates from open.er-api.com (free, no key needed) ── */
+  async function fetchLiveRates() {
+    try {
+      const res = await fetch("https://open.er-api.com/v6/latest/USD");
+      if (res.ok) {
+        const data = await res.json();
+        liveRates = data.rates || {};
+      } else {
+        document.getElementById("rate-error").style.display = "block";
+      }
+    } catch(e) {
+      document.getElementById("rate-error").style.display = "block";
+    }
+    updateRateDisplay();
+  }
+
+  function getRateForCode(code) {
+    if (liveRates[code]) return liveRates[code];
+    const c = EA_CURRENCIES.find(c => c.code === code);
+    return c ? c.fallback : 1;
+  }
+
+  function updateRateDisplay() {
+    const code   = document.getElementById("currency-select").value;
+    currentCurrencyCode = code;
+    currentRate  = getRateForCode(code);
+    const usdPer = 1 / currentRate;
+
+    document.getElementById("rate-loading").style.display = "none";
+    document.getElementById("rate-info").style.display    = "block";
+    document.getElementById("rate-line-1").textContent =
+      `1 USD = ${currentRate.toLocaleString(undefined,{maximumFractionDigits:2})} ${code}`;
+    document.getElementById("rate-line-2").textContent =
+      `1 ${code} = $${usdPer.toFixed(usdPer < 0.01 ? 6 : 4)} USD  ·  ${Object.keys(liveRates).length ? "Live rate" : "Estimate"}`;
+
+    // Refresh column headers and totals
+    document.querySelectorAll(".local-currency-header").forEach(el => {
+      el.textContent = `Amount (${code})`;
+    });
+    document.getElementById("grand-local-label").textContent = `Total (${code})`;
+
+    recalcAll();
+  }
+
+  function onCurrencyChange() { updateRateDisplay(); }
+
+  /* ── Set today's date ── */
   document.getElementById("sig-date").value = new Date().toISOString().split("T")[0];
 
-  // Init EmailJS
+  /* ── Init EmailJS ── */
   emailjs.init(EMAILJS_PUBLIC_KEY);
 
   /* ── Add stop ── */
   function addStop() {
     stopCount++;
-    const id = `stop-${stopCount}`;
+    const id  = `stop-${stopCount}`;
     const div = document.createElement("div");
     div.className = "stop-card";
     div.id = id;
@@ -408,7 +506,7 @@
         <thead><tr>
           <th style="width:38%">Expense Category</th>
           <th>Description / Notes</th>
-          <th style="width:120px;text-align:right">Amount (UGX)</th>
+          <th class="local-currency-header" style="width:140px;text-align:right">Amount (${currentCurrencyCode})</th>
           <th style="width:80px;text-align:right">USD</th>
         </tr></thead>
         <tbody>
@@ -416,14 +514,14 @@
             <tr>
               <td style="font-size:13px;font-weight:500;">${e.label}</td>
               <td><input type="text" placeholder="Optional" /></td>
-              <td><input type="number" class="ugx" min="0" placeholder="0" oninput="recalcStop('${id}')" /></td>
+              <td><input type="number" class="local-amt" min="0" placeholder="0" oninput="recalcStop('${id}')" /></td>
               <td class="usd-cell" data-usd="${e.key}">$0.00</td>
             </tr>`).join("")}
         </tbody>
         <tfoot>
           <tr class="subtotal-row">
             <td colspan="2">Stop Subtotal</td>
-            <td style="text-align:right" id="${id}-ugx-sub">0 UGX</td>
+            <td style="text-align:right" class="local-currency-sub" id="${id}-local-sub">0 ${currentCurrencyCode}</td>
             <td class="usd-cell" id="${id}-usd-sub">$0.00</td>
           </tr>
         </tfoot>
@@ -437,55 +535,57 @@
     recalcAll();
   }
 
+  /* ── Recalc a single stop ── */
   function recalcStop(id) {
-    const card = document.getElementById(id);
-    const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
-    const inputs = card.querySelectorAll("input.ugx");
+    const card     = document.getElementById(id);
+    const rate     = currentRate || 1;
+    const inputs   = card.querySelectorAll("input.local-amt");
     const usdCells = card.querySelectorAll("td[data-usd]");
     let total = 0;
     inputs.forEach((inp, i) => {
-      const ugx = parseFloat(inp.value) || 0;
-      total += ugx;
-      usdCells[i].textContent = "$" + (ugx / rate).toFixed(2);
+      const amt = parseFloat(inp.value) || 0;
+      total += amt;
+      usdCells[i].textContent = "$" + (amt / rate).toFixed(2);
     });
-    document.getElementById(`${id}-ugx-sub`).textContent = total.toLocaleString() + " UGX";
+    const subEl = document.getElementById(`${id}-local-sub`);
+    if (subEl) subEl.textContent = total.toLocaleString() + " " + currentCurrencyCode;
     document.getElementById(`${id}-usd-sub`).textContent = "$" + (total / rate).toFixed(2);
   }
 
+  /* ── Recalc all stops + grand total ── */
   function recalcAll() {
-    const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
-    let grandUGX = 0;
+    let grandLocal = 0;
     document.querySelectorAll(".stop-card").forEach(card => {
       recalcStop(card.id);
-      card.querySelectorAll("input.ugx").forEach(inp => { grandUGX += parseFloat(inp.value) || 0; });
+      card.querySelectorAll("input.local-amt").forEach(inp => { grandLocal += parseFloat(inp.value) || 0; });
     });
-    const grandUSD = grandUGX / rate;
-    document.getElementById("grand-ugx").textContent = grandUGX.toLocaleString() + " UGX";
-    document.getElementById("grand-usd").textContent = "$" + grandUSD.toFixed(2);
-    document.getElementById("grand-both").textContent = "$" + grandUSD.toFixed(2) + " USD";
+    const grandUSD = grandLocal / (currentRate || 1);
+    document.getElementById("grand-local").textContent = grandLocal.toLocaleString() + " " + currentCurrencyCode;
+    document.getElementById("grand-usd").textContent   = "$" + grandUSD.toFixed(2);
+    document.getElementById("grand-both").textContent  = "$" + grandUSD.toFixed(2) + " USD";
   }
 
-  /* ── Collect form data into structured object ── */
+  /* ── Collect form data ── */
   function collectForm() {
-    const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
+    const rate = currentRate || 1;
     const stops = [];
-    let grandUGX = 0;
+    let grandLocal = 0;
 
     document.querySelectorAll(".stop-card").forEach(card => {
-      const inputs    = Array.from(card.querySelectorAll("input[type=text], input[type=number]"));
-      const location  = inputs[0]?.value || "";
-      const church    = inputs[1]?.value || "";
-      const purpose   = inputs[2]?.value || "";
-      const ugxInputs = Array.from(card.querySelectorAll("input.ugx"));
-      const noteInputs= Array.from(card.querySelectorAll("tbody td:nth-child(2) input"));
-      const expenses  = {};
-      const notes     = {};
+      const inputs     = Array.from(card.querySelectorAll("input[type=text], input[type=number]"));
+      const location   = inputs[0]?.value || "";
+      const church     = inputs[1]?.value || "";
+      const purpose    = inputs[2]?.value || "";
+      const amtInputs  = Array.from(card.querySelectorAll("input.local-amt"));
+      const noteInputs = Array.from(card.querySelectorAll("tbody td:nth-child(2) input"));
+      const expenses   = {};
+      const notes      = {};
       EXPENSE_TYPES.forEach((et, i) => {
-        expenses[et.key] = parseFloat(ugxInputs[i]?.value) || 0;
+        expenses[et.key] = parseFloat(amtInputs[i]?.value) || 0;
         notes[et.key]    = noteInputs[i]?.value || "";
-        grandUGX        += expenses[et.key];
+        grandLocal      += expenses[et.key];
       });
-      stops.push({ location, church, purpose, expenses, notes });
+      stops.push({ location, church, purpose, expenses, notes, currency: currentCurrencyCode });
     });
 
     return {
@@ -497,15 +597,19 @@
       stops,
       notes:          document.getElementById("notes").value.trim(),
       submitted_by:   document.getElementById("sig-name").value.trim(),
-      total_ugx:      grandUGX,
-      total_usd:      parseFloat((grandUGX / rate).toFixed(2)),
+      currency_code:  currentCurrencyCode,
+      total_ugx:      grandLocal,   // field name kept for DB compatibility
+      total_usd:      parseFloat((grandLocal / rate).toFixed(2)),
     };
   }
 
   /* ── Build plain-text email summary ── */
   function buildSummary(data) {
+    const code    = data.currency_code || currentCurrencyCode || "LOCAL";
+    const rate    = currentRate || 1;
     const fmtDate = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "Not specified";
-    let lines = [];
+    const lines   = [];
+
     lines.push("EAST AFRICA TRIP REQUEST — PROJECT KANYEA");
     lines.push("==========================================");
     lines.push(`Requester:    ${data.requester_name}`);
@@ -513,54 +617,55 @@
     lines.push(`Departure:    ${fmtDate(data.departure_date)}`);
     lines.push(`Return:       ${fmtDate(data.return_date)}`);
     lines.push(`Submitted By: ${data.submitted_by || "Not specified"}`);
+    lines.push(`Currency:     ${code}`);
     lines.push("");
+
     if (data.objective) {
       lines.push("OBJECTIVE");
       lines.push("---------");
       lines.push(data.objective);
       lines.push("");
     }
+
     data.stops.forEach((stop, i) => {
-      lines.push(`STOP ${i + 1}: ${stop.location || "Unknown"} — ${stop.church || "Unknown"}`);
+      lines.push(`STOP ${i+1}: ${stop.location || "Unknown"} — ${stop.church || "Unknown"}`);
       if (stop.purpose) lines.push(`Purpose: ${stop.purpose}`);
-      const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
       let stopTotal = 0;
       EXPENSE_TYPES.forEach(et => {
-        const ugx = stop.expenses[et.key] || 0;
-        if (ugx > 0) {
+        const amt = stop.expenses[et.key] || 0;
+        if (amt > 0) {
           const note = stop.notes[et.key] ? ` (${stop.notes[et.key]})` : "";
-          lines.push(`  ${et.label}: ${ugx.toLocaleString()} UGX / $${(ugx/rate).toFixed(2)}${note}`);
-          stopTotal += ugx;
+          lines.push(`  ${et.label}: ${amt.toLocaleString()} ${code} / $${(amt/rate).toFixed(2)}${note}`);
+          stopTotal += amt;
         }
       });
-      lines.push(`  Stop Total: ${stopTotal.toLocaleString()} UGX / $${(stopTotal/rate).toFixed(2)}`);
+      lines.push(`  Stop Total: ${stopTotal.toLocaleString()} ${code} / $${(stopTotal/rate).toFixed(2)}`);
       lines.push("");
     });
+
     lines.push("TOTALS");
     lines.push("------");
-    lines.push(`Total (UGX): ${data.total_ugx.toLocaleString()} UGX`);
-    lines.push(`Total (USD): $${data.total_usd.toFixed(2)}`);
+    lines.push(`Total (${code}): ${data.total_ugx.toLocaleString()} ${code}`);
+    lines.push(`Total (USD):    $${data.total_usd.toFixed(2)}`);
     lines.push("");
+
     if (data.notes) {
       lines.push("NOTES");
       lines.push("-----");
       lines.push(data.notes);
       lines.push("");
     }
+
     lines.push("--");
     lines.push("Submitted via East Africa Trip Request Form");
-    lines.push(`drobertson0624.github.io/Projects/trip-request.html`);
+    lines.push("drobertson0624.github.io/Projects/trip-request.html");
     return lines.join("\n");
   }
 
   /* ── Submit ── */
   async function submitRequest() {
     const data = collectForm();
-
-    if (!data.requester_name) {
-      showError("Full name is required before submitting.");
-      return;
-    }
+    if (!data.requester_name) { showError("Full name is required before submitting."); return; }
 
     const btn = document.getElementById("submit-btn");
     btn.disabled = true;
@@ -595,16 +700,17 @@
       if (!res.ok) throw new Error("Save failed: " + await res.text());
 
       // 2. Send email via EmailJS
-      const fmtDate = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
+      const fmtDate = d => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
       await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
         to_email:       APPROVAL_EMAIL,
         requester_name: data.requester_name,
         region:         data.region || "—",
         departure_date: fmtDate(data.departure_date),
         return_date:    fmtDate(data.return_date),
+        currency:       data.currency_code,
         stop_count:     data.stops.length,
+        total_local:    data.total_ugx.toLocaleString() + " " + data.currency_code,
         total_usd:      "$" + data.total_usd.toFixed(2),
-        total_ugx:      data.total_ugx.toLocaleString() + " UGX",
         summary:        buildSummary(data),
       });
 
@@ -614,7 +720,7 @@
 
     } catch(e) {
       console.error(e);
-      showError("Something went wrong: " + e.message + ". Please try again or contact support.");
+      showError("Something went wrong: " + e.message + ". Please try again.");
       btn.disabled = false;
       btn.textContent = "Submit Trip Request";
     }
@@ -632,7 +738,6 @@
   function clearForm() {
     if (!confirm("Clear all form data?")) return;
     document.querySelectorAll("#form-wrap input, #form-wrap textarea").forEach(el => {
-      if (el.id === "ugx-rate") return;
       el.value = "";
     });
     document.getElementById("stops-container").innerHTML = "";
@@ -642,8 +747,8 @@
     addStop();
   }
 
-  // Start with one stop
-  addStop();
+  /* ── Init: fetch live rates then render first stop ── */
+  fetchLiveRates().then(() => { addStop(); });
 </script>
 </body>
 </html>
