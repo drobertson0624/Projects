@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>East Africa Trip Request — Project Kanyea</title>
+
+  <!--
+  ═══════════════════════════════════════════════════════════════
+  EMAILJS SETUP — do this once before sharing the link
+  ═══════════════════════════════════════════════════════════════
+  1. Go to https://emailjs.com and create a free account
+  2. Add an Email Service → connect your Gmail (soulchild2117@gmail.com)
+     → copy the Service ID and paste it into EMAILJS_SERVICE_ID below
+  3. Create an Email Template → set To Email = soulchild2117@gmail.com
+     → Subject:  New Trip Request — {{requester_name}}
+     → Body:     {{summary}}
+     → copy the Template ID into EMAILJS_TEMPLATE_ID below
+  4. Go to Account → API Keys → copy your Public Key into EMAILJS_PUBLIC_KEY below
+  5. Upload this file to GitHub alongside index.html
+  ═══════════════════════════════════════════════════════════════
+  -->
+
+  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <script>
+    // ── EmailJS credentials ── fill these in after setup ──
+    const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";   // e.g. "service_abc123"
+    const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // e.g. "template_xyz789"
+    const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";   // e.g. "abcDEF123..."
+
+    // ── Supabase ──
+    const SUPABASE_URL = "https://gwvaarvwmptbsnanxmij.supabase.co";
+    const SUPABASE_KEY = "sb_publishable_ziOlB_rYW9yh9-DMRPqzXg_7ZWV6THq";
+
+    // ── To change the approval email address later, update this line ──
+    const APPROVAL_EMAIL = "soulchild2117@gmail.com";
+  </script>
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f4f7fa;
+      color: #1a1a1a;
+      padding: 32px 16px 64px;
+      font-size: 15px;
+    }
+
+    .page { max-width: 820px; margin: 0 auto; }
+
+    .header {
+      background: #42C6EE;
+      border-radius: 14px 14px 0 0;
+      padding: 28px 32px 24px;
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+
+    .logo-circle {
+      width: 56px; height: 56px;
+      background: white; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-circle svg { width: 38px; height: 38px; }
+
+    .header-text h1 { font-size: 22px; font-weight: 700; color: white; letter-spacing: -0.3px; }
+    .header-text p  { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 3px; }
+
+    .card {
+      background: white;
+      padding: 28px 32px;
+      border-left: 1px solid #e2e8f0;
+      border-right: 1px solid #e2e8f0;
+    }
+
+    .card:last-of-type {
+      border-radius: 0 0 14px 14px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .section-title {
+      font-size: 12px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.6px;
+      color: #42C6EE; margin-bottom: 16px;
+    }
+
+    .divider { border: none; border-top: 1px solid #e8edf2; margin: 24px 0; }
+
+    .field-grid { display: grid; gap: 14px; }
+    .field-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+
+    .field label {
+      display: block; font-size: 11px; font-weight: 700;
+      color: #64748b; margin-bottom: 5px;
+      text-transform: uppercase; letter-spacing: 0.4px;
+    }
+
+    .field input,
+    .field select,
+    .field textarea {
+      width: 100%; padding: 10px 13px;
+      border: 1.5px solid #dce3ec; border-radius: 8px;
+      font-size: 14px; color: #1a1a1a; background: #fafbfc;
+      transition: border-color 0.15s; font-family: inherit;
+    }
+
+    .field input:focus,
+    .field select:focus,
+    .field textarea:focus {
+      outline: none; border-color: #42C6EE; background: white;
+    }
+
+    .field textarea { resize: vertical; min-height: 80px; }
+
+    .rate-bar {
+      background: #f0f9ff; border: 1px solid #bae6fd;
+      border-radius: 8px; padding: 10px 14px;
+      font-size: 12px; color: #0369a1;
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 20px; flex-wrap: wrap; gap: 8px;
+    }
+
+    .rate-bar input[type="number"] {
+      width: 100px; padding: 4px 8px;
+      border: 1.5px solid #7dd3fc; border-radius: 6px;
+      font-size: 12px; text-align: right; background: white;
+    }
+
+    .stop-card {
+      border: 1.5px solid #e2e8f0; border-radius: 12px;
+      padding: 20px; margin-bottom: 12px; background: #fafbfc;
+    }
+
+    .stop-header {
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 16px;
+    }
+
+    .stop-number {
+      font-weight: 700; font-size: 12px; color: #42C6EE;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+
+    .btn-remove {
+      background: none; border: none; color: #94a3b8;
+      cursor: pointer; font-size: 12px; padding: 3px 8px;
+      border-radius: 6px; transition: background 0.1s, color 0.1s;
+    }
+    .btn-remove:hover { background: #fee2e2; color: #dc2626; }
+
+    .expense-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
+
+    .expense-table th {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.5px; color: #94a3b8;
+      text-align: left; padding: 0 6px 8px;
+    }
+    .expense-table th:last-child, .expense-table th:nth-child(3) { text-align: right; }
+
+    .expense-table td { padding: 4px 6px; vertical-align: middle; }
+
+    .expense-table input {
+      width: 100%; padding: 7px 10px;
+      border: 1.5px solid #dce3ec; border-radius: 7px;
+      font-size: 13px; background: white; font-family: inherit;
+    }
+    .expense-table input:focus { outline: none; border-color: #42C6EE; }
+    .expense-table input.ugx { text-align: right; }
+
+    .expense-table .usd-cell {
+      font-size: 13px; font-weight: 600; color: #065f46;
+      text-align: right; white-space: nowrap; min-width: 72px;
+    }
+
+    .expense-table .subtotal-row td {
+      padding-top: 10px; border-top: 1.5px solid #e2e8f0;
+      font-weight: 700; font-size: 13px;
+    }
+
+    .totals-box {
+      background: #f0fdf8; border: 1.5px solid #a7f3d0;
+      border-radius: 10px; padding: 16px 20px; margin-top: 20px;
+    }
+
+    .totals-box .total-line {
+      display: flex; justify-content: space-between;
+      align-items: center; font-size: 14px; padding: 3px 0;
+    }
+
+    .totals-box .total-line.grand {
+      border-top: 1.5px solid #6ee7b7; margin-top: 8px;
+      padding-top: 10px; font-weight: 800; font-size: 17px; color: #065f46;
+    }
+
+    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
+
+    .btn {
+      padding: 11px 20px; border-radius: 9px;
+      font-size: 14px; font-weight: 600;
+      cursor: pointer; border: none; transition: opacity 0.15s; font-family: inherit;
+    }
+    .btn:hover { opacity: 0.88; }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .btn-primary { background: #42C6EE; color: white; flex: 2; }
+    .btn-outline  { background: white; color: #42C6EE; border: 2px solid #42C6EE; }
+    .btn-ghost    { background: #f1f5f9; color: #475569; }
+
+    .success-screen {
+      display: none;
+      background: white; border: 1px solid #e2e8f0;
+      border-radius: 14px; padding: 60px 32px;
+      text-align: center; margin-top: 0;
+      border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;
+      border-bottom: 1px solid #e2e8f0;
+      border-radius: 0 0 14px 14px;
+    }
+
+    .success-icon {
+      width: 64px; height: 64px; background: #f0fdf8;
+      border-radius: 50%; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 20px; font-size: 28px;
+    }
+
+    .error-msg {
+      display: none; background: #fff1f2; border: 1px solid #fecdd3;
+      border-radius: 8px; padding: 12px 16px; font-size: 13px;
+      color: #be123c; margin-top: 12px;
+    }
+
+    @media (max-width: 600px) {
+      .field-grid.cols-2 { grid-template-columns: 1fr; }
+      .header { padding: 20px; }
+      .card { padding: 20px; }
+      .rate-bar { flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- Header -->
+  <div class="header">
+    <div class="logo-circle">
+      <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="50" cy="50" r="46" fill="#42C6EE"/>
+        <text x="50" y="57" text-anchor="middle" font-family="-apple-system,sans-serif" font-weight="800" font-size="22" fill="white">JOSHWAY</text>
+        <ellipse cx="50" cy="72" rx="28" ry="4" stroke="white" stroke-width="2" fill="none" opacity="0.6"/>
+      </svg>
+    </div>
+    <div class="header-text">
+      <h1>East Africa Travel Request</h1>
+      <p>Project Kanyea &nbsp;·&nbsp; Submit for trustee approval</p>
+    </div>
+  </div>
+
+  <!-- Form (hidden after submit) -->
+  <div id="form-wrap">
+
+    <!-- Section 1: Requester Info -->
+    <div class="card">
+      <div class="section-title">Requester Information</div>
+      <div class="field-grid cols-2">
+        <div class="field">
+          <label>Full Name <span style="color:#ef4444">*</span></label>
+          <input type="text" id="req-name" placeholder="e.g. Brother Isaac Okuru" />
+        </div>
+        <div class="field">
+          <label>Country / Region</label>
+          <input type="text" id="req-region" placeholder="e.g. Uganda" />
+        </div>
+        <div class="field">
+          <label>Departure Date</label>
+          <input type="date" id="dep-date" />
+        </div>
+        <div class="field">
+          <label>Return Date</label>
+          <input type="date" id="ret-date" />
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="section-title">Trip Objective</div>
+      <div class="field">
+        <label>What is the goal of this trip?</label>
+        <textarea id="objective" placeholder="Describe the churches you plan to visit and what you hope to accomplish — setting up podcast access, training believers, conducting surveys, fellowship, etc."></textarea>
+      </div>
+    </div>
+
+    <!-- Section 2: Stops & Budget -->
+    <div class="card">
+      <div class="section-title">Stops &amp; Expense Breakdown</div>
+
+      <div class="rate-bar">
+        <span>Exchange rate: &nbsp;<strong>1 USD =</strong></span>
+        <div style="display:flex;align-items:center;gap:8px;">
+          <input type="number" id="ugx-rate" value="3700" min="1" oninput="recalcAll()" />
+          <span><strong>UGX</strong> &nbsp;(update as needed)</span>
+        </div>
+        <span style="color:#64748b;font-size:11px;">USD figures auto-convert.</span>
+      </div>
+
+      <div id="stops-container"></div>
+
+      <div class="btn-row" style="margin-top:0;">
+        <button class="btn btn-outline" style="flex:0 0 auto;" onclick="addStop()">+ Add Stop</button>
+      </div>
+
+      <div class="totals-box">
+        <div class="total-line"><span>Total (UGX)</span><span id="grand-ugx">0 UGX</span></div>
+        <div class="total-line"><span>Total (USD)</span><span id="grand-usd">$0.00</span></div>
+        <div class="total-line grand"><span>Total Requested</span><span id="grand-both">$0.00 USD</span></div>
+      </div>
+    </div>
+
+    <!-- Section 3: Notes & Submit -->
+    <div class="card" style="border-radius:0 0 14px 14px;border-bottom:1px solid #e2e8f0;">
+      <div class="section-title">Additional Notes</div>
+      <div class="field" style="margin-bottom:20px;">
+        <label>Notes for trustees</label>
+        <textarea id="notes" placeholder="Any special circumstances, contingency plans, or context the trustees should know."></textarea>
+      </div>
+
+      <hr class="divider" />
+
+      <div class="section-title">Submitter Signature</div>
+      <div class="field-grid cols-2" style="margin-bottom:20px;">
+        <div class="field">
+          <label>Submitted By</label>
+          <input type="text" id="sig-name" placeholder="Your name" />
+        </div>
+        <div class="field">
+          <label>Date Submitted</label>
+          <input type="date" id="sig-date" />
+        </div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-primary" id="submit-btn" onclick="submitRequest()">Submit Trip Request</button>
+        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+      </div>
+      <div class="error-msg" id="error-msg"></div>
+    </div>
+
+  </div><!-- /form-wrap -->
+
+  <!-- Success screen -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">✓</div>
+    <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Request Submitted</div>
+    <div style="font-size:14px;color:#64748b;max-width:400px;margin:0 auto 24px;">
+      Your trip request has been received. A summary has been sent for trustee review. You'll hear back soon.
+    </div>
+    <button class="btn btn-outline" style="display:inline-block;" onclick="location.reload()">Submit Another</button>
+  </div>
+
+</div><!-- /page -->
+
+<script>
+  const EXPENSE_TYPES = [
+    { key:"transport", label:"Transport / Car Hire" },
+    { key:"lodging",   label:"Lodging / Accommodation" },
+    { key:"food",      label:"Food / Meals" },
+    { key:"comms",     label:"Airtime / Data" },
+    { key:"other",     label:"Other" },
+  ];
+
+  let stopCount = 0;
+
+  // Set today's date
+  document.getElementById("sig-date").value = new Date().toISOString().split("T")[0];
+
+  // Init EmailJS
+  emailjs.init(EMAILJS_PUBLIC_KEY);
+
+  /* ── Add stop ── */
+  function addStop() {
+    stopCount++;
+    const id = `stop-${stopCount}`;
+    const div = document.createElement("div");
+    div.className = "stop-card";
+    div.id = id;
+    div.innerHTML = `
+      <div class="stop-header">
+        <span class="stop-number">Stop ${stopCount}</span>
+        <button class="btn-remove" onclick="removeStop('${id}')">Remove</button>
+      </div>
+      <div class="field-grid cols-2" style="margin-bottom:12px;">
+        <div class="field">
+          <label>Location / Town</label>
+          <input type="text" placeholder="e.g. Tororo, Gulu, Lira" />
+        </div>
+        <div class="field">
+          <label>Church / Site Name</label>
+          <input type="text" placeholder="e.g. Church of Christ Iganga" />
+        </div>
+      </div>
+      <div class="field" style="margin-bottom:12px;">
+        <label>Purpose / Objective for this stop</label>
+        <input type="text" placeholder="e.g. Survey setup, podcast training, fellowship" />
+      </div>
+      <table class="expense-table">
+        <thead><tr>
+          <th style="width:38%">Expense Category</th>
+          <th>Description / Notes</th>
+          <th style="width:120px;text-align:right">Amount (UGX)</th>
+          <th style="width:80px;text-align:right">USD</th>
+        </tr></thead>
+        <tbody>
+          ${EXPENSE_TYPES.map(e => `
+            <tr>
+              <td style="font-size:13px;font-weight:500;">${e.label}</td>
+              <td><input type="text" placeholder="Optional" /></td>
+              <td><input type="number" class="ugx" min="0" placeholder="0" oninput="recalcStop('${id}')" /></td>
+              <td class="usd-cell" data-usd="${e.key}">$0.00</td>
+            </tr>`).join("")}
+        </tbody>
+        <tfoot>
+          <tr class="subtotal-row">
+            <td colspan="2">Stop Subtotal</td>
+            <td style="text-align:right" id="${id}-ugx-sub">0 UGX</td>
+            <td class="usd-cell" id="${id}-usd-sub">$0.00</td>
+          </tr>
+        </tfoot>
+      </table>`;
+    document.getElementById("stops-container").appendChild(div);
+    recalcAll();
+  }
+
+  function removeStop(id) {
+    document.getElementById(id).remove();
+    recalcAll();
+  }
+
+  function recalcStop(id) {
+    const card = document.getElementById(id);
+    const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
+    const inputs = card.querySelectorAll("input.ugx");
+    const usdCells = card.querySelectorAll("td[data-usd]");
+    let total = 0;
+    inputs.forEach((inp, i) => {
+      const ugx = parseFloat(inp.value) || 0;
+      total += ugx;
+      usdCells[i].textContent = "$" + (ugx / rate).toFixed(2);
+    });
+    document.getElementById(`${id}-ugx-sub`).textContent = total.toLocaleString() + " UGX";
+    document.getElementById(`${id}-usd-sub`).textContent = "$" + (total / rate).toFixed(2);
+  }
+
+  function recalcAll() {
+    const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
+    let grandUGX = 0;
+    document.querySelectorAll(".stop-card").forEach(card => {
+      recalcStop(card.id);
+      card.querySelectorAll("input.ugx").forEach(inp => { grandUGX += parseFloat(inp.value) || 0; });
+    });
+    const grandUSD = grandUGX / rate;
+    document.getElementById("grand-ugx").textContent = grandUGX.toLocaleString() + " UGX";
+    document.getElementById("grand-usd").textContent = "$" + grandUSD.toFixed(2);
+    document.getElementById("grand-both").textContent = "$" + grandUSD.toFixed(2) + " USD";
+  }
+
+  /* ── Collect form data into structured object ── */
+  function collectForm() {
+    const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
+    const stops = [];
+    let grandUGX = 0;
+
+    document.querySelectorAll(".stop-card").forEach(card => {
+      const inputs    = Array.from(card.querySelectorAll("input[type=text], input[type=number]"));
+      const location  = inputs[0]?.value || "";
+      const church    = inputs[1]?.value || "";
+      const purpose   = inputs[2]?.value || "";
+      const ugxInputs = Array.from(card.querySelectorAll("input.ugx"));
+      const noteInputs= Array.from(card.querySelectorAll("tbody td:nth-child(2) input"));
+      const expenses  = {};
+      const notes     = {};
+      EXPENSE_TYPES.forEach((et, i) => {
+        expenses[et.key] = parseFloat(ugxInputs[i]?.value) || 0;
+        notes[et.key]    = noteInputs[i]?.value || "";
+        grandUGX        += expenses[et.key];
+      });
+      stops.push({ location, church, purpose, expenses, notes });
+    });
+
+    return {
+      requester_name: document.getElementById("req-name").value.trim(),
+      region:         document.getElementById("req-region").value.trim(),
+      departure_date: document.getElementById("dep-date").value || null,
+      return_date:    document.getElementById("ret-date").value || null,
+      objective:      document.getElementById("objective").value.trim(),
+      stops,
+      notes:          document.getElementById("notes").value.trim(),
+      submitted_by:   document.getElementById("sig-name").value.trim(),
+      total_ugx:      grandUGX,
+      total_usd:      parseFloat((grandUGX / rate).toFixed(2)),
+    };
+  }
+
+  /* ── Build plain-text email summary ── */
+  function buildSummary(data) {
+    const fmtDate = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "Not specified";
+    let lines = [];
+    lines.push("EAST AFRICA TRIP REQUEST — PROJECT KANYEA");
+    lines.push("==========================================");
+    lines.push(`Requester:    ${data.requester_name}`);
+    lines.push(`Region:       ${data.region || "Not specified"}`);
+    lines.push(`Departure:    ${fmtDate(data.departure_date)}`);
+    lines.push(`Return:       ${fmtDate(data.return_date)}`);
+    lines.push(`Submitted By: ${data.submitted_by || "Not specified"}`);
+    lines.push("");
+    if (data.objective) {
+      lines.push("OBJECTIVE");
+      lines.push("---------");
+      lines.push(data.objective);
+      lines.push("");
+    }
+    data.stops.forEach((stop, i) => {
+      lines.push(`STOP ${i + 1}: ${stop.location || "Unknown"} — ${stop.church || "Unknown"}`);
+      if (stop.purpose) lines.push(`Purpose: ${stop.purpose}`);
+      const rate = parseFloat(document.getElementById("ugx-rate").value) || 3700;
+      let stopTotal = 0;
+      EXPENSE_TYPES.forEach(et => {
+        const ugx = stop.expenses[et.key] || 0;
+        if (ugx > 0) {
+          const note = stop.notes[et.key] ? ` (${stop.notes[et.key]})` : "";
+          lines.push(`  ${et.label}: ${ugx.toLocaleString()} UGX / $${(ugx/rate).toFixed(2)}${note}`);
+          stopTotal += ugx;
+        }
+      });
+      lines.push(`  Stop Total: ${stopTotal.toLocaleString()} UGX / $${(stopTotal/rate).toFixed(2)}`);
+      lines.push("");
+    });
+    lines.push("TOTALS");
+    lines.push("------");
+    lines.push(`Total (UGX): ${data.total_ugx.toLocaleString()} UGX`);
+    lines.push(`Total (USD): $${data.total_usd.toFixed(2)}`);
+    lines.push("");
+    if (data.notes) {
+      lines.push("NOTES");
+      lines.push("-----");
+      lines.push(data.notes);
+      lines.push("");
+    }
+    lines.push("--");
+    lines.push("Submitted via East Africa Trip Request Form");
+    lines.push(`drobertson0624.github.io/Projects/trip-request.html`);
+    return lines.join("\n");
+  }
+
+  /* ── Submit ── */
+  async function submitRequest() {
+    const data = collectForm();
+
+    if (!data.requester_name) {
+      showError("Full name is required before submitting.");
+      return;
+    }
+
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = true;
+    btn.textContent = "Submitting…";
+    hideError();
+
+    try {
+      // 1. Save to Supabase
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/trip_requests`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal",
+        },
+        body: JSON.stringify({
+          requester_name: data.requester_name,
+          region:         data.region,
+          departure_date: data.departure_date,
+          return_date:    data.return_date,
+          objective:      data.objective,
+          stops_json:     data.stops,
+          notes:          data.notes,
+          submitted_by:   data.submitted_by,
+          status:         "Pending",
+          total_ugx:      data.total_ugx,
+          total_usd:      data.total_usd,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Save failed: " + await res.text());
+
+      // 2. Send email via EmailJS
+      const fmtDate = d => d ? new Date(d + "T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
+      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+        to_email:       APPROVAL_EMAIL,
+        requester_name: data.requester_name,
+        region:         data.region || "—",
+        departure_date: fmtDate(data.departure_date),
+        return_date:    fmtDate(data.return_date),
+        stop_count:     data.stops.length,
+        total_usd:      "$" + data.total_usd.toFixed(2),
+        total_ugx:      data.total_ugx.toLocaleString() + " UGX",
+        summary:        buildSummary(data),
+      });
+
+      // 3. Show success
+      document.getElementById("form-wrap").style.display = "none";
+      document.getElementById("success-screen").style.display = "block";
+
+    } catch(e) {
+      console.error(e);
+      showError("Something went wrong: " + e.message + ". Please try again or contact support.");
+      btn.disabled = false;
+      btn.textContent = "Submit Trip Request";
+    }
+  }
+
+  function showError(msg) {
+    const el = document.getElementById("error-msg");
+    el.textContent = msg;
+    el.style.display = "block";
+  }
+  function hideError() {
+    document.getElementById("error-msg").style.display = "none";
+  }
+
+  function clearForm() {
+    if (!confirm("Clear all form data?")) return;
+    document.querySelectorAll("#form-wrap input, #form-wrap textarea").forEach(el => {
+      if (el.id === "ugx-rate") return;
+      el.value = "";
+    });
+    document.getElementById("stops-container").innerHTML = "";
+    stopCount = 0;
+    document.getElementById("sig-date").value = new Date().toISOString().split("T")[0];
+    recalcAll();
+    addStop();
+  }
+
+  // Start with one stop
+  addStop();
+</script>
+</body>
+</html>
