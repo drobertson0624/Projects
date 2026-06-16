@@ -179,7 +179,7 @@
       font-size: 13px; background: white; font-family: inherit;
     }
     .expense-table input:focus { outline: none; border-color: #42C6EE; }
-    .expense-table input.local-amt { text-align: right; }
+    .expense-table input.local-amt { text-align: right; min-width: 160px; font-size: 14px; }
 
     .expense-table .usd-cell {
       font-size: 13px; font-weight: 600; color: #065f46;
@@ -244,12 +244,69 @@
       color: #be123c; margin-top: 12px;
     }
 
-    @media (max-width: 600px) {
+    /* ── Tablet ── */
+    @media (max-width: 900px) {
+      .page { max-width: 100%; }
+      .card { padding: 24px; }
+      .header { padding: 22px 24px; }
+      .expense-table input.local-amt { min-width: 140px; }
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 640px) {
+      body { padding: 12px 10px 60px; font-size: 14px; }
+
+      .page { max-width: 100%; }
+      .header { padding: 16px 14px; border-radius: 10px 10px 0 0; gap: 12px; }
+      .header-text h1 { font-size: 18px; }
+      .logo-circle { width: 44px; height: 44px; }
+      .logo-circle svg { width: 30px; height: 30px; }
+
+      .card { padding: 16px 14px; }
       .field-grid.cols-2 { grid-template-columns: 1fr; }
-      .header { padding: 20px; }
-      .card { padding: 20px; }
-      .currency-bar { flex-direction: column; align-items: flex-start; }
-      .currency-bar select { min-width: 100%; }
+
+      /* 16px on inputs prevents iOS Safari from auto-zooming */
+      .field input,
+      .field select,
+      .field textarea,
+      .expense-table input { font-size: 16px !important; }
+
+      /* Touch-friendly tap targets */
+      .field input,
+      .field select { padding: 12px 13px; min-height: 44px; }
+      .field textarea { padding: 12px 13px; }
+
+      /* Currency bar — stack vertically */
+      .currency-bar { gap: 10px; }
+      .currency-bar select { width: 100%; min-width: unset; font-size: 15px; padding: 12px; min-height: 44px; }
+      .rate-info-box { width: 100%; }
+
+      /* Stop cards */
+      .stop-card { padding: 14px; }
+      .btn-remove { padding: 6px 12px; font-size: 13px; min-height: 36px; }
+
+      /* Expense table:
+         - Wrap in scrollable container (added in JS)
+         - Hide optional description column to reduce width
+         - Widen amount column for big numbers */
+      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px 4px; }
+      .expense-table th:nth-child(2),
+      .expense-table td:nth-child(2) { display: none; }
+      .expense-table input.local-amt { min-width: 150px; padding: 10px; }
+      .expense-table .usd-cell { min-width: 64px; font-size: 12px; }
+      .expense-table th { font-size: 9px; padding: 0 4px 8px; }
+      .expense-table td { padding: 3px 4px; }
+
+      /* Totals */
+      .totals-box { padding: 14px; }
+      .totals-box .total-line { font-size: 13px; }
+      .totals-box .total-line.grand { font-size: 15px; }
+
+      /* Buttons — stack vertically, full width */
+      .btn-row { flex-direction: column; gap: 8px; }
+      .btn { padding: 14px 20px; font-size: 15px; text-align: center; }
+      .btn-primary { flex: unset; }
+      .btn-ghost { flex: unset; }
     }
   </style>
 </head>
@@ -267,7 +324,7 @@
     </div>
     <div class="header-text">
       <h1>East Africa Travel Request</h1>
-      <p>Project Kanyea &nbsp;·&nbsp; Submit for trustee approval</p>
+      <p>Project Kanyea</p>
     </div>
   </div>
 
@@ -344,8 +401,8 @@
     <div class="card" style="border-radius:0 0 14px 14px;border-bottom:1px solid #e2e8f0;">
       <div class="section-title">Additional Notes</div>
       <div class="field" style="margin-bottom:20px;">
-        <label>Notes for trustees</label>
-        <textarea id="notes" placeholder="Any special circumstances, contingency plans, or context the trustees should know."></textarea>
+        <label>Notes</label>
+        <textarea id="notes" placeholder="Any special circumstances, contingency plans, or additional context for this trip."></textarea>
       </div>
 
       <hr class="divider" />
@@ -376,7 +433,7 @@
     <div class="success-icon">✓</div>
     <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Request Submitted</div>
     <div style="font-size:14px;color:#64748b;max-width:400px;margin:0 auto 24px;">
-      Your trip request has been received. A summary has been sent for trustee review. You'll hear back soon.
+      Your trip request has been received. A summary has been sent for review. You'll hear back soon.
     </div>
     <button class="btn btn-outline" style="display:inline-block;" onclick="location.reload()">Submit Another</button>
   </div>
@@ -502,12 +559,12 @@
         <label>Purpose / Objective for this stop</label>
         <input type="text" placeholder="e.g. Survey setup, podcast training, fellowship" />
       </div>
-      <table class="expense-table">
+      <div class="table-wrap"><table class="expense-table">
         <thead><tr>
-          <th style="width:38%">Expense Category</th>
+          <th style="width:36%">Expense Category</th>
           <th>Description / Notes</th>
-          <th class="local-currency-header" style="width:140px;text-align:right">Amount (${currentCurrencyCode})</th>
-          <th style="width:80px;text-align:right">USD</th>
+          <th class="local-currency-header" style="width:190px;text-align:right">Amount (${currentCurrencyCode})</th>
+          <th style="width:90px;text-align:right">USD</th>
         </tr></thead>
         <tbody>
           ${EXPENSE_TYPES.map(e => `
@@ -525,7 +582,7 @@
             <td class="usd-cell" id="${id}-usd-sub">$0.00</td>
           </tr>
         </tfoot>
-      </table>`;
+      </table></div>`;
     document.getElementById("stops-container").appendChild(div);
     recalcAll();
   }
