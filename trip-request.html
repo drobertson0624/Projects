@@ -5,35 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>East Africa Trip Request — Project Kanyea</title>
 
-  <!--
-  ═══════════════════════════════════════════════════════════════
-  EMAILJS SETUP — do this once before sharing the link
-  ═══════════════════════════════════════════════════════════════
-  1. Go to https://emailjs.com and create a free account
-  2. Add an Email Service → connect your Gmail (soulchild2117@gmail.com)
-     → copy the Service ID and paste it into EMAILJS_SERVICE_ID below
-  3. Create an Email Template → set To Email = soulchild2117@gmail.com
-     → Subject:  New Trip Request — {{requester_name}}
-     → Body:     {{summary}}
-     → copy the Template ID into EMAILJS_TEMPLATE_ID below
-  4. Go to Account → API Keys → copy your Public Key into EMAILJS_PUBLIC_KEY below
-  5. Upload this file to GitHub alongside index.html
-  ═══════════════════════════════════════════════════════════════
-  -->
-
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
   <script>
-    // ── EmailJS credentials ── fill these in after setup ──
-    const EMAILJS_SERVICE_ID  = "YOUR_SERVICE_ID";   // e.g. "service_abc123"
-    const EMAILJS_TEMPLATE_ID = "YOUR_TEMPLATE_ID";  // e.g. "template_xyz789"
-    const EMAILJS_PUBLIC_KEY  = "YOUR_PUBLIC_KEY";   // e.g. "abcDEF123..."
-
     // ── Supabase ──
     const SUPABASE_URL = "https://gwvaarvwmptbsnanxmij.supabase.co";
     const SUPABASE_KEY = "sb_publishable_ziOlB_rYW9yh9-DMRPqzXg_7ZWV6THq";
-
-    // ── To change the approval email address later, update this line ──
-    const APPROVAL_EMAIL = "soulchild2117@gmail.com";
   </script>
 
   <style>
@@ -431,11 +406,23 @@
   <!-- Success screen -->
   <div class="success-screen" id="success-screen">
     <div class="success-icon">✓</div>
-    <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Request Submitted</div>
-    <div style="font-size:14px;color:#64748b;max-width:400px;margin:0 auto 24px;">
-      Your trip request has been received. A summary has been sent for review. You'll hear back soon.
+    <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Request Saved</div>
+    <div style="font-size:14px;color:#64748b;max-width:420px;margin:0 auto 20px;line-height:1.6;">
+      Your trip details have been recorded. Now send the approval email below — it will open your email app with everything pre-filled. Just hit Send.
     </div>
-    <button class="btn btn-outline" style="display:inline-block;" onclick="location.reload()">Submit Another</button>
+
+    <a id="mailto-link" href="#"
+       style="display:block;max-width:340px;margin:0 auto 14px;background:#42C6EE;color:white;
+              font-weight:700;font-size:16px;padding:16px 24px;border-radius:10px;text-decoration:none;
+              text-align:center;">
+      Open Email to Send Approval
+    </a>
+
+    <div style="font-size:12px;color:#94a3b8;margin-bottom:24px;">
+      To: natgoyco@yahoo.com &nbsp;·&nbsp; CC: David Robertson
+    </div>
+
+    <button class="btn btn-outline" style="display:inline-block;" onclick="location.reload()">Submit Another Request</button>
   </div>
 
 </div><!-- /page -->
@@ -530,8 +517,6 @@
   /* ── Set today's date ── */
   document.getElementById("sig-date").value = new Date().toISOString().split("T")[0];
 
-  /* ── Init EmailJS ── */
-  emailjs.init(EMAILJS_PUBLIC_KEY);
 
   /* ── Add stop ── */
   function addStop() {
@@ -726,7 +711,7 @@
 
     const btn = document.getElementById("submit-btn");
     btn.disabled = true;
-    btn.textContent = "Submitting…";
+    btn.textContent = "Saving…";
     hideError();
 
     try {
@@ -756,22 +741,14 @@
 
       if (!res.ok) throw new Error("Save failed: " + await res.text());
 
-      // 2. Send email via EmailJS
-      const fmtDate = d => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
-      await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
-        to_email:       APPROVAL_EMAIL,
-        requester_name: data.requester_name,
-        region:         data.region || "—",
-        departure_date: fmtDate(data.departure_date),
-        return_date:    fmtDate(data.return_date),
-        currency:       data.currency_code,
-        stop_count:     data.stops.length,
-        total_local:    data.total_ugx.toLocaleString() + " " + data.currency_code,
-        total_usd:      "$" + data.total_usd.toFixed(2),
-        summary:        buildSummary(data),
-      });
+      // 2. Build mailto link — opens their email app with everything pre-filled
+      const summary = buildSummary(data);
+      const subject = encodeURIComponent(`Trip Request — ${data.requester_name}`);
+      const body    = encodeURIComponent(summary);
+      const mailto  = `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${subject}&body=${body}`;
+      document.getElementById("mailto-link").href = mailto;
 
-      // 3. Show success
+      // 3. Show success screen
       document.getElementById("form-wrap").style.display = "none";
       document.getElementById("success-screen").style.display = "block";
 
