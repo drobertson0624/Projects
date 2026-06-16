@@ -219,6 +219,35 @@
       color: #be123c; margin-top: 12px;
     }
 
+    /* ── Print / PDF ── */
+    #print-summary { display: none; }
+
+    @media print {
+      body * { visibility: hidden; }
+      #print-summary, #print-summary * { visibility: visible; }
+      #print-summary {
+        display: block !important;
+        position: fixed; top: 0; left: 0; width: 100%;
+        background: white; padding: 32px 40px;
+        font-family: Georgia, "Times New Roman", serif;
+        color: #000; font-size: 12pt; line-height: 1.7;
+      }
+      #print-summary .ph { font-size: 18pt; font-weight: bold; margin-bottom: 4px; }
+      #print-summary .ps { font-size: 10pt; color: #555; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
+      #print-summary .sec { font-size: 11pt; font-weight: bold; text-transform: uppercase;
+                            letter-spacing: 1px; margin: 18px 0 6px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
+      #print-summary .row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 11pt; }
+      #print-summary .row .lbl { color: #555; min-width: 140px; }
+      #print-summary .stop-block { margin: 12px 0; padding: 10px 14px; border-left: 3px solid #42C6EE; background: #f9f9f9; }
+      #print-summary .stop-title { font-weight: bold; font-size: 11pt; margin-bottom: 6px; }
+      #print-summary table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 10pt; }
+      #print-summary table th { text-align: left; border-bottom: 1px solid #ccc; padding: 3px 6px; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
+      #print-summary table td { padding: 3px 6px; border-bottom: 1px solid #eee; }
+      #print-summary table td:last-child { text-align: right; font-weight: 600; }
+      #print-summary .grand-row { margin-top: 14px; padding: 10px 14px; background: #f0fdf8; border: 1px solid #a7f3d0; display: flex; justify-content: space-between; font-weight: bold; font-size: 13pt; }
+      #print-summary .footer { margin-top: 24px; font-size: 9pt; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
+    }
+
     /* ── Tablet ── */
     @media (max-width: 900px) {
       .page { max-width: 100%; }
@@ -407,23 +436,44 @@
   <div class="success-screen" id="success-screen">
     <div class="success-icon">✓</div>
     <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Request Saved</div>
-    <div style="font-size:14px;color:#64748b;max-width:420px;margin:0 auto 20px;line-height:1.6;">
-      Your trip details have been recorded. Now send the approval email below — it will open your email app with everything pre-filled. Just hit Send.
+    <div style="font-size:14px;color:#64748b;max-width:420px;margin:0 auto 24px;line-height:1.6;">
+      Your trip details have been recorded. Complete the two steps below to send your approval request.
     </div>
 
-    <a id="mailto-link" href="#"
-       style="display:block;max-width:340px;margin:0 auto 14px;background:#42C6EE;color:white;
-              font-weight:700;font-size:16px;padding:16px 24px;border-radius:10px;text-decoration:none;
-              text-align:center;">
-      Open Email to Send Approval
-    </a>
+    <!-- Step 1 -->
+    <div style="max-width:380px;margin:0 auto 10px;background:#f8fafc;border:1px solid #e2e8f0;
+                border-radius:10px;padding:16px 18px;text-align:left;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+                  color:#94a3b8;margin-bottom:8px;">Step 1</div>
+      <button onclick="downloadPDF()"
+              style="width:100%;background:#1a1a1a;color:white;border:none;border-radius:8px;
+                     padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
+        Download PDF Summary
+      </button>
+      <div style="font-size:12px;color:#94a3b8;margin-top:6px;">Save it — you'll attach it to the email.</div>
+    </div>
 
-    <div style="font-size:12px;color:#94a3b8;margin-bottom:24px;">
-      To: natgoyco@yahoo.com &nbsp;·&nbsp; CC: David Robertson
+    <!-- Step 2 -->
+    <div style="max-width:380px;margin:0 auto 20px;background:#f8fafc;border:1px solid #e2e8f0;
+                border-radius:10px;padding:16px 18px;text-align:left;">
+      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
+                  color:#94a3b8;margin-bottom:8px;">Step 2</div>
+      <a id="mailto-link" href="#"
+         style="display:block;background:#42C6EE;color:white;border-radius:8px;
+                padding:14px 20px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;">
+        Open Email to Send Approval
+      </a>
+      <div style="font-size:12px;color:#94a3b8;margin-top:6px;">
+        Attach the PDF, then hit Send.<br>
+        To: natgoyco@yahoo.com &nbsp;·&nbsp; CC: David Robertson
+      </div>
     </div>
 
     <button class="btn btn-outline" style="display:inline-block;" onclick="location.reload()">Submit Another Request</button>
   </div>
+
+<!-- Hidden print-only summary — populated by buildPrintSummary() before window.print() -->
+<div id="print-summary"></div>
 
 </div><!-- /page -->
 
@@ -556,7 +606,7 @@
             <tr>
               <td style="font-size:13px;font-weight:500;">${e.label}</td>
               <td><input type="text" placeholder="Optional" /></td>
-              <td><input type="number" class="local-amt" min="0" placeholder="0" oninput="recalcStop('${id}')" /></td>
+              <td><input type="number" class="local-amt" min="0" placeholder="0" oninput="recalcAll()" /></td>
               <td class="usd-cell" data-usd="${e.key}">$0.00</td>
             </tr>`).join("")}
         </tbody>
@@ -741,14 +791,17 @@
 
       if (!res.ok) throw new Error("Save failed: " + await res.text());
 
-      // 2. Build mailto link — opens their email app with everything pre-filled
+      // 2. Store data for PDF download
+      _lastPrintData = data;
+
+      // 3. Build mailto link — opens their email app with everything pre-filled
       const summary = buildSummary(data);
       const subject = encodeURIComponent(`Trip Request — ${data.requester_name}`);
       const body    = encodeURIComponent(summary);
       const mailto  = `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${subject}&body=${body}`;
       document.getElementById("mailto-link").href = mailto;
 
-      // 3. Show success screen
+      // 4. Show success screen
       document.getElementById("form-wrap").style.display = "none";
       document.getElementById("success-screen").style.display = "block";
 
@@ -758,6 +811,79 @@
       btn.disabled = false;
       btn.textContent = "Submit Trip Request";
     }
+  }
+
+  /* ── PDF download via browser print ── */
+  let _lastPrintData = null;
+
+  function downloadPDF() {
+    if (!_lastPrintData) return;
+    buildPrintSummary(_lastPrintData);
+    window.print();
+  }
+
+  function buildPrintSummary(data) {
+    const code    = data.currency_code || "LOCAL";
+    const rate    = currentRate || 1;
+    const fmtDate = d => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "Not specified";
+
+    let html = `
+      <div class="ph">East Africa Trip Request</div>
+      <div class="ps">Project Kanyea &nbsp;·&nbsp; Submitted ${new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+
+      <div class="sec">Trip Details</div>
+      <div class="row"><span class="lbl">Requester</span><span>${data.requester_name}</span></div>
+      <div class="row"><span class="lbl">Region</span><span>${data.region || "Not specified"}</span></div>
+      <div class="row"><span class="lbl">Departure</span><span>${fmtDate(data.departure_date)}</span></div>
+      <div class="row"><span class="lbl">Return</span><span>${fmtDate(data.return_date)}</span></div>
+      <div class="row"><span class="lbl">Submitted By</span><span>${data.submitted_by || "Not specified"}</span></div>
+      <div class="row"><span class="lbl">Currency</span><span>${code}</span></div>
+    `;
+
+    if (data.objective) {
+      html += `<div class="sec">Objective</div><div style="font-size:11pt;">${data.objective}</div>`;
+    }
+
+    html += `<div class="sec">Stops &amp; Expenses</div>`;
+
+    data.stops.forEach((stop, i) => {
+      let stopTotal = 0;
+      const rows = EXPENSE_TYPES.map(et => {
+        const amt = stop.expenses[et.key] || 0;
+        stopTotal += amt;
+        if (amt === 0) return "";
+        return `<tr><td>${et.label}</td><td>${stop.notes[et.key] || ""}</td><td>${amt.toLocaleString()} ${code}</td><td>$${(amt/rate).toFixed(2)}</td></tr>`;
+      }).join("");
+
+      html += `
+        <div class="stop-block">
+          <div class="stop-title">Stop ${i+1}: ${stop.location || "—"} — ${stop.church || "—"}</div>
+          ${stop.purpose ? `<div style="font-size:10pt;color:#444;margin-bottom:6px;">${stop.purpose}</div>` : ""}
+          <table>
+            <thead><tr><th>Category</th><th>Notes</th><th>Amount (${code})</th><th>USD</th></tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" style="color:#aaa;">No expenses entered</td></tr>`}</tbody>
+            <tfoot><tr style="font-weight:bold;border-top:1px solid #ccc;">
+              <td colspan="2">Stop Subtotal</td>
+              <td>${stopTotal.toLocaleString()} ${code}</td>
+              <td>$${(stopTotal/rate).toFixed(2)}</td>
+            </tr></tfoot>
+          </table>
+        </div>`;
+    });
+
+    html += `
+      <div class="grand-row">
+        <span>Total Requested</span>
+        <span>${data.total_ugx.toLocaleString()} ${code} &nbsp;/&nbsp; $${data.total_usd.toFixed(2)} USD</span>
+      </div>`;
+
+    if (data.notes) {
+      html += `<div class="sec">Notes</div><div style="font-size:11pt;">${data.notes}</div>`;
+    }
+
+    html += `<div class="footer">East Africa Trip Request Form &nbsp;·&nbsp; drobertson0624.github.io/Projects/trip-request.html</div>`;
+
+    document.getElementById("print-summary").innerHTML = html;
   }
 
   function showError(msg) {
