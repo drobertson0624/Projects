@@ -370,7 +370,7 @@
       <div class="section-title">Requester Information</div>
       <div class="field-grid cols-2">
         <div class="field">
-          <label>Full Name <span style="color:#ef4444">*</span></label>
+          <label>Your Name — Traveler 1 <span style="color:#ef4444">*</span></label>
           <input type="text" id="req-name" placeholder="e.g. Brother Isaac Okuru" />
         </div>
         <div class="field">
@@ -386,6 +386,20 @@
           <input type="date" id="ret-date" />
         </div>
       </div>
+
+      <hr class="divider" />
+
+      <div class="section-title">Additional Travelers</div>
+      <div style="font-size:12px;color:#64748b;margin-bottom:12px;">Anyone else making this trip? Add their names below.</div>
+      <div id="travelers-list" style="display:flex;flex-direction:column;gap:8px;margin-bottom:10px;"></div>
+      <button type="button" onclick="addTraveler()"
+              style="background:none;border:1.5px dashed #dce3ec;border-radius:8px;padding:9px 16px;
+                     font-size:13px;font-weight:600;color:#64748b;cursor:pointer;width:100%;
+                     transition:border-color 0.15s,color 0.15s;"
+              onmouseover="this.style.borderColor='#42C6EE';this.style.color='#42C6EE';"
+              onmouseout="this.style.borderColor='#dce3ec';this.style.color='#64748b';">
+        + Add Traveler
+      </button>
 
       <hr class="divider" />
 
@@ -687,6 +701,39 @@
     document.getElementById("grand-both").textContent  = "$" + grandUSD.toFixed(2) + " USD";
   }
 
+  /* ── Additional travelers ── */
+  let travelerCount = 0;
+
+  function addTraveler() {
+    travelerCount++;
+    const row = document.createElement("div");
+    row.id = `traveler-${travelerCount}`;
+    row.style.cssText = "display:flex;gap:8px;align-items:center;";
+    row.innerHTML = `
+      <input type="text" placeholder="Traveler ${travelerCount + 1} full name"
+             style="flex:1;padding:10px 13px;border:1.5px solid #dce3ec;border-radius:8px;
+                    font-size:16px;font-family:inherit;background:#fafbfc;"
+             onfocus="this.style.borderColor='#42C6EE';this.style.background='white';"
+             onblur="this.style.borderColor='#dce3ec';this.style.background='#fafbfc';" />
+      <button type="button" onclick="removeTraveler('traveler-${travelerCount}')"
+              style="background:none;border:none;color:#94a3b8;cursor:pointer;font-size:18px;
+                     padding:4px 8px;border-radius:6px;line-height:1;flex-shrink:0;"
+              onmouseover="this.style.color='#dc2626';" onmouseout="this.style.color='#94a3b8';">
+        &times;
+      </button>`;
+    document.getElementById("travelers-list").appendChild(row);
+  }
+
+  function removeTraveler(id) {
+    document.getElementById(id)?.remove();
+  }
+
+  function collectTravelers() {
+    return Array.from(document.querySelectorAll("#travelers-list input"))
+      .map(i => i.value.trim())
+      .filter(v => v.length > 0);
+  }
+
   /* ── Amendment toggle ── */
   function toggleAmendment() {
     const on    = document.getElementById("is-amendment").checked;
@@ -738,6 +785,7 @@
       total_usd:        parseFloat((grandLocal / rate).toFixed(2)),
       is_amendment:     document.getElementById("is-amendment").checked,
       amendment_notes:  document.getElementById("amendment-notes").value.trim(),
+      travelers:        collectTravelers(),
     };
   }
 
@@ -757,6 +805,10 @@
     lines.push(`Return:       ${fmtDate(data.return_date)}`);
     lines.push(`Submitted By: ${data.submitted_by || "Not specified"}`);
     lines.push(`Currency:     ${code}`);
+    if (data.travelers && data.travelers.length > 0) {
+      lines.push(`Travelers:    1. ${data.requester_name}`);
+      data.travelers.forEach((name, i) => lines.push(`              ${i+2}. ${name}`));
+    }
     if (data.is_amendment) lines.push(`Type:         AMENDMENT`);
     lines.push("");
 
@@ -851,6 +903,7 @@
           total_usd:        data.total_usd,
           is_amendment:     data.is_amendment,
           amendment_notes:  data.amendment_notes || null,
+          travelers_json:   data.travelers,
         }),
       });
 
@@ -906,6 +959,11 @@
       <div class="row"><span class="lbl">Return</span><span>${fmtDate(data.return_date)}</span></div>
       <div class="row"><span class="lbl">Submitted By</span><span>${data.submitted_by || "Not specified"}</span></div>
       <div class="row"><span class="lbl">Currency</span><span>${code}</span></div>
+      ${(data.travelers && data.travelers.length > 0) ? `
+      <div class="sec" style="margin-top:12px;">Travelers</div>
+      <div class="row"><span class="lbl">1. (Requester)</span><span>${data.requester_name}</span></div>
+      ${data.travelers.map((n,i) => `<div class="row"><span class="lbl">${i+2}.</span><span>${n}</span></div>`).join("")}
+      ` : ""}
     `;
 
     if (data.objective) {

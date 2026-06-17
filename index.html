@@ -2967,6 +2967,17 @@
                 </div>
               ))}
             </div>
+            {selected.travelers_json && selected.travelers_json.length > 0 && (
+              <div style={{ background:"var(--surface2)", borderRadius:10, padding:"14px 16px", marginBottom:14 }}>
+                <div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.4px", color:"var(--text-muted)", marginBottom:8 }}>Travelers</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:4 }}>
+                  <div style={{ fontSize:13 }}><span style={{ color:"var(--text-muted)", fontSize:12, marginRight:8 }}>1</span><strong>{selected.requester_name}</strong> <span style={{ color:"var(--text-muted)", fontSize:11 }}>(requester)</span></div>
+                  {selected.travelers_json.map((name, i) => (
+                    <div key={i} style={{ fontSize:13 }}><span style={{ color:"var(--text-muted)", fontSize:12, marginRight:8 }}>{i+2}</span>{name}</div>
+                  ))}
+                </div>
+              </div>
+            )}
             {selected.is_amendment && selected.amendment_notes && (
               <div style={{ background:"#f5f3ff", border:"1.5px solid #c4b5fd", borderRadius:10, padding:"14px 16px", marginBottom:14 }}>
                 <div style={{ fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.4px", color:"#7c3aed", marginBottom:6 }}>Amendment — What Changed</div>
