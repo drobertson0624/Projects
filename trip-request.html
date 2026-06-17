@@ -335,8 +335,38 @@
   <!-- Form -->
   <div id="form-wrap">
 
+    <!-- Amendment banner -->
+    <div class="card" style="border-radius:0;border-top:none;">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
+        <div>
+          <div style="font-size:14px;font-weight:600;color:#1a1a1a;">Updating a previous request?</div>
+          <div style="font-size:12px;color:#64748b;margin-top:2px;">Toggle on to flag this as an amendment to an existing trip request.</div>
+        </div>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none;">
+          <div style="position:relative;">
+            <input type="checkbox" id="is-amendment" onchange="toggleAmendment()"
+                   style="opacity:0;position:absolute;width:0;height:0;" />
+            <div id="toggle-track"
+                 style="width:44px;height:24px;background:#dce3ec;border-radius:12px;transition:background 0.2s;"></div>
+            <div id="toggle-thumb"
+                 style="position:absolute;top:2px;left:2px;width:20px;height:20px;
+                        background:white;border-radius:50%;transition:left 0.2s;
+                        box-shadow:0 1px 3px rgba(0,0,0,0.2);"></div>
+          </div>
+          <span id="toggle-label" style="font-size:13px;font-weight:600;color:#94a3b8;">No</span>
+        </label>
+      </div>
+      <div id="amendment-block" style="display:none;margin-top:16px;">
+        <div class="field">
+          <label>What changed and why? <span style="color:#ef4444">*</span></label>
+          <textarea id="amendment-notes" placeholder="e.g. We are removing Stop 3 (Latwong) as the roads are impassable. Adjusting transport budget for remaining stops accordingly."
+                    style="min-height:90px;border-color:#f97316;"></textarea>
+        </div>
+      </div>
+    </div>
+
     <!-- Section 1: Requester Info -->
-    <div class="card">
+    <div class="card" style="border-top:none;">
       <div class="section-title">Requester Information</div>
       <div class="field-grid cols-2">
         <div class="field">
@@ -657,6 +687,20 @@
     document.getElementById("grand-both").textContent  = "$" + grandUSD.toFixed(2) + " USD";
   }
 
+  /* ── Amendment toggle ── */
+  function toggleAmendment() {
+    const on    = document.getElementById("is-amendment").checked;
+    const track = document.getElementById("toggle-track");
+    const thumb = document.getElementById("toggle-thumb");
+    const label = document.getElementById("toggle-label");
+    const block = document.getElementById("amendment-block");
+    track.style.background = on ? "#f97316" : "#dce3ec";
+    thumb.style.left       = on ? "22px" : "2px";
+    label.textContent      = on ? "Yes" : "No";
+    label.style.color      = on ? "#f97316" : "#94a3b8";
+    block.style.display    = on ? "block" : "none";
+  }
+
   /* ── Collect form data ── */
   function collectForm() {
     const rate = currentRate || 1;
@@ -689,9 +733,11 @@
       stops,
       notes:          document.getElementById("notes").value.trim(),
       submitted_by:   document.getElementById("sig-name").value.trim(),
-      currency_code:  currentCurrencyCode,
-      total_ugx:      grandLocal,   // field name kept for DB compatibility
-      total_usd:      parseFloat((grandLocal / rate).toFixed(2)),
+      currency_code:    currentCurrencyCode,
+      total_ugx:        grandLocal,
+      total_usd:        parseFloat((grandLocal / rate).toFixed(2)),
+      is_amendment:     document.getElementById("is-amendment").checked,
+      amendment_notes:  document.getElementById("amendment-notes").value.trim(),
     };
   }
 
@@ -711,7 +757,16 @@
     lines.push(`Return:       ${fmtDate(data.return_date)}`);
     lines.push(`Submitted By: ${data.submitted_by || "Not specified"}`);
     lines.push(`Currency:     ${code}`);
+    if (data.is_amendment) lines.push(`Type:         AMENDMENT`);
     lines.push("");
+
+    if (data.is_amendment && data.amendment_notes) {
+      lines.push("*** AMENDMENT - WHAT CHANGED ***");
+      lines.push(div);
+      lines.push(data.amendment_notes);
+      lines.push(div);
+      lines.push("");
+    }
 
     if (data.objective) {
       lines.push("OBJECTIVE");
@@ -765,6 +820,7 @@
   async function submitRequest() {
     const data = collectForm();
     if (!data.requester_name) { showError("Full name is required before submitting."); return; }
+    if (data.is_amendment && !data.amendment_notes) { showError("Please describe what changed and why before submitting an amendment."); return; }
 
     const btn = document.getElementById("submit-btn");
     btn.disabled = true;
@@ -790,9 +846,11 @@
           stops_json:     data.stops,
           notes:          data.notes,
           submitted_by:   data.submitted_by,
-          status:         "Pending",
-          total_ugx:      data.total_ugx,
-          total_usd:      data.total_usd,
+          status:           data.is_amendment ? "Amendment" : "Pending",
+          total_ugx:        data.total_ugx,
+          total_usd:        data.total_usd,
+          is_amendment:     data.is_amendment,
+          amendment_notes:  data.amendment_notes || null,
         }),
       });
 
@@ -803,7 +861,10 @@
 
       // 3. Build mailto link — opens their email app with everything pre-filled
       const summary = buildSummary(data);
-      const subject = encodeURIComponent(`Trip Request — ${data.requester_name}`);
+      const subjectText = data.is_amendment
+        ? `AMENDMENT - Trip Request - ${data.requester_name}`
+        : `Trip Request - ${data.requester_name}`;
+      const subject = encodeURIComponent(subjectText);
       const body    = encodeURIComponent(summary);
       const mailto  = `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${subject}&body=${body}`;
       document.getElementById("mailto-link").href = mailto;
