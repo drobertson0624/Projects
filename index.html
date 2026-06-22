@@ -1766,7 +1766,6 @@
         ["Phone","phone","text"],["WhatsApp","whatsapp","text"],["Email","email","text"],
         ["Members","members","number"],["Score (1-9)","priority","number"],
         ["Deploy Order","deploy_order","number"],["Building Type","bldg_type","text"],
-        ["Spiritual Standing","spiritual_standing","text"],
       ];
       const YN_FIELDS = [
         ["Cell Signal","cell_signal"],["Cell Phone","cell_phone"],
@@ -2208,8 +2207,8 @@
                     </div>
                   ))}
                   <div className="field-group">
-                    <div className="field-label">Standing</div>
-                    <select value={editData.standing||""} onChange={e=>setEditData(d=>({...d,standing:e.target.value}))}>
+                    <div className="field-label">Spiritual Standing</div>
+                    <select value={editData.spiritual_standing||""} onChange={e=>setEditData(d=>({...d,spiritual_standing:e.target.value,standing:e.target.value}))}>
                       {["STRONG","Stable","Growing","Weak",""].map(s=><option key={s} value={s}>{s||"(none)"}</option>)}
                     </select>
                   </div>
@@ -2389,8 +2388,8 @@
                     </select>
                   </div>
                   <div className="field-group">
-                    <div className="field-label">Standing</div>
-                    <select value={newC.standing||"Stable"} onChange={e=>setNewC(p=>({...p,standing:e.target.value}))}>
+                    <div className="field-label">Spiritual Standing</div>
+                    <select value={newC.spiritual_standing||newC.standing||"Stable"} onChange={e=>setNewC(p=>({...p,spiritual_standing:e.target.value,standing:e.target.value}))}>
                       {["STRONG","Stable","Growing","Weak"].map(s=><option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
