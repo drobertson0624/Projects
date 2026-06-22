@@ -1507,14 +1507,33 @@
 
       // Optional columns the user can toggle
       const OPTIONAL_KEYS = ALL_COLS.filter(c => !c.always).map(c => c.key);
+      const _OPT_KEYS = ALL_COLS.filter(c => !c.always && c.label).map(c => c.key);
       const [visibleOptional, setVisibleOptional] = useState(() => {
         try { const s = localStorage.getItem('ea_visible_cols'); return s ? JSON.parse(s) : ["location","region","members","standing","language","internet","priority"]; }
         catch { return ["location","region","members","standing","language","internet","priority"]; }
       });
+      const [colOrder, setColOrder] = useState(() => {
+        try {
+          const s = localStorage.getItem('ea_col_order');
+          if (s) {
+            const stored = JSON.parse(s);
+            return [...stored.filter(k => _OPT_KEYS.includes(k)), ..._OPT_KEYS.filter(k => !stored.includes(k))];
+          }
+        } catch {}
+        return _OPT_KEYS;
+      });
+      const dragItem = React.useRef(null);
+      const dragOver = React.useRef(null);
       const [visitedIds, setVisitedIds] = useState(new Set());
 
-      // Which cols are actually shown = always cols + visible optional cols (in ALL_COLS order)
-      const shownCols = ALL_COLS.filter(c => c.always || visibleOptional.includes(c.key));
+      // Which cols are actually shown = always first + optional in user order + always last
+      const _alwaysFirst = ALL_COLS.filter(c => c.always && c.key !== '_edit' && c.key !== '_order' && c.key !== '_delete');
+      const _alwaysLast  = ALL_COLS.filter(c => c.always && (c.key === '_edit' || c.key === '_order' || c.key === '_delete'));
+      const shownCols = [
+        ..._alwaysFirst,
+        ...colOrder.map(k => ALL_COLS.find(c => c.key === k)).filter(c => c && visibleOptional.includes(c.key)),
+        ..._alwaysLast,
+      ];
 
       // ── State ──────────────────────────────────────────────────────────────
       const [activeView, setActiveView]   = useState("all");
@@ -2050,17 +2069,43 @@
               </button>
               {showColPicker && (
                 <div style={{ position:"absolute", top:"calc(100% + 6px)", right:0, background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:14, padding:16, boxShadow:"var(--shadow-lg)", zIndex:200, minWidth:180 }} onClick={e=>e.stopPropagation()}>
-                  <div style={{ fontSize:13, fontWeight:700, marginBottom:12, color:"var(--text)" }}>Show / Hide Columns</div>
-                  {ALL_COLS.filter(c=>!c.always && c.label).map(col => (
-                    <label key={col.key} style={{ display:"flex", alignItems:"center", gap:10, fontSize:13, padding:"6px 0", cursor:"pointer", color:"var(--text)" }}>
-                      <input type="checkbox"
-                        checked={visibleOptional.includes(col.key)}
-                        onChange={e => setVisibleOptional(vc => e.target.checked ? [...vc, col.key] : vc.filter(k=>k!==col.key))}
-                      />
-                      {col.label}
-                    </label>
-                  ))}
-                  <button onClick={() => { localStorage.setItem('ea_visible_cols', JSON.stringify(visibleOptional)); setShowColPicker(false); }} style={{ marginTop:10, width:"100%", padding:"8px", border:"none", background:"var(--accent)", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", color:"#fff" }}>Save as Default</button>
+                  <div style={{ fontSize:13, fontWeight:700, marginBottom:4, color:"var(--text)" }}>Show / Hide Columns</div>
+                  <div style={{ fontSize:11, color:"var(--text-muted)", marginBottom:10 }}>Drag to reorder</div>
+                  {colOrder.map(key => {
+                    const col = ALL_COLS.find(c => c.key === key);
+                    if (!col || !col.label) return null;
+                    return (
+                      <div
+                        key={col.key}
+                        draggable
+                        onDragStart={() => { dragItem.current = key; }}
+                        onDragEnter={() => { dragOver.current = key; }}
+                        onDragEnd={() => {
+                          if (!dragItem.current || !dragOver.current || dragItem.current === dragOver.current) return;
+                          const next = [...colOrder];
+                          const fi = next.indexOf(dragItem.current); const ti = next.indexOf(dragOver.current);
+                          next.splice(fi, 1); next.splice(ti, 0, dragItem.current);
+                          setColOrder(next); dragItem.current = null; dragOver.current = null;
+                        }}
+                        onDragOver={e => e.preventDefault()}
+                        style={{ display:"flex", alignItems:"center", gap:8, padding:"5px 0", cursor:"grab", userSelect:"none" }}
+                      >
+                        <svg width="12" height="14" viewBox="0 0 12 14" fill="none" style={{ flexShrink:0, opacity:0.35 }}>
+                          <circle cx="3" cy="2" r="1.5" fill="currentColor"/><circle cx="9" cy="2" r="1.5" fill="currentColor"/>
+                          <circle cx="3" cy="7" r="1.5" fill="currentColor"/><circle cx="9" cy="7" r="1.5" fill="currentColor"/>
+                          <circle cx="3" cy="12" r="1.5" fill="currentColor"/><circle cx="9" cy="12" r="1.5" fill="currentColor"/>
+                        </svg>
+                        <label style={{ display:"flex", alignItems:"center", gap:8, fontSize:13, cursor:"pointer", flex:1, color:"var(--text)" }} onClick={e => e.stopPropagation()}>
+                          <input type="checkbox"
+                            checked={visibleOptional.includes(col.key)}
+                            onChange={e => setVisibleOptional(vc => e.target.checked ? [...vc, col.key] : vc.filter(k=>k!==col.key))}
+                          />
+                          {col.label}
+                        </label>
+                      </div>
+                    );
+                  })}
+                  <button onClick={() => { localStorage.setItem('ea_visible_cols', JSON.stringify(visibleOptional)); localStorage.setItem('ea_col_order', JSON.stringify(colOrder)); setShowColPicker(false); }} style={{ marginTop:12, width:"100%", padding:"8px", border:"none", background:"var(--accent)", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer", color:"#fff" }}>Save as Default</button>
                   <button onClick={() => setShowColPicker(false)} style={{ marginTop:6, width:"100%", padding:"7px", border:"none", background:"var(--surface3)", borderRadius:8, fontSize:13, cursor:"pointer" }}>Done</button>
                 </div>
               )}
