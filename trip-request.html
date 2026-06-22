@@ -223,29 +223,102 @@
     #print-summary { display: none; }
 
     @media print {
+      @page { margin: 18mm 16mm; size: A4; }
       body * { visibility: hidden; }
       #print-summary, #print-summary * { visibility: visible; }
       #print-summary {
         display: block !important;
         position: fixed; top: 0; left: 0; width: 100%;
-        background: white; padding: 32px 40px;
-        font-family: Georgia, "Times New Roman", serif;
-        color: #000; font-size: 12pt; line-height: 1.7;
+        background: white;
+        font-family: "Helvetica Neue", Arial, sans-serif;
+        color: #111; font-size: 9.5pt; line-height: 1.5;
       }
-      #print-summary .ph { font-size: 18pt; font-weight: bold; margin-bottom: 4px; }
-      #print-summary .ps { font-size: 10pt; color: #555; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 10px; }
-      #print-summary .sec { font-size: 11pt; font-weight: bold; text-transform: uppercase;
-                            letter-spacing: 1px; margin: 18px 0 6px; border-bottom: 1px solid #ccc; padding-bottom: 4px; }
-      #print-summary .row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 11pt; }
-      #print-summary .row .lbl { color: #555; min-width: 140px; }
-      #print-summary .stop-block { margin: 12px 0; padding: 10px 14px; border-left: 3px solid #42C6EE; background: #f9f9f9; }
-      #print-summary .stop-title { font-weight: bold; font-size: 11pt; margin-bottom: 6px; }
-      #print-summary table { width: 100%; border-collapse: collapse; margin-top: 6px; font-size: 10pt; }
-      #print-summary table th { text-align: left; border-bottom: 1px solid #ccc; padding: 3px 6px; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px; color: #555; }
-      #print-summary table td { padding: 3px 6px; border-bottom: 1px solid #eee; }
-      #print-summary table td:last-child { text-align: right; font-weight: 600; }
-      #print-summary .grand-row { margin-top: 14px; padding: 10px 14px; background: #f0fdf8; border: 1px solid #a7f3d0; display: flex; justify-content: space-between; font-weight: bold; font-size: 13pt; }
-      #print-summary .footer { margin-top: 24px; font-size: 9pt; color: #888; border-top: 1px solid #eee; padding-top: 10px; }
+
+      /* Header */
+      #print-summary .ph {
+        font-size: 17pt; font-weight: 700; letter-spacing: -0.3px;
+        color: #111; margin-bottom: 2px;
+      }
+      #print-summary .ps {
+        font-size: 8.5pt; color: #666; margin-bottom: 14px;
+        padding-bottom: 10px; border-bottom: 2px solid #111;
+      }
+
+      /* Section label */
+      #print-summary .sec {
+        font-size: 8pt; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.8px; color: #42C6EE;
+        margin: 16px 0 6px; padding-bottom: 3px;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      /* Key-value rows (trip details) */
+      #print-summary .detail-grid {
+        display: grid; grid-template-columns: 130px 1fr;
+        row-gap: 3px; column-gap: 12px;
+        font-size: 9pt;
+      }
+      #print-summary .detail-grid .lbl { color: #777; }
+      #print-summary .detail-grid .val { font-weight: 600; color: #111; }
+
+      /* Stop block */
+      #print-summary .stop-block {
+        margin: 10px 0; padding: 10px 12px 8px;
+        border: 1px solid #ddd; border-left: 3px solid #42C6EE;
+        border-radius: 3px; page-break-inside: avoid;
+      }
+      #print-summary .stop-title {
+        font-weight: 700; font-size: 10pt; margin-bottom: 1px; color: #111;
+      }
+      #print-summary .stop-purpose {
+        font-size: 8.5pt; color: #666; margin-bottom: 8px;
+      }
+
+      /* Expense table — fixed layout so all stops align identically */
+      #print-summary table {
+        width: 100%; border-collapse: collapse;
+        table-layout: fixed; font-size: 8.5pt;
+      }
+      #print-summary table colgroup col:nth-child(1) { width: 32%; }
+      #print-summary table colgroup col:nth-child(2) { width: 26%; }
+      #print-summary table colgroup col:nth-child(3) { width: 26%; }
+      #print-summary table colgroup col:nth-child(4) { width: 16%; }
+      #print-summary table th {
+        font-size: 7.5pt; font-weight: 700; text-transform: uppercase;
+        letter-spacing: 0.5px; color: #999;
+        text-align: left; padding: 4px 6px 4px;
+        border-bottom: 1px solid #ccc;
+      }
+      #print-summary table th.r,
+      #print-summary table td.r { text-align: right; }
+      #print-summary table td {
+        padding: 4px 6px; border-bottom: 1px solid #eee;
+        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      }
+      #print-summary table tfoot td {
+        border-top: 1.5px solid #bbb; border-bottom: none;
+        font-weight: 700; padding-top: 6px; font-size: 9pt;
+      }
+
+      /* Grand total */
+      #print-summary .grand-row {
+        margin-top: 14px; padding: 10px 14px;
+        background: #f0fdf8; border: 1px solid #a7f3d0;
+        display: flex; justify-content: space-between;
+        font-weight: 700; font-size: 11pt; color: #065f46;
+      }
+
+      /* Notes */
+      #print-summary .notes-text {
+        font-size: 9pt; line-height: 1.55; color: #333;
+        white-space: pre-wrap;
+      }
+
+      /* Footer */
+      #print-summary .footer {
+        margin-top: 20px; font-size: 7.5pt; color: #aaa;
+        border-top: 1px solid #eee; padding-top: 8px;
+      }
     }
 
     /* ── Tablet ── */
@@ -948,50 +1021,85 @@
     const rate    = currentRate || 1;
     const fmtDate = d => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "Not specified";
 
+    // Shared colgroup for every expense table — ensures identical column widths across all stops
+    const colgroup = `<colgroup><col/><col/><col/><col/></colgroup>`;
+
+    // Trip details section
+    const allTravelers = [
+      `1. ${data.requester_name} (requester)`,
+      ...(data.travelers || []).map((n, i) => `${i+2}. ${n}`)
+    ];
+    const travelersHtml = allTravelers.length > 1
+      ? `<div class="sec">Travelers</div>
+         <div class="detail-grid">${allTravelers.map((t,i) => `<span class="lbl">${i===0?"Lead":""}</span><span class="val">${t}</span>`).join("")}</div>`
+      : "";
+
     let html = `
       <div class="ph">East Africa Trip Request</div>
-      <div class="ps">Project Kanyea &nbsp;·&nbsp; Submitted ${new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
+      <div class="ps">Project Kanyea &nbsp;&middot;&nbsp; Submitted ${new Date().toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"})}</div>
 
       <div class="sec">Trip Details</div>
-      <div class="row"><span class="lbl">Requester</span><span>${data.requester_name}</span></div>
-      <div class="row"><span class="lbl">Region</span><span>${data.region || "Not specified"}</span></div>
-      <div class="row"><span class="lbl">Departure</span><span>${fmtDate(data.departure_date)}</span></div>
-      <div class="row"><span class="lbl">Return</span><span>${fmtDate(data.return_date)}</span></div>
-      <div class="row"><span class="lbl">Submitted By</span><span>${data.submitted_by || "Not specified"}</span></div>
-      <div class="row"><span class="lbl">Currency</span><span>${code}</span></div>
-      ${(data.travelers && data.travelers.length > 0) ? `
-      <div class="sec" style="margin-top:12px;">Travelers</div>
-      <div class="row"><span class="lbl">1. (Requester)</span><span>${data.requester_name}</span></div>
-      ${data.travelers.map((n,i) => `<div class="row"><span class="lbl">${i+2}.</span><span>${n}</span></div>`).join("")}
-      ` : ""}
+      <div class="detail-grid">
+        <span class="lbl">Requester</span>  <span class="val">${data.requester_name}</span>
+        <span class="lbl">Region</span>     <span class="val">${data.region || "Not specified"}</span>
+        <span class="lbl">Departure</span>  <span class="val">${fmtDate(data.departure_date)}</span>
+        <span class="lbl">Return</span>     <span class="val">${fmtDate(data.return_date)}</span>
+        <span class="lbl">Submitted By</span><span class="val">${data.submitted_by || "Not specified"}</span>
+        <span class="lbl">Currency</span>   <span class="val">${code}</span>
+      </div>
+      ${travelersHtml}
     `;
 
+    if (data.is_amendment && data.amendment_notes) {
+      html += `<div class="sec">Amendment - What Changed</div>
+               <div class="notes-text" style="color:#7c3aed;">${data.amendment_notes}</div>`;
+    }
+
     if (data.objective) {
-      html += `<div class="sec">Objective</div><div style="font-size:11pt;">${data.objective}</div>`;
+      html += `<div class="sec">Objective</div>
+               <div class="notes-text">${data.objective}</div>`;
     }
 
     html += `<div class="sec">Stops &amp; Expenses</div>`;
 
     data.stops.forEach((stop, i) => {
       let stopTotal = 0;
+      // Only show rows with amounts > 0
       const rows = EXPENSE_TYPES.map(et => {
-        const amt = stop.expenses[et.key] || 0;
+        const amt = stop.expenses?.[et.key] || 0;
         stopTotal += amt;
-        if (amt === 0) return "";
-        return `<tr><td>${et.label}</td><td>${stop.notes[et.key] || ""}</td><td>${amt.toLocaleString()} ${code}</td><td>$${(amt/rate).toFixed(2)}</td></tr>`;
+        if (!amt) return "";
+        const note = stop.notes?.[et.key] || "";
+        return `<tr>
+          <td>${et.label}</td>
+          <td style="color:#666;">${note}</td>
+          <td class="r">${amt.toLocaleString()} ${code}</td>
+          <td class="r">$${(amt/rate).toFixed(2)}</td>
+        </tr>`;
       }).join("");
+
+      // Build stop title — omit church part if blank
+      const loc    = stop.location || "";
+      const church = stop.church   || "";
+      const title  = loc && church ? `${loc} - ${church}` : (loc || church || "Unnamed Stop");
 
       html += `
         <div class="stop-block">
-          <div class="stop-title">Stop ${i+1}: ${stop.location || "—"} — ${stop.church || "—"}</div>
-          ${stop.purpose ? `<div style="font-size:10pt;color:#444;margin-bottom:6px;">${stop.purpose}</div>` : ""}
+          <div class="stop-title">Stop ${i+1}: ${title}</div>
+          ${stop.purpose ? `<div class="stop-purpose">${stop.purpose}</div>` : ""}
           <table>
-            <thead><tr><th>Category</th><th>Notes</th><th>Amount (${code})</th><th>USD</th></tr></thead>
-            <tbody>${rows || `<tr><td colspan="4" style="color:#aaa;">No expenses entered</td></tr>`}</tbody>
-            <tfoot><tr style="font-weight:bold;border-top:1px solid #ccc;">
+            ${colgroup}
+            <thead><tr>
+              <th>Category</th>
+              <th>Notes</th>
+              <th class="r">Amount (${code})</th>
+              <th class="r">USD</th>
+            </tr></thead>
+            <tbody>${rows || `<tr><td colspan="4" style="color:#bbb;font-style:italic;">No expenses entered</td></tr>`}</tbody>
+            <tfoot><tr>
               <td colspan="2">Stop Subtotal</td>
-              <td>${stopTotal.toLocaleString()} ${code}</td>
-              <td>$${(stopTotal/rate).toFixed(2)}</td>
+              <td class="r">${stopTotal.toLocaleString()} ${code}</td>
+              <td class="r">$${(stopTotal/rate).toFixed(2)}</td>
             </tr></tfoot>
           </table>
         </div>`;
@@ -1004,10 +1112,10 @@
       </div>`;
 
     if (data.notes) {
-      html += `<div class="sec">Notes</div><div style="font-size:11pt;">${data.notes}</div>`;
+      html += `<div class="sec">Notes</div><div class="notes-text">${data.notes}</div>`;
     }
 
-    html += `<div class="footer">East Africa Trip Request Form &nbsp;·&nbsp; drobertson0624.github.io/Projects/trip-request.html</div>`;
+    html += `<div class="footer">East Africa Trip Request Form &nbsp;&middot;&nbsp; drobertson0624.github.io/Projects/trip-request.html</div>`;
 
     document.getElementById("print-summary").innerHTML = html;
   }

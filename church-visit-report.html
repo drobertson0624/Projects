@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Church Visit Report — East Africa</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      padding: 24px 16px 48px;
+      color: #1a202c;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 18px;
+      box-shadow: 0 2px 16px rgba(0,0,0,0.10);
+      max-width: 560px;
+      margin: 0 auto;
+      padding: 28px 24px;
+    }
+
+    .logo-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 22px;
+    }
+
+    .logo-circle {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: #1a5276;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .logo-circle svg { display: block; }
+
+    .logo-text { font-size: 13px; color: #555; line-height: 1.3; }
+    .logo-text strong { display: block; font-size: 15px; color: #1a202c; font-weight: 700; }
+
+    h1 { font-size: 20px; font-weight: 700; margin-bottom: 4px; }
+    .subtitle { font-size: 13px; color: #718096; margin-bottom: 24px; }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.07em;
+      color: #a0aec0;
+      margin-bottom: 12px;
+      margin-top: 22px;
+    }
+
+    .field-group { margin-bottom: 14px; }
+
+    label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: #4a5568;
+      margin-bottom: 5px;
+    }
+
+    input[type="text"],
+    input[type="date"],
+    input[type="number"],
+    select,
+    textarea {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid #d1d8e0;
+      border-radius: 9px;
+      font-size: 16px !important;
+      font-family: inherit;
+      background: #f7fafc;
+      color: #1a202c;
+      outline: none;
+      transition: border-color 0.15s;
+      appearance: none;
+      -webkit-appearance: none;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: #3182ce;
+      background: #fff;
+    }
+
+    textarea { min-height: 80px; resize: vertical; line-height: 1.5; }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    .checkbox-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px;
+      background: #f7fafc;
+      border: 1px solid #d1d8e0;
+      border-radius: 9px;
+      cursor: pointer;
+    }
+
+    .checkbox-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      accent-color: #3182ce;
+    }
+
+    .checkbox-row label {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 500;
+      color: #2d3748;
+      cursor: pointer;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: 14px;
+      background: #1a5276;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      margin-top: 22px;
+      transition: background 0.2s;
+    }
+
+    .btn-submit:hover { background: #154360; }
+    .btn-submit:disabled { background: #a0aec0; cursor: not-allowed; }
+
+    .required { color: #e53e3e; margin-left: 2px; }
+
+    .success-screen {
+      display: none;
+      text-align: center;
+      padding: 16px 0;
+    }
+
+    .success-icon {
+      width: 64px;
+      height: 64px;
+      background: #c6f6d5;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .success-screen h2 { font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+    .success-screen p { font-size: 14px; color: #718096; line-height: 1.6; margin-bottom: 20px; }
+
+    .steps { list-style: none; text-align: left; margin-bottom: 20px; }
+    .steps li {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 12px 14px;
+      background: #f7fafc;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #2d3748;
+      margin-bottom: 8px;
+      border: 1px solid #e2e8f0;
+    }
+
+    .step-num {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      background: #1a5276;
+      color: #fff;
+      font-size: 12px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .btn-email {
+      display: block;
+      width: 100%;
+      padding: 13px;
+      background: #2b6cb0;
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      text-align: center;
+      margin-bottom: 10px;
+    }
+
+    .btn-another {
+      display: block;
+      width: 100%;
+      padding: 12px;
+      background: #f7fafc;
+      color: #4a5568;
+      border: 1px solid #d1d8e0;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    @media (max-width: 420px) {
+      .two-col { grid-template-columns: 1fr; }
+      .card { padding: 22px 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <!-- Logo -->
+  <div class="logo-row">
+    <div class="logo-circle">
+      <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+        <ellipse cx="13" cy="13" rx="11" ry="7" stroke="white" stroke-width="1.5" fill="none"/>
+        <ellipse cx="13" cy="13" rx="5" ry="11" stroke="white" stroke-width="1.5" fill="none"/>
+        <circle cx="13" cy="13" r="2.5" fill="white"/>
+      </svg>
+    </div>
+    <div class="logo-text">
+      <strong>East Africa Mission</strong>
+      Church Visit Report
+    </div>
+  </div>
+
+  <!-- Form -->
+  <div id="form-view">
+    <h1>Log a Church Visit</h1>
+    <p class="subtitle">Field workers — fill this out after each church visit.</p>
+
+    <div class="section-label">Church</div>
+
+    <div class="field-group">
+      <label for="church_select">Church<span class="required">*</span></label>
+      <select id="church_select">
+        <option value="">— select church —</option>
+      </select>
+    </div>
+
+    <div class="section-label">Visit Details</div>
+
+    <div class="two-col">
+      <div class="field-group">
+        <label for="visit_date">Visit Date<span class="required">*</span></label>
+        <input type="date" id="visit_date" />
+      </div>
+      <div class="field-group">
+        <label for="submitted_by">Your Name<span class="required">*</span></label>
+        <input type="text" id="submitted_by" placeholder="First and last name" />
+      </div>
+    </div>
+
+    <div class="field-group">
+      <label for="visitors">Team Members Present</label>
+      <input type="text" id="visitors" placeholder="e.g. Isaac Okiru, Daniel Wako" />
+    </div>
+
+    <div class="two-col">
+      <div class="field-group">
+        <label for="attendees">Attendees</label>
+        <input type="number" id="attendees" min="0" placeholder="0" />
+      </div>
+      <div class="field-group">
+        <label for="smartphones">Smartphones Present</label>
+        <input type="number" id="smartphones" min="0" placeholder="0" />
+      </div>
+    </div>
+
+    <div class="field-group">
+      <div class="checkbox-row" onclick="document.getElementById('training_completed').click()">
+        <input type="checkbox" id="training_completed" onclick="event.stopPropagation()" />
+        <label for="training_completed">Training was completed during this visit</label>
+      </div>
+    </div>
+
+    <div class="section-label">Notes</div>
+
+    <div class="field-group">
+      <label for="challenges">Challenges / Blockers</label>
+      <textarea id="challenges" placeholder="Anything that made this visit difficult or incomplete…"></textarea>
+    </div>
+
+    <div class="field-group">
+      <label for="notes">General Notes</label>
+      <textarea id="notes" placeholder="Observations, next steps, prayer requests, anything else worth noting…"></textarea>
+    </div>
+
+    <button class="btn-submit" id="submit_btn" onclick="submitReport()">Submit Report</button>
+  </div>
+
+  <!-- Success screen -->
+  <div class="success-screen" id="success-view">
+    <div class="success-icon">
+      <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="#38a169" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="20 6 9 17 4 12"/>
+      </svg>
+    </div>
+    <h2>Visit Saved</h2>
+    <p>Your report has been recorded. Now send the email notification so the team is informed.</p>
+
+    <ol class="steps">
+      <li>
+        <div class="step-num">1</div>
+        <div><strong>Saved to database</strong><br/>Your visit report is stored.</div>
+      </li>
+      <li>
+        <div class="step-num">2</div>
+        <div><strong>Send email notification</strong><br/>Tap below to open your email app with the report pre-filled.</div>
+      </li>
+    </ol>
+
+    <a id="email_link" href="#" class="btn-email">Open Email to Send Report</a>
+    <button class="btn-another" onclick="resetForm()">Submit Another Report</button>
+  </div>
+</div>
+
+<script>
+  const SUPABASE_URL = "https://gwvaarvwmptbsnanxmij.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_ziOlB_rYW9yh9-DMRPqzXg_7ZWV6THq";
+  const NOTIFY_TO  = "natgoyco@yahoo.com";
+  const NOTIFY_CC  = "drobconsultingroup@gmail.com";
+
+  // Churches list — synced with admin portal CHURCHES array
+  const CHURCHES = [
+    { id:1,  location:"Kyomya village",          pastor:"Richard Muwanguzi",      region:"Jinja",       country:"Uganda" },
+    { id:2,  location:"Magamaga village",         pastor:"Grace Ikomba",           region:"Jinja",       country:"Uganda" },
+    { id:3,  location:"Namwendwa village",        pastor:"Stephen Ikomba",         region:"Kamuli",      country:"Uganda" },
+    { id:4,  location:"Iganga town",              pastor:"Paul Musulube",          region:"Iganga",      country:"Uganda" },
+    { id:5,  location:"Buyende district",         pastor:"Edward Bwanga",          region:"Buyende",     country:"Uganda" },
+    { id:6,  location:"Namusita village",         pastor:"David Mukisa",           region:"Mayuge",      country:"Uganda" },
+    { id:7,  location:"Nsinda Mayuge",            pastor:"Moses Mukisa",           region:"Mayuge",      country:"Uganda" },
+    { id:8,  location:"Grace Tabernacle Busia",   pastor:"Joshua Otaget",          region:"Busia",       country:"Uganda" },
+    { id:9,  location:"Namukunyu village",        pastor:"Robert Kirungi",         region:"Kamuli",      country:"Uganda" },
+    { id:10, location:"Kasana Mubende",           pastor:"Julius Nturyabuza",      region:"Mubende",     country:"Uganda" },
+    { id:11, location:"Kalachai Tororo",          pastor:"Livingstone Okape",      region:"Tororo",      country:"Uganda" },
+    { id:12, location:"Mayuge town",              pastor:"Henry Mulugo",           region:"Mayuge",      country:"Uganda" },
+    { id:13, location:"Wandago village",          pastor:"Charles Bameka",         region:"Jinja",       country:"Uganda" },
+    { id:14, location:"Kiryadongo",               pastor:"Tumwebaze Gideon",       region:"Kiryadongo",  country:"Uganda" },
+    { id:16, location:"Teko Kisoro",              pastor:"Agensi Emmanuel",        region:"Kisoro",      country:"Uganda" },
+    { id:17, location:"Iyolwa Tororo",            pastor:"John Adungo",            region:"Tororo",      country:"Uganda" },
+    { id:18, location:"Kasokoso Wakiso",          pastor:"David Anwongowroth",     region:"Wakiso",      country:"Uganda" },
+    { id:19, location:"Iringa village",           pastor:"Rodgers Buyinza",        region:"Mayuge",      country:"Uganda" },
+    { id:20, location:"Kirinya Kampala",          pastor:"Jackson Imai",           region:"Kampala",     country:"Uganda" },
+    { id:21, location:"Katerema Tororo",          pastor:"Peter Opendi",           region:"Tororo",      country:"Uganda" },
+    { id:22, location:"Nabitchiki Namisindwa",    pastor:"Wakuma Julius",          region:"Namisindwa",  country:"Uganda" },
+    { id:23, location:"Kyegwegwa",                pastor:"Aron Ssemaganda",        region:"Kyegegwa",    country:"Uganda" },
+    { id:24, location:"Katikara Kakumiro",        pastor:"Gershom Twinomugisha",   region:"Kakumiro",    country:"Uganda" },
+    { id:25, location:"Kapapi Buliisa",           pastor:"Alfred Caleb",           region:"Buliisa",     country:"Uganda" },
+    { id:26, location:"Busamu Mayuge",            pastor:"Marvin Mukungu",         region:"Mayuge",      country:"Uganda" },
+    { id:27, location:"Bwondha Mayuge",           pastor:"Peter Musasizi",         region:"Mayuge",      country:"Uganda" },
+    { id:28, location:"Nakabale Malongo",         pastor:"Moses Mufumbiro",        region:"Mayuge",      country:"Uganda" },
+    { id:29, location:"Jakuzi Namba Six Mayuge",  pastor:"Vincent Karugambe",      region:"Mayuge",      country:"Uganda" },
+    { id:30, location:"Bunamwayi Mbale",          pastor:"Martin (Bunamwayi)",     region:"Mbale",       country:"Uganda" },
+    { id:31, location:"Tondo Kiboga",             pastor:"Ronald Sabiti",          region:"Kiboga",      country:"Uganda" },
+    { id:32, location:"Kwania",                   pastor:"Patrick Obiya",          region:"Kwania",      country:"Uganda" },
+    { id:33, location:"Kotido Karamoja",          pastor:"Joseph Omoding",         region:"Kotido",      country:"Uganda" },
+    { id:34, location:"Namayemba",                pastor:"Caleb Dhafa",            region:"Bugiri",      country:"Uganda" },
+    { id:35, location:"Oditel Kapelebyong",       pastor:"Gabriel Okobu",          region:"Kapelebyong", country:"Uganda" },
+    { id:36, location:"Nsambya",                  pastor:"Philip Kaputunuwo",      region:"Kampala",     country:"Uganda" },
+    { id:37, location:"Nyaful Akorwo Nebbi",      pastor:"Peter Ujiki",            region:"Nebbi",       country:"Uganda" },
+    { id:38, location:"Bungoma Western Kenya",    pastor:"Cyprean Amballah Oyasi", region:"Bungoma",     country:"Kenya"  },
+    { id:39, location:"Lumino Busia",             pastor:"Charles Okello",         region:"Busia",       country:"Uganda" },
+    { id:40, location:"Morukebu Tororo",          pastor:"Daniel Omella",          region:"Tororo",      country:"Uganda" },
+    { id:41, location:"Paya village",             pastor:"",                       region:"Iganga",      country:"Uganda" },
+    { id:15, location:"Central Division Lira",    pastor:"Jimmy Opoo",             region:"Lira",        country:"Uganda" },
+    { id:42, location:"Oyam",                     pastor:"",                       region:"Oyam",        country:"Uganda" },
+  ];
+
+  // Populate church dropdown
+  (function() {
+    const sel = document.getElementById("church_select");
+    CHURCHES.sort((a,b) => a.location.localeCompare(b.location)).forEach(c => {
+      const opt = document.createElement("option");
+      opt.value = c.id;
+      opt.textContent = c.location + (c.pastor ? " — " + c.pastor : "") + " (" + c.region + ")";
+      sel.appendChild(opt);
+    });
+    // Set today's date as default
+    document.getElementById("visit_date").value = new Date().toISOString().split("T")[0];
+  })();
+
+  let _lastData = {};
+
+  async function submitReport() {
+    const btn = document.getElementById("submit_btn");
+    const churchId = document.getElementById("church_select").value;
+    const visitDate = document.getElementById("visit_date").value;
+    const submittedBy = document.getElementById("submitted_by").value.trim();
+
+    if (!churchId) { alert("Please select a church."); return; }
+    if (!visitDate) { alert("Please select a visit date."); return; }
+    if (!submittedBy) { alert("Please enter your name."); return; }
+
+    btn.disabled = true;
+    btn.textContent = "Saving…";
+
+    const church = CHURCHES.find(c => c.id === Number(churchId));
+    const attendeesVal = document.getElementById("attendees").value;
+    const smartphonesVal = document.getElementById("smartphones").value;
+
+    const payload = {
+      church_id: Number(churchId),
+      church_name: church ? church.location : "",
+      visit_date: visitDate,
+      submitted_by: submittedBy,
+      visitors: document.getElementById("visitors").value.trim(),
+      attendees: attendeesVal ? Number(attendeesVal) : null,
+      smartphones: smartphonesVal ? Number(smartphonesVal) : null,
+      training_completed: document.getElementById("training_completed").checked,
+      challenges: document.getElementById("challenges").value.trim(),
+      notes: document.getElementById("notes").value.trim(),
+    };
+
+    try {
+      const res = await fetch(`${SUPABASE_URL}/rest/v1/church_visits`, {
+        method: "POST",
+        headers: {
+          apikey: SUPABASE_KEY,
+          Authorization: `Bearer ${SUPABASE_KEY}`,
+          "Content-Type": "application/json",
+          Prefer: "return=minimal"
+        },
+        body: JSON.stringify(payload)
+      });
+
+      if (!res.ok) {
+        const err = await res.text();
+        throw new Error(err);
+      }
+
+      _lastData = { ...payload, church };
+      buildEmailLink(_lastData);
+      showSuccess();
+
+    } catch(e) {
+      alert("Could not save report. Please check your connection and try again.\n\n" + e.message);
+      btn.disabled = false;
+      btn.textContent = "Submit Report";
+    }
+  }
+
+  function buildEmailLink(d) {
+    const church = d.church;
+    const churchLabel = church ? church.location + (church.pastor ? " (" + church.pastor + ")" : "") : "Unknown Church";
+
+    const subject = "Church Visit Report - " + churchLabel + " - " + d.visit_date;
+
+    const lines = [
+      "CHURCH VISIT REPORT",
+      "===================",
+      "",
+      "Church:       " + churchLabel,
+      "Visit Date:   " + d.visit_date,
+      "Submitted By: " + d.submitted_by,
+      "",
+    ];
+
+    if (d.visitors) lines.push("Team:         " + d.visitors, "");
+    lines.push("Attendees:    " + (d.attendees != null ? d.attendees : "N/A"));
+    lines.push("Smartphones:  " + (d.smartphones != null ? d.smartphones : "N/A"));
+    lines.push("Training:     " + (d.training_completed ? "Completed" : "Not completed"));
+    lines.push("");
+
+    if (d.challenges) {
+      lines.push("CHALLENGES");
+      lines.push("----------");
+      lines.push(d.challenges);
+      lines.push("");
+    }
+
+    if (d.notes) {
+      lines.push("NOTES");
+      lines.push("-----");
+      lines.push(d.notes);
+      lines.push("");
+    }
+
+    lines.push("-- Submitted via East Africa Church Visit Form");
+
+    const body = lines.join("\n");
+    const link = "mailto:" + NOTIFY_TO
+      + "?cc=" + encodeURIComponent(NOTIFY_CC)
+      + "&subject=" + encodeURIComponent(subject)
+      + "&body=" + encodeURIComponent(body);
+
+    document.getElementById("email_link").href = link;
+  }
+
+  function showSuccess() {
+    document.getElementById("form-view").style.display = "none";
+    document.getElementById("success-view").style.display = "block";
+  }
+
+  function resetForm() {
+    document.getElementById("church_select").value = "";
+    document.getElementById("visit_date").value = new Date().toISOString().split("T")[0];
+    document.getElementById("submitted_by").value = "";
+    document.getElementById("visitors").value = "";
+    document.getElementById("attendees").value = "";
+    document.getElementById("smartphones").value = "";
+    document.getElementById("training_completed").checked = false;
+    document.getElementById("challenges").value = "";
+    document.getElementById("notes").value = "";
+    const btn = document.getElementById("submit_btn");
+    btn.disabled = false;
+    btn.textContent = "Submit Report";
+    document.getElementById("success-view").style.display = "none";
+    document.getElementById("form-view").style.display = "block";
+  }
+</script>
+
+</body>
+</html>

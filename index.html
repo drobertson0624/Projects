@@ -1372,7 +1372,7 @@
       { id:12, pastor:"Henry Mulugo",          location:"Mayuge town",             region:"Mayuge",      country:"Uganda", members:20,  standing:"STRONG", spiritual_standing:"STRONG", language:"Luganda/Lusoga",              priority:7, distKampala:"134 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"Yes", tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.4583,  lng:33.4833 },
       { id:13, pastor:"Charles Bameka",        location:"Wandago village",         region:"Jinja",       country:"Uganda", members:30,  standing:"STRONG", spiritual_standing:"STRONG", language:"Luganda/Lusoga",              priority:7, distKampala:"113 km", internet:"Available", cell_signal:"Yes", cell_quality:"",     cell_phone:"No",  tablet:"",   elect_power:"No",   laptop:"",      sound_system:"No",       tv_screen:"No",  lat:0.4167,  lng:33.2333 },
       { id:14, pastor:"Tumwebaze Gideon",      location:"Kiryadongo",              region:"Kiryadongo",  country:"Uganda", members:50,  standing:"Stable", spiritual_standing:"Stable", language:"Swahili/Luo/Ateso",           priority:4, distKampala:"240 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:1.8833,  lng:32.0833 },
-      { id:15, pastor:"Jimmy Opoo",            location:"Central Division Lira",   region:"Lira",        country:"Uganda", members:25,  standing:"Stable", spiritual_standing:"Stable", language:"Langi/Luo",                   priority:5, distKampala:"342 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.2499,  lng:32.8997 },
+      { id:15, pastor:"Jimmy Opoo",            location:"Central Division Lira",   region:"Lira",        country:"Uganda", members:25,  standing:"Weak", spiritual_standing:"Weak", language:"Langi/Luo",                   priority:5, distKampala:"342 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.2499,  lng:32.8997 },
       { id:16, pastor:"Agensi Emmanuel",       location:"Teko Kisoro",             region:"Kisoro",      country:"Uganda", members:85,  standing:"Stable", spiritual_standing:"Stable", language:"Lukiga/Lunyankole/Kinyarwanda",priority:9, distKampala:"481 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:-1.2833, lng:29.6833 },
       { id:17, pastor:"John Adungo",           location:"Iyolwa Tororo",           region:"Tororo",      country:"Uganda", members:17,  standing:"Stable", spiritual_standing:"Stable", language:"Japadhola",                   priority:4, distKampala:"195 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.7167,  lng:34.2167 },
       { id:18, pastor:"David Anwongowroth",    location:"Kasokoso Wakiso",         region:"Wakiso",      country:"Uganda", members:40,  standing:"Stable", spiritual_standing:"Stable", language:"English/Luganda",             priority:3, distKampala:"",       internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Near", laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.3500,  lng:32.6500 },
@@ -1398,6 +1398,8 @@
       { id:38, pastor:"Cyprean Amballah Oyasi",location:"Bungoma Western Kenya",   region:"Bungoma",     country:"Kenya",  members:65,  standing:"Growing",spiritual_standing:"Growing", language:"Swahili",                     priority:0, distKampala:"222 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"No",  tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5635,  lng:34.5606 },
       { id:39, pastor:"Charles Okello",        location:"Lumino Busia",            region:"Busia",       country:"Uganda", members:89,  standing:"Stable", spiritual_standing:"Stable", language:"Samia/Luganda",               priority:1, distKampala:"186 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.5600,  lng:33.9800 },
       { id:40, pastor:"Daniel Omella",         location:"Morukebu Tororo",         region:"Tororo",      country:"Uganda", members:56,  standing:"Stable", spiritual_standing:"Stable", language:"Ateso",                       priority:1, distKampala:"222 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"Far",  laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.7000,  lng:34.1500 },
+      { id:41, pastor:"",                      location:"Paya village",             region:"Iganga",      country:"Uganda", members:5,   standing:"",       spiritual_standing:"",       language:"Lusoga/Luganda",              priority:7, distKampala:"145 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"Yes", tablet:"No", elect_power:"No",   laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:0.6200,  lng:33.5500 },
+      { id:42, pastor:"",                      location:"Oyam",                     region:"Oyam",        country:"Uganda", members:0,   standing:"Weak",   spiritual_standing:"Weak",   language:"Langi/Luo",                   priority:0, distKampala:"310 km", internet:"Not Available",        cell_signal:"Okay",cell_quality:"Okay", cell_phone:"",    tablet:"No", elect_power:"",     laptop:"No",    sound_system:"No",       tv_screen:"No",  lat:2.2333,  lng:32.7333 },
     ];
 
     // ─── Portal Login ──────────────────────────────────────────────────────────
@@ -1527,6 +1529,12 @@
       const [selected, setSelected]       = useState(null);
       const [editing, setEditing]         = useState(false);
       const [editData, setEditData]       = useState(null);
+      const [churchVisits, setChurchVisits] = useState([]);
+      const [visitLoading, setVisitLoading] = useState(false);
+      const [showVisitForm, setShowVisitForm] = useState(false);
+      const blankVisit = { visit_date:"", visitors:"", attendees:"", smartphones:"", training_completed:false, challenges:"", notes:"", submitted_by:"" };
+      const [visitForm, setVisitForm]     = useState(blankVisit);
+      const [savingVisit, setSavingVisit] = useState(false);
       const [showAdd, setShowAdd]         = useState(false);
       const [showImport, setShowImport]   = useState(false);
       const [importText, setImportText]   = useState("");
@@ -1584,9 +1592,47 @@
       };
 
       // ── Helpers ────────────────────────────────────────────────────────────
-      const sColor   = s => s==="STRONG"?"tag-green":s==="Growing"?"tag-warn":"tag-gray";
-      const openEdit = (c, e) => { e?.stopPropagation(); setEditData({...c}); setEditing(true); setSelected(null); };
-      const saveEdit = () => { onUpdate(editData); setEditing(false); setEditData(null); };
+      const sColor   = s => s==="STRONG"?"tag-green":s==="Growing"?"tag-warn":s==="Weak"?"tag-red":"tag-gray";
+      const loadVisitsForChurch = async (churchId) => {
+        setVisitLoading(true);
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/church_visits?church_id=eq.${churchId}&order=visit_date.desc`, {
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+          });
+          const data = await res.json();
+          setChurchVisits(Array.isArray(data) ? data : []);
+        } catch(e) { setChurchVisits([]); }
+        setVisitLoading(false);
+      };
+      const saveVisit = async () => {
+        if (!visitForm.visit_date || !visitForm.submitted_by) { alert("Visit date and submitted by are required."); return; }
+        setSavingVisit(true);
+        const payload = {
+          church_id: editData.id,
+          church_name: editData.location || editData.pastor || "",
+          visit_date: visitForm.visit_date,
+          visitors: visitForm.visitors || "",
+          attendees: visitForm.attendees ? Number(visitForm.attendees) : null,
+          smartphones: visitForm.smartphones ? Number(visitForm.smartphones) : null,
+          training_completed: visitForm.training_completed || false,
+          challenges: visitForm.challenges || "",
+          notes: visitForm.notes || "",
+          submitted_by: visitForm.submitted_by || "",
+        };
+        try {
+          await fetch(`${SUPABASE_URL}/rest/v1/church_visits`, {
+            method: "POST",
+            headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+            body: JSON.stringify(payload)
+          });
+          setVisitForm(blankVisit);
+          setShowVisitForm(false);
+          await loadVisitsForChurch(editData.id);
+        } catch(e) { alert("Failed to save visit."); }
+        setSavingVisit(false);
+      };
+      const openEdit = (c, e) => { e?.stopPropagation(); setEditData({...c}); setEditing(true); setSelected(null); setChurchVisits([]); setShowVisitForm(false); loadVisitsForChurch(c.id); };
+      const saveEdit = () => { onUpdate(editData); setEditing(false); setEditData(null); setChurchVisits([]); setShowVisitForm(false); };
 
       const saveView = () => {
         if (!newViewName.trim()) return;
@@ -2023,7 +2069,7 @@
                 {[
                   { label:"Country",  key:"country",  opts:["", ...uniqueCountries] },
                   { label:"Region",   key:"region",   opts:["", ...uniqueRegions]   },
-                  { label:"Standing", key:"standing",  opts:["","STRONG","Stable","Growing"] },
+                  { label:"Standing", key:"standing",  opts:["","STRONG","Stable","Growing","Weak"] },
                   { label:"Internet", key:"internet",  opts:["","Available","Not Available","Unknown"] },
                 ].map(({label,key,opts}) => (
                   <div key={key} style={{ marginBottom:14 }}>
@@ -2164,7 +2210,7 @@
                   <div className="field-group">
                     <div className="field-label">Standing</div>
                     <select value={editData.standing||""} onChange={e=>setEditData(d=>({...d,standing:e.target.value}))}>
-                      {["STRONG","Stable","Growing",""].map(s=><option key={s} value={s}>{s||"(none)"}</option>)}
+                      {["STRONG","Stable","Growing","Weak",""].map(s=><option key={s} value={s}>{s||"(none)"}</option>)}
                     </select>
                   </div>
                   <div className="field-group">
@@ -2214,6 +2260,81 @@
                     </div>
                   </div>
                 </div>
+                {/* Visit Log */}
+                <div style={{ borderTop:"1px solid var(--border)", paddingTop:16, marginBottom:16 }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                    <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em" }}>Visit Log</div>
+                    <button onClick={() => setShowVisitForm(v=>!v)} style={{ padding:"5px 12px", background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", borderRadius:8, fontSize:12, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>
+                      {showVisitForm ? "Cancel" : "+ Log a Visit"}
+                    </button>
+                  </div>
+                  {showVisitForm && (
+                    <div style={{ background:"var(--surface2)", borderRadius:12, padding:16, marginBottom:14, border:"1px solid var(--border)" }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+                        <div className="field-group">
+                          <div className="field-label">Visit Date *</div>
+                          <input type="date" value={visitForm.visit_date} onChange={e=>setVisitForm(f=>({...f,visit_date:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Submitted By *</div>
+                          <input type="text" placeholder="Your name" value={visitForm.submitted_by} onChange={e=>setVisitForm(f=>({...f,submitted_by:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Visitors (names)</div>
+                          <input type="text" placeholder="e.g. Isaac, Daniel" value={visitForm.visitors} onChange={e=>setVisitForm(f=>({...f,visitors:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Attendees</div>
+                          <input type="number" min="0" placeholder="0" value={visitForm.attendees} onChange={e=>setVisitForm(f=>({...f,attendees:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Smartphones Present</div>
+                          <input type="number" min="0" placeholder="0" value={visitForm.smartphones} onChange={e=>setVisitForm(f=>({...f,smartphones:e.target.value}))} />
+                        </div>
+                        <div className="field-group" style={{ display:"flex", alignItems:"center", gap:10, paddingTop:20 }}>
+                          <input type="checkbox" id="tc_visit" checked={visitForm.training_completed} onChange={e=>setVisitForm(f=>({...f,training_completed:e.target.checked}))} style={{ width:16, height:16 }} />
+                          <label htmlFor="tc_visit" style={{ fontSize:13, cursor:"pointer" }}>Training completed</label>
+                        </div>
+                      </div>
+                      <div className="field-group" style={{ marginBottom:10 }}>
+                        <div className="field-label">Challenges</div>
+                        <textarea placeholder="Any challenges or blockers?" value={visitForm.challenges} onChange={e=>setVisitForm(f=>({...f,challenges:e.target.value}))} style={{ minHeight:60 }} />
+                      </div>
+                      <div className="field-group" style={{ marginBottom:12 }}>
+                        <div className="field-label">Notes</div>
+                        <textarea placeholder="General observations, next steps…" value={visitForm.notes} onChange={e=>setVisitForm(f=>({...f,notes:e.target.value}))} style={{ minHeight:60 }} />
+                      </div>
+                      <button onClick={saveVisit} disabled={savingVisit} className="btn-next" style={{ width:"100%" }}>
+                        {savingVisit ? "Saving…" : "Save Visit"}
+                      </button>
+                    </div>
+                  )}
+                  {visitLoading ? (
+                    <div style={{ color:"var(--text-muted)", fontSize:13, padding:"8px 0" }}>Loading visits…</div>
+                  ) : churchVisits.length === 0 ? (
+                    <div style={{ color:"var(--text-muted)", fontSize:13, padding:"8px 0" }}>No visits logged yet.</div>
+                  ) : (
+                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                      {churchVisits.map(v => (
+                        <div key={v.id} style={{ background:"var(--surface2)", borderRadius:10, padding:"12px 14px", border:"1px solid var(--border)" }}>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+                            <div style={{ fontWeight:600, fontSize:13 }}>{v.visit_date}</div>
+                            <div style={{ fontSize:11, color:"var(--text-muted)" }}>by {v.submitted_by}</div>
+                          </div>
+                          {v.visitors && <div style={{ fontSize:12, color:"var(--text-secondary)", marginBottom:2 }}>Team: {v.visitors}</div>}
+                          <div style={{ fontSize:12, color:"var(--text-muted)", display:"flex", gap:12, flexWrap:"wrap" }}>
+                            {v.attendees != null && <span>Attendees: <strong>{v.attendees}</strong></span>}
+                            {v.smartphones != null && <span>Smartphones: <strong>{v.smartphones}</strong></span>}
+                            {v.training_completed && <span style={{ color:"var(--success)", fontWeight:600 }}>Training Done</span>}
+                          </div>
+                          {v.challenges && <div style={{ fontSize:12, color:"var(--danger)", marginTop:4 }}>Challenges: {v.challenges}</div>}
+                          {v.notes && <div style={{ fontSize:12, color:"var(--text-secondary)", marginTop:4 }}>{v.notes}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
                 <div style={{ display:"flex", gap:8 }}>
                   <button className="btn-back" onClick={() => setEditing(false)} style={{ flex:1 }}>Cancel</button>
                   <button onClick={async () => {
@@ -2270,7 +2391,7 @@
                   <div className="field-group">
                     <div className="field-label">Standing</div>
                     <select value={newC.standing||"Stable"} onChange={e=>setNewC(p=>({...p,standing:e.target.value}))}>
-                      {["STRONG","Stable","Growing"].map(s=><option key={s} value={s}>{s}</option>)}
+                      {["STRONG","Stable","Growing","Weak"].map(s=><option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                   <div className="field-group" style={{ gridColumn:"1 / -1" }}>
