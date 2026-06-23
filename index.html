@@ -4495,7 +4495,15 @@
       if (!user) return (
         <div className="app">
           <nav className="nav">
-            <div className="nav-logo"><div className="nav-dot" /><span className="nav-title" style={{ fontSize:12 }}>East Africa · Admin</span></div>
+            <div className="nav-logo">
+              <div style={{ width:32, height:32, borderRadius:"50%", background:"#42C6EE", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="20" height="20" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M28,5 L62,5 L68,12 L82,28 L72,35 L74,48 L70,62 L62,80 L50,95 L42,97 L34,90 L26,80 L16,65 L10,50 L12,44 L20,46 L22,50 L16,56 L10,38 L10,28 L18,14 L26,8 Z" fill="white"/>
+                  <path d="M78,58 L83,54 L85,61 L83,70 L77,68 Z" fill="white"/>
+                </svg>
+              </div>
+              <span className="nav-title" style={{ fontSize:12 }}>East Africa · Admin</span>
+            </div>
             <button onClick={onClose} style={{ border:"none", background:"var(--surface3)", color:"var(--text-muted)", borderRadius:8, padding:"6px 12px", fontSize:13, fontWeight:500, cursor:"pointer" }}>← Back</button>
           </nav>
           <PortalLogin onLogin={login} />
@@ -4506,7 +4514,15 @@
         <div className="app">
           {/* Nav */}
           <nav className="nav" style={{ gap:8 }}>
-            <div className="nav-logo"><div className="nav-dot" /><span className="nav-title" style={{ fontSize:12 }}>East Africa · Admin</span></div>
+            <div className="nav-logo">
+              <div style={{ width:32, height:32, borderRadius:"50%", background:"#42C6EE", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+                <svg width="20" height="20" viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M28,5 L62,5 L68,12 L82,28 L72,35 L74,48 L70,62 L62,80 L50,95 L42,97 L34,90 L26,80 L16,65 L10,50 L12,44 L20,46 L22,50 L16,56 L10,38 L10,28 L18,14 L26,8 Z" fill="white"/>
+                  <path d="M78,58 L83,54 L85,61 L83,70 L77,68 Z" fill="white"/>
+                </svg>
+              </div>
+              <span className="nav-title" style={{ fontSize:12 }}>East Africa · Admin</span>
+            </div>
 
             {/* Desktop tabs */}
             <div className="portal-desktop-tabs" style={{ display:"flex", alignItems:"center", gap:8 }}>
