@@ -1503,9 +1503,7 @@
         { key:"elect_power",  label:"Power",    always:false, w:80  },
         { key:"cell_signal",  label:"Cell",     always:false, w:70  },
         { key:"_visited",     label:"Site Visit", always:false, w:90  },
-        { key:"_edit",        label:"",         always:true,  w:40  },
-        { key:"_order",       label:"",         always:true,  w:60  },
-        { key:"_delete",      label:"",         always:true,  w:36  },
+        { key:"_actions",     label:"",         always:true,  w:44  },
       ];
 
       // Optional columns the user can toggle
@@ -1530,8 +1528,8 @@
       const [visitedIds, setVisitedIds] = useState(new Set());
 
       // Which cols are actually shown = always first + optional in user order + always last
-      const _alwaysFirst = ALL_COLS.filter(c => c.always && c.key !== '_edit' && c.key !== '_order' && c.key !== '_delete');
-      const _alwaysLast  = ALL_COLS.filter(c => c.always && (c.key === '_edit' || c.key === '_order' || c.key === '_delete'));
+      const _alwaysFirst = ALL_COLS.filter(c => c.always && c.key !== '_actions');
+      const _alwaysLast  = ALL_COLS.filter(c => c.always && c.key === '_actions');
       const shownCols = [
         ..._alwaysFirst,
         ...colOrder.map(k => ALL_COLS.find(c => c.key === k)).filter(c => c && visibleOptional.includes(c.key)),
@@ -1552,6 +1550,8 @@
       const [pageSize, setPageSize]       = useState(25);
       const [showColPicker, setShowColPicker] = useState(false);
       const [selected, setSelected]       = useState(null);
+      const [recordView, setRecordView]     = useState(null);
+      const [listView, setListView]         = useState('all');
       const [editing, setEditing]         = useState(false);
       const [editData, setEditData]       = useState(null);
       const [churchVisits, setChurchVisits] = useState([]);
@@ -1567,6 +1567,8 @@
       const [importError, setImportError] = useState("");
       const [importDefaultCountry, setImportDefaultCountry] = useState("");
       const [newC, setNewC]               = useState({ pastor:"", location:"", region:"", country:"Uganda", members:"", standing:"Stable" });
+      const [rowMenu, setRowMenu]         = useState(null);
+      const [confirmDelete, setConfirmDelete] = useState(null);
       const [showQueue, setShowQueue]     = useState(false);
       const [mergeTargets, setMergeTargets] = useState({});
       const [queueMergeSel, setQueueMergeSel] = useState([]);
@@ -1604,8 +1606,17 @@
         return true;
       });
 
+      // ── listView filter (applied after search/filter, before sort) ──────────
+      const filtered2 = filtered.filter(c => {
+        if (listView === 'visited') return visitedIds.has(c.id);
+        if (listView === 'strong') return c.spiritual_standing === 'STRONG';
+        if (listView === 'weak') return c.spiritual_standing === 'Weak';
+        if (listView === 'no_power') return !c.elect_power || c.elect_power === 'No';
+        return true;
+      });
+
       // ── Sort ───────────────────────────────────────────────────────────────
-      const sorted = [...filtered].sort((a, b) => {
+      const sorted = [...filtered2].sort((a, b) => {
         let av = a[sortCol], bv = b[sortCol];
         if (sortCol === "deploy_order") { av = av ? Number(av) : 9999; bv = bv ? Number(bv) : 9999; }
         else if (sortCol === "members" || sortCol === "priority") { av = Number(av)||0; bv = Number(bv)||0; }
@@ -1638,12 +1649,12 @@
         } catch(e) { setChurchVisits([]); }
         setVisitLoading(false);
       };
-      const saveVisit = async () => {
+      const saveVisitForChurch = async (church) => {
         if (!visitForm.visit_date || !visitForm.submitted_by) { alert("Visit date and submitted by are required."); return; }
         setSavingVisit(true);
         const payload = {
-          church_id: editData.id,
-          church_name: editData.location || editData.pastor || "",
+          church_id: church.id,
+          church_name: church.location || church.pastor || "",
           visit_date: visitForm.visit_date,
           visitors: visitForm.visitors || "",
           attendees: visitForm.attendees ? Number(visitForm.attendees) : null,
@@ -1661,10 +1672,12 @@
           });
           setVisitForm(blankVisit);
           setShowVisitForm(false);
-          await loadVisitsForChurch(editData.id);
+          await loadVisitsForChurch(church.id);
         } catch(e) { alert("Failed to save visit."); }
         setSavingVisit(false);
       };
+      const saveVisit = () => saveVisitForChurch(editData);
+      const saveVisitFromRecord = () => saveVisitForChurch(recordView);
       const openEdit = (c, e) => { e?.stopPropagation(); setEditData({...c}); setEditing(true); setSelected(null); setChurchVisits([]); setShowVisitForm(false); loadVisitsForChurch(c.id); };
       const saveEdit = () => { onUpdate(editData); setEditing(false); setEditData(null); setChurchVisits([]); setShowVisitForm(false); };
 
@@ -1697,26 +1710,28 @@
                 />
               </td>
             );
-          case "_edit":
+          case "_actions":
             return (
-              <td key={col.key} onClick={e => openEdit(c,e)} style={{ padding:"6px 8px" }}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:28, height:28, borderRadius:7, background:"var(--surface2)", border:"1px solid var(--border-strong)", cursor:"pointer" }}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--text-muted)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </div>
-              </td>
-            );
-          case "_order":
-            return (
-              <td key={col.key} onClick={e => { e.stopPropagation(); onPlaceOrder && onPlaceOrder(c); }} style={{ padding:"6px 6px" }}>
-                <div style={{ padding:"5px 10px", borderRadius:7, background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", cursor:"pointer", fontSize:11, fontWeight:600, color:"var(--accent)", whiteSpace:"nowrap" }}>Order</div>
-              </td>
-            );
-          case "_delete":
-            return (
-              <td key={col.key} onClick={e => { e.stopPropagation(); if (confirm("Delete "+(c.pastor||"this church")+"? Cannot be undone.")) onUpdate({...c,_delete:true}); }} style={{ padding:"6px 4px" }}>
-                <div style={{ display:"flex", alignItems:"center", justifyContent:"center", width:26, height:26, borderRadius:7, background:"var(--danger-light)", cursor:"pointer" }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
-                </div>
+              <td key="_actions" style={{ padding:"4px 8px", position:"relative" }} onClick={e => e.stopPropagation()}>
+                <button onClick={e => { e.stopPropagation(); setRowMenu(rowMenu===c.id ? null : c.id); }}
+                  style={{ background:"none", border:"none", cursor:"pointer", fontSize:16, color:"var(--text-muted)", padding:"2px 6px", borderRadius:6 }}>⋯</button>
+                {rowMenu === c.id && (
+                  <div style={{ position:"absolute", right:8, top:"100%", zIndex:300, background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:10, boxShadow:"var(--shadow-lg)", minWidth:130, overflow:"hidden" }}>
+                    {[
+                      ["View", () => { setRecordView(c); loadVisitsForChurch(c.id); setRowMenu(null); }],
+                      ["Edit", e => { openEdit(c, e); setRowMenu(null); }],
+                      ["Log Visit", () => { setRecordView(c); loadVisitsForChurch(c.id); setShowVisitForm(true); setRowMenu(null); }],
+                      ["Delete", () => { setConfirmDelete(c.id); setRowMenu(null); }],
+                    ].map(([label, fn]) => (
+                      <div key={label} onClick={fn}
+                        style={{ padding:"9px 14px", fontSize:13, cursor:"pointer", color: label==="Delete"?"var(--danger)":"var(--text)" }}
+                        onMouseEnter={e => e.currentTarget.style.background="var(--surface2)"}
+                        onMouseLeave={e => e.currentTarget.style.background="transparent"}>
+                        {label}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </td>
             );
           case "standing":
@@ -1833,6 +1848,14 @@
         setImportPreview(valid);
       };
       const commitImport = () => { importPreview.forEach(r=>onAdd(r)); setShowImport(false); setImportText(""); setImportPreview([]); setImportDefaultCountry(""); };
+
+      // ── Close rowMenu on outside click ────────────────────────────────────
+      React.useEffect(() => {
+        if (!rowMenu) return;
+        const close = () => setRowMenu(null);
+        document.addEventListener('click', close);
+        return () => document.removeEventListener('click', close);
+      }, [rowMenu]);
 
       // ── Sort icon ──────────────────────────────────────────────────────────
       const SortIcon = ({ col }) => sortCol!==col ? null : <span style={{ marginLeft:3, fontSize:10, opacity:0.7 }}>{sortDir==="asc"?"↑":"↓"}</span>;
@@ -2018,7 +2041,7 @@
                   [churches.reduce((s,c)=>s+(c.archived?0:(c.members||0)),0), "members", "var(--accent)"],
                   [deployedCount, "in queue", "var(--success)"],
                   [archivedCount || null, "archived", "var(--text-muted)"],
-                  [filtered.length !== churches.filter(c=>!c.archived).length ? filtered.length : null, "filtered", "var(--warn)"],
+                  [filtered2.length !== churches.filter(c=>!c.archived).length ? filtered2.length : null, "filtered", "var(--warn)"],
                 ].filter(([v])=>v!=null).map(([val,label,color]) => (
                   <div key={label} style={{ fontSize:13, color:"var(--text-muted)" }}>
                     <span style={{ fontWeight:700, color, marginRight:3 }}>{val}</span>{label}
@@ -2052,6 +2075,26 @@
               ))}
               <button onClick={() => setShowNewView(true)} style={{ padding:"9px 12px", border:"none", background:"transparent", borderBottom:"2px solid transparent", fontSize:13, color:"var(--text-muted)", cursor:"pointer", whiteSpace:"nowrap", marginBottom:-1 }}>+ New View</button>
             </div>
+          </div>
+
+          {/* List View Tabs */}
+          <div style={{ display:"flex", gap:6, padding:"10px 24px 0", borderBottom:"1px solid var(--border)", overflowX:"auto", flexShrink:0 }}>
+            {[
+              { key:"all",      label:"All Churches" },
+              { key:"visited",  label:"Visited" },
+              { key:"strong",   label:"Strong" },
+              { key:"weak",     label:"Weak Standing" },
+              { key:"no_power", label:"No Power" },
+            ].map(v => (
+              <button key={v.key} onClick={() => { setListView(v.key); setPage(1); }}
+                style={{ padding:"7px 14px", borderRadius:"8px 8px 0 0", border:"1px solid", borderBottom:"none", fontSize:13, fontWeight:500, cursor:"pointer",
+                  borderColor: listView===v.key ? "var(--border-strong)" : "transparent",
+                  background: listView===v.key ? "var(--surface)" : "transparent",
+                  color: listView===v.key ? "var(--text)" : "var(--text-muted)"
+                }}>
+                {v.label}{listView===v.key ? ` (${filtered2.length})` : ""}
+              </button>
+            ))}
           </div>
 
           {/* Search + toolbar */}
@@ -2114,11 +2157,171 @@
               )}
             </div>
             <div style={{ fontSize:13, color:"var(--text-muted)", whiteSpace:"nowrap" }}>
-              {filtered.length} of {churches.length}
+              {filtered2.length} of {churches.length}
             </div>
           </div>
 
-          {/* Filter sidebar + table */}
+          {/* Filter sidebar + table OR Record Page */}
+          {recordView ? (
+            <div style={{ flex:1, overflowY:"auto", padding:"0 0 48px" }}>
+              {/* Header bar */}
+              <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"14px 24px", borderBottom:"1px solid var(--border)", background:"var(--surface)", position:"sticky", top:0, zIndex:10 }}>
+                <button onClick={() => { setRecordView(null); setChurchVisits([]); setShowVisitForm(false); }}
+                  style={{ display:"flex", alignItems:"center", gap:6, padding:"7px 12px", border:"1px solid var(--border-strong)", borderRadius:8, background:"var(--surface2)", cursor:"pointer", fontSize:13, fontWeight:500, color:"var(--text-secondary)" }}>
+                  ← Churches
+                </button>
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={e => openEdit(recordView, e)}
+                    style={{ padding:"7px 14px", border:"1px solid var(--border-strong)", borderRadius:8, background:"var(--surface2)", cursor:"pointer", fontSize:13, fontWeight:500, color:"var(--text)" }}>
+                    Edit
+                  </button>
+                  <button onClick={() => setShowVisitForm(true)}
+                    style={{ padding:"7px 14px", border:"none", borderRadius:8, background:"var(--accent)", cursor:"pointer", fontSize:13, fontWeight:600, color:"#fff" }}>
+                    Log Visit
+                  </button>
+                </div>
+              </div>
+
+              {/* Record title */}
+              <div style={{ padding:"20px 24px 16px", borderBottom:"1px solid var(--border)" }}>
+                <div style={{ fontSize:22, fontWeight:700, letterSpacing:"-0.02em" }}>{recordView.pastor || recordView.location}</div>
+                <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:4 }}>
+                  {[recordView.location, recordView.region, recordView.country, recordView.distKampala ? recordView.distKampala+" from Kampala" : null].filter(Boolean).join(" · ")}
+                </div>
+                {recordView.spiritual_standing && (
+                  <span style={{ display:"inline-block", marginTop:8, padding:"3px 12px", borderRadius:100, fontSize:12, fontWeight:600,
+                    background: recordView.spiritual_standing==="STRONG"?"rgba(52,199,89,0.12)":recordView.spiritual_standing==="Weak"?"rgba(255,59,48,0.12)":"rgba(0,122,255,0.1)",
+                    color: recordView.spiritual_standing==="STRONG"?"var(--success)":recordView.spiritual_standing==="Weak"?"var(--danger)":"var(--accent)"
+                  }}>{recordView.spiritual_standing}</span>
+                )}
+              </div>
+
+              {/* Two-column: Contact + Church Info */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:24, padding:"20px 24px" }}>
+                {/* Contact */}
+                <div>
+                  <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Contact</div>
+                  <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                    {[["Church Name",recordView.church_name],["Phone",recordView.phone],["WhatsApp",recordView.whatsapp],["Email",recordView.email]].filter(([,v])=>v).map(([k,v])=>(
+                      <div key={k} style={{ padding:"10px 14px", background:"var(--surface2)", borderRadius:10, border:"1px solid var(--border)" }}>
+                        <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
+                        <div style={{ fontSize:14, fontWeight:500 }}>{v}</div>
+                      </div>
+                    ))}
+                    {![recordView.church_name,recordView.phone,recordView.whatsapp,recordView.email].some(Boolean) && (
+                      <div style={{ color:"var(--text-muted)", fontSize:13, padding:"8px 0" }}>No contact info recorded.</div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Church Info */}
+                <div>
+                  <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Church Info</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+                    {[["Region",recordView.region],["Country",recordView.country],["Members",recordView.members],["Language",recordView.language],["Building",recordView.bldg_type],["Score",recordView.priority],["Deploy Order",recordView.deploy_order]].filter(([,v])=>v).map(([k,v])=>(
+                      <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
+                        <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
+                        <div style={{ fontSize:13, fontWeight:500 }}>{v}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* Infrastructure */}
+              <div style={{ padding:"0 24px 20px" }}>
+                <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em", marginBottom:10 }}>Infrastructure</div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
+                  {[["Internet",recordView.internet],["Cell Signal",recordView.cell_signal],["Cell Quality",recordView.cell_quality],["Cell Phone",recordView.cell_phone],["Tablet",recordView.tablet],["Electric Power",recordView.elect_power],["Laptop",recordView.laptop],["Sound System",recordView.sound_system],["TV Screen",recordView.tv_screen]].map(([k,v])=>{
+                    const isYes=v==="Available"||v==="Yes"||v==="Strong", isNo=v==="Not Available"||v==="No"||v==="None"||v==="Weak";
+                    return (
+                      <div key={k} style={{ padding:"9px 12px", background:"var(--surface2)", borderRadius:9, border:"1px solid var(--border)" }}>
+                        <div style={{ fontSize:10, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.04em", marginBottom:3 }}>{k}</div>
+                        <div style={{ fontSize:12, fontWeight:600, color:isYes?"var(--success)":isNo?"var(--danger)":"var(--text-muted)" }}>{v||"—"}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Visit History */}
+              <div style={{ padding:"0 24px 24px" }}>
+                <div style={{ borderTop:"1px solid var(--border)", paddingTop:16 }}>
+                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
+                    <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em" }}>Visit History</div>
+                    <button onClick={() => setShowVisitForm(v=>!v)} style={{ padding:"5px 12px", background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", borderRadius:8, fontSize:12, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>
+                      {showVisitForm ? "Cancel" : "+ Log a Visit"}
+                    </button>
+                  </div>
+                  {showVisitForm && (
+                    <div style={{ background:"var(--surface2)", borderRadius:12, padding:16, marginBottom:14, border:"1px solid var(--border)" }}>
+                      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:10 }}>
+                        <div className="field-group">
+                          <div className="field-label">Visit Date *</div>
+                          <input type="date" value={visitForm.visit_date} onChange={e=>setVisitForm(f=>({...f,visit_date:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Submitted By *</div>
+                          <input type="text" placeholder="Your name" value={visitForm.submitted_by} onChange={e=>setVisitForm(f=>({...f,submitted_by:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Visitors (names)</div>
+                          <input type="text" placeholder="e.g. Isaac, Daniel" value={visitForm.visitors} onChange={e=>setVisitForm(f=>({...f,visitors:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Attendees</div>
+                          <input type="number" min="0" placeholder="0" value={visitForm.attendees} onChange={e=>setVisitForm(f=>({...f,attendees:e.target.value}))} />
+                        </div>
+                        <div className="field-group">
+                          <div className="field-label">Smartphones Present</div>
+                          <input type="number" min="0" placeholder="0" value={visitForm.smartphones} onChange={e=>setVisitForm(f=>({...f,smartphones:e.target.value}))} />
+                        </div>
+                        <div className="field-group" style={{ display:"flex", alignItems:"center", gap:10, paddingTop:20 }}>
+                          <input type="checkbox" id="tc_rec" checked={visitForm.training_completed} onChange={e=>setVisitForm(f=>({...f,training_completed:e.target.checked}))} style={{ width:16, height:16 }} />
+                          <label htmlFor="tc_rec" style={{ fontSize:13, cursor:"pointer" }}>Training completed</label>
+                        </div>
+                      </div>
+                      <div className="field-group" style={{ marginBottom:10 }}>
+                        <div className="field-label">Challenges</div>
+                        <textarea placeholder="Any challenges or blockers?" value={visitForm.challenges} onChange={e=>setVisitForm(f=>({...f,challenges:e.target.value}))} style={{ minHeight:60 }} />
+                      </div>
+                      <div className="field-group" style={{ marginBottom:12 }}>
+                        <div className="field-label">Notes</div>
+                        <textarea placeholder="General observations, next steps…" value={visitForm.notes} onChange={e=>setVisitForm(f=>({...f,notes:e.target.value}))} style={{ minHeight:60 }} />
+                      </div>
+                      <button onClick={saveVisitFromRecord} disabled={savingVisit} className="btn-next" style={{ width:"100%" }}>
+                        {savingVisit ? "Saving…" : "Save Visit"}
+                      </button>
+                    </div>
+                  )}
+                  {visitLoading ? (
+                    <div style={{ color:"var(--text-muted)", fontSize:13, padding:"8px 0" }}>Loading visits…</div>
+                  ) : churchVisits.length === 0 ? (
+                    <div style={{ color:"var(--text-muted)", fontSize:13, padding:"8px 0" }}>No visits logged yet.</div>
+                  ) : (
+                    <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                      {churchVisits.map(v => (
+                        <div key={v.id} style={{ background:"var(--surface2)", borderRadius:10, padding:"12px 14px", border:"1px solid var(--border)" }}>
+                          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:4 }}>
+                            <div style={{ fontWeight:600, fontSize:13 }}>{v.visit_date}</div>
+                            <div style={{ fontSize:11, color:"var(--text-muted)" }}>by {v.submitted_by}</div>
+                          </div>
+                          {v.visitors && <div style={{ fontSize:12, color:"var(--text-secondary)", marginBottom:2 }}>Team: {v.visitors}</div>}
+                          <div style={{ fontSize:12, color:"var(--text-muted)", display:"flex", gap:12, flexWrap:"wrap" }}>
+                            {v.attendees != null && <span>Attendees: <strong>{v.attendees}</strong></span>}
+                            {v.smartphones != null && <span>Smartphones: <strong>{v.smartphones}</strong></span>}
+                            {v.training_completed && <span style={{ color:"var(--success)", fontWeight:600 }}>Training Done</span>}
+                          </div>
+                          {v.challenges && <div style={{ fontSize:12, color:"var(--danger)", marginTop:4 }}>Challenges: {v.challenges}</div>}
+                          {v.notes && <div style={{ fontSize:12, color:"var(--text-secondary)", marginTop:4 }}>{v.notes}</div>}
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          ) : (
           <div style={{ display:"flex", flex:1, minHeight:0, overflow:"hidden" }}>
 
             {/* Filter panel */}
@@ -2155,6 +2358,16 @@
 
             {/* Table */}
             <div style={{ flex:1, overflowX:"auto", overflowY:"auto" }}>
+              <div style={{ padding:"6px 24px", fontSize:12, color:"var(--text-muted)", borderBottom:"1px solid var(--border)", display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", flexShrink:0 }}>
+                <span style={{ fontWeight:600, color:"var(--text-secondary)" }}>{filtered2.length}</span> churches
+                <span>·</span>
+                <span>Sorted by {ALL_COLS.find(c=>c.key===sortCol)?.label || sortCol} {sortDir==="asc"?"↑":"↓"}</span>
+                {Object.entries(filters).filter(([,v])=>v).map(([k,v]) => (
+                  <span key={k} style={{ background:"rgba(0,122,255,0.1)", color:"var(--accent)", borderRadius:100, padding:"2px 8px", fontSize:11, fontWeight:600 }}>
+                    {k}: {v} <span onClick={()=>setFilters(f=>({...f,[k]:""}))} style={{ cursor:"pointer", marginLeft:2 }}>×</span>
+                  </span>
+                ))}
+              </div>
               <table className="responses-table" style={{ borderRadius:0, tableLayout:"fixed" }}>
                 <colgroup>
                   {shownCols.map(col => <col key={col.key} style={{ width:col.w }} />)}
@@ -2163,11 +2376,10 @@
                   <tr>
                     {shownCols.map(col => (
                       <th key={col.key}
-                        style={{ cursor: col.key.startsWith("_") ? "default" : "pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}
+                        style={{ cursor: col.key.startsWith("_") ? "default" : "pointer", whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis", userSelect:"none" }}
                         onClick={() => !col.key.startsWith("_") && toggleSort(col.key)}
                       >
-                        {col.label}
-                        {sortCol === col.key && <span style={{ marginLeft:3, fontSize:10, opacity:0.7 }}>{sortDir==="asc"?"↑":"↓"}</span>}
+                        {col.label}{sortCol === col.key ? (sortDir === "asc" ? " ↑" : " ↓") : ""}
                       </th>
                     ))}
                   </tr>
@@ -2175,7 +2387,7 @@
                 <tbody>
                   {pageRows.map(c => {
                     return (
-                      <tr key={c.id} onClick={() => setSelected(c)} style={{ cursor:"pointer" }}>
+                      <tr key={c.id} onClick={() => { setRecordView(c); loadVisitsForChurch(c.id); }} style={{ cursor:"pointer" }}>
                         {shownCols.map(col => renderCell(col, c))}
                       </tr>
                     );
@@ -2185,6 +2397,8 @@
               {pageRows.length===0 && <div style={{ padding:"60px 24px", textAlign:"center", color:"var(--text-muted)", fontSize:14 }}>No churches match your filters.</div>}
             </div>
           </div>
+
+          )} {/* end recordView ternary */}
 
           {/* Pagination */}
           <div style={{ padding:"10px 24px", borderTop:"1px solid var(--border)", display:"flex", alignItems:"center", justifyContent:"space-between", flexShrink:0, flexWrap:"wrap", gap:10, background:"var(--surface)" }}>
@@ -2249,6 +2463,20 @@
                       </div>
                     );
                   })}
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Confirm Delete modal */}
+          {confirmDelete && (
+            <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.4)", display:"flex", alignItems:"center", justifyContent:"center", zIndex:300, padding:16 }} onClick={() => setConfirmDelete(null)}>
+              <div style={{ background:"var(--surface)", borderRadius:16, padding:24, maxWidth:380, width:"100%", boxShadow:"var(--shadow-lg)" }} onClick={e=>e.stopPropagation()}>
+                <div style={{ fontSize:16, fontWeight:700, marginBottom:8 }}>Delete Church?</div>
+                <div style={{ fontSize:13, color:"var(--text-muted)", marginBottom:20 }}>This cannot be undone. The church record will be permanently removed.</div>
+                <div style={{ display:"flex", gap:8 }}>
+                  <button onClick={() => setConfirmDelete(null)} style={{ flex:1, padding:"10px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:9, fontSize:13, cursor:"pointer" }}>Cancel</button>
+                  <button onClick={() => { const c = churches.find(x=>x.id===confirmDelete); if (c) onUpdate({...c,_delete:true}); setConfirmDelete(null); }} style={{ flex:1, padding:"10px", border:"none", background:"var(--danger)", color:"#fff", borderRadius:9, fontSize:13, fontWeight:600, cursor:"pointer" }}>Delete</button>
                 </div>
               </div>
             </div>
