@@ -231,7 +231,7 @@
       #print-summary, #print-summary * { visibility: visible; }
       #print-summary {
         display: block !important;
-        position: fixed; top: 0; left: 0; width: 100%;
+        position: absolute; top: 0; left: 0; width: 100%;
         background: white;
         font-family: "Helvetica Neue", Arial, sans-serif;
         color: #111; font-size: 9.5pt; line-height: 1.5;
@@ -540,6 +540,14 @@
           <label>Date Submitted</label>
           <input type="date" id="sig-date" />
         </div>
+        <div class="field">
+          <label>Your Email</label>
+          <input type="email" id="sig-email" placeholder="e.g. jima@example.com" />
+        </div>
+        <div class="field">
+          <label>WhatsApp Number</label>
+          <input type="tel" id="sig-whatsapp" placeholder="e.g. +256 700 000000" />
+        </div>
       </div>
 
       <div class="btn-row">
@@ -556,35 +564,19 @@
     <div class="success-icon">✓</div>
     <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Request Saved</div>
     <div style="font-size:14px;color:#64748b;max-width:420px;margin:0 auto 24px;line-height:1.6;">
-      Your trip details have been recorded. Complete the two steps below to send your approval request.
+      Your trip details have been recorded. Tap the button below to send your approval request by email.
     </div>
 
-    <!-- Step 1 -->
-    <div style="max-width:380px;margin:0 auto 10px;background:#f8fafc;border:1px solid #e2e8f0;
-                border-radius:10px;padding:16px 18px;text-align:left;">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
-                  color:#94a3b8;margin-bottom:8px;">Step 1</div>
-      <button onclick="downloadPDF()"
-              style="width:100%;background:#1a1a1a;color:white;border:none;border-radius:8px;
-                     padding:14px 20px;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit;">
-        Download PDF Summary
-      </button>
-      <div style="font-size:12px;color:#94a3b8;margin-top:6px;">Save it — you'll attach it to the email.</div>
-    </div>
-
-    <!-- Step 2 -->
     <div style="max-width:380px;margin:0 auto 20px;background:#f8fafc;border:1px solid #e2e8f0;
                 border-radius:10px;padding:16px 18px;text-align:left;">
-      <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;
-                  color:#94a3b8;margin-bottom:8px;">Step 2</div>
       <a id="mailto-link" href="#"
          style="display:block;background:#42C6EE;color:white;border-radius:8px;
                 padding:14px 20px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;">
         Open Email to Send Approval
       </a>
-      <div style="font-size:12px;color:#94a3b8;margin-top:6px;">
-        Attach the PDF, then hit Send.<br>
-        To: natgoyco@yahoo.com &nbsp;·&nbsp; CC: David Robertson
+      <div style="font-size:12px;color:#94a3b8;margin-top:8px;">
+        This will open your email app with everything pre-filled.<br>
+        Just tap Send — it goes to David and Brother Greg automatically.
       </div>
     </div>
 
@@ -854,7 +846,9 @@
       objective:      document.getElementById("objective").value.trim(),
       stops,
       notes:          document.getElementById("notes").value.trim(),
-      submitted_by:   document.getElementById("sig-name").value.trim(),
+      submitted_by:      document.getElementById("sig-name").value.trim(),
+      requester_email:   document.getElementById("sig-email").value.trim(),
+      requester_whatsapp:document.getElementById("sig-whatsapp").value.trim(),
       currency_code:    currentCurrencyCode,
       total_ugx:        grandLocal,
       total_usd:        parseFloat((grandLocal / rate).toFixed(2)),
@@ -978,26 +972,23 @@
           total_usd:        data.total_usd,
           is_amendment:     data.is_amendment,
           amendment_notes:  data.amendment_notes || null,
-          travelers_json:   data.travelers,
+          travelers_json:      data.travelers,
+          requester_email:     data.requester_email || null,
+          requester_whatsapp:  data.requester_whatsapp || null,
         }),
       });
 
       if (!res.ok) throw new Error("Save failed: " + await res.text());
 
-      // 2. Store data for PDF download
-      _lastPrintData = data;
-
-      // 3. Build mailto link — opens their email app with everything pre-filled
+      // 2. Build mailto link — opens their email app with everything pre-filled
       const summary = buildSummary(data);
       const subjectText = data.is_amendment
         ? `AMENDMENT - Trip Request - ${data.requester_name}`
         : `Trip Request - ${data.requester_name}`;
-      const subject = encodeURIComponent(subjectText);
-      const body    = encodeURIComponent(summary);
-      const mailto  = `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${subject}&body=${body}`;
+      const mailto = `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${encodeURIComponent(subjectText)}&body=${encodeURIComponent(summary)}`;
       document.getElementById("mailto-link").href = mailto;
 
-      // 4. Show success screen
+      // 3. Show success screen
       document.getElementById("form-wrap").style.display = "none";
       document.getElementById("success-screen").style.display = "block";
 

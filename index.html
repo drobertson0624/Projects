@@ -3360,6 +3360,51 @@
       const fmtDate = (d) => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
       const fmtUSD  = (n) => n != null ? "$"+parseFloat(n).toFixed(2) : "—";
 
+      const buildAdminMailto = (trip) => {
+        const fmtD = d => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "Not specified";
+        const div = "------------------------------------------------------------";
+        const lines = [];
+        lines.push("EAST AFRICA TRIP REQUEST - PROJECT KANYEA");
+        lines.push(div);
+        lines.push(`Requester:    ${trip.requester_name}`);
+        lines.push(`Region:       ${trip.region || "Not specified"}`);
+        lines.push(`Departure:    ${fmtD(trip.departure_date)}`);
+        lines.push(`Return:       ${fmtD(trip.return_date)}`);
+        lines.push(`Submitted By: ${trip.submitted_by || "Not specified"}`);
+        lines.push(`Status:       ${trip.status}`);
+        if (trip.travelers_json && trip.travelers_json.length > 0) {
+          lines.push(`Travelers:    1. ${trip.requester_name} (requester)`);
+          trip.travelers_json.forEach((name, i) => lines.push(`              ${i+2}. ${name}`));
+        }
+        if (trip.is_amendment) lines.push(`Type:         AMENDMENT`);
+        if (trip.amendment_notes) { lines.push(""); lines.push(`Amendment Notes: ${trip.amendment_notes}`); }
+        lines.push("");
+        lines.push("OBJECTIVE");
+        lines.push(trip.objective || "Not specified");
+        lines.push("");
+        const stops = trip.stops_json || [];
+        stops.forEach((stop, i) => {
+          lines.push(div);
+          lines.push(`Stop ${i+1}: ${stop.location || "Unknown"} — ${stop.church || ""}`);
+          lines.push(`Purpose: ${stop.purpose || "Not specified"}`);
+          if (stop.expenses && stop.expenses.length > 0) {
+            stop.expenses.forEach(e => {
+              if (e.amount) lines.push(`  ${e.type || "Expense"}: ${Number(e.amount).toLocaleString()} ${stop.currency || ""}`);
+            });
+          }
+        });
+        lines.push(div);
+        lines.push(`TOTAL: ${trip.total_ugx ? Number(trip.total_ugx).toLocaleString() + " UGX" : "—"} / ${trip.total_usd ? "$"+parseFloat(trip.total_usd).toFixed(2)+" USD" : "—"}`);
+        if (trip.notes) { lines.push(""); lines.push("NOTES"); lines.push(trip.notes); }
+        lines.push("");
+        lines.push("Submitted via East Africa Trip Request Form");
+        const body = lines.join("\n");
+        const subject = trip.is_amendment
+          ? `AMENDMENT - Trip Request - ${trip.requester_name}`
+          : `Trip Request - ${trip.requester_name}`;
+        return `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      };
+
       // ── Detail view ──
       if (selected) {
         const stops = selected.stops_json || [];
@@ -3374,6 +3419,23 @@
                   style={{ padding:"6px 14px", border:"1.5px solid var(--accent)", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"var(--accent)" }}>
                   Edit Trip
                 </button>
+                <a href={buildAdminMailto(selected)}
+                   style={{ padding:"6px 14px", border:"1.5px solid #FF9500", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"#FF9500", textDecoration:"none" }}>
+                  Resend Email
+                </a>
+                {selected.requester_email && (
+                  <a href={`mailto:${selected.requester_email}?subject=Trip Request ${selected.status} - ${selected.requester_name}&body=Hi ${selected.requester_name},%0A%0AYour trip request for ${selected.departure_date ? new Date(selected.departure_date+"T00:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "upcoming trip"} has been reviewed.%0A%0AStatus: ${selected.status}%0A%0APlease reach out if you have any questions.%0A%0ADavid Robertson%0AProject Kanyea`}
+                     style={{ padding:"6px 12px", border:"1.5px solid #34C759", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"#34C759", textDecoration:"none" }}>
+                    Email
+                  </a>
+                )}
+                {selected.requester_whatsapp && (
+                  <a href={`https://wa.me/${selected.requester_whatsapp.replace(/\D/g,"")}?text=Hi ${encodeURIComponent(selected.requester_name)}, your trip request (${selected.departure_date||"upcoming"}) status is: ${selected.status}. Please reach out if you have questions. - David`}
+                     target="_blank" rel="noopener noreferrer"
+                     style={{ padding:"6px 12px", border:"1.5px solid #25D366", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"#25D366", textDecoration:"none" }}>
+                    WhatsApp
+                  </a>
+                )}
                 {["Pending","Approved","Denied","Amendment"].map(s => (
                   <button key={s} onClick={() => updateStatus(selected.id, s)}
                     style={{ padding:"6px 12px", border:`1.5px solid ${STATUS_COLORS[s]||"#8e8e93"}`, borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer",
