@@ -338,24 +338,6 @@
       });
     }
 
-    async function mergeQueueItem(queueId, targetChurchId, alias) {
-      const getRes = await fetch(`${SUPABASE_URL}/rest/v1/churches?id=eq.${targetChurchId}&select=aliases`, {
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
-      });
-      const [church] = await getRes.json();
-      const newAliases = [...(church?.aliases || []), alias];
-      await fetch(`${SUPABASE_URL}/rest/v1/churches?id=eq.${targetChurchId}`, {
-        method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: JSON.stringify({ aliases: newAliases })
-      });
-      await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue?id=eq.${queueId}`, {
-        method: "PATCH",
-        headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
-        body: JSON.stringify({ status: "merged", matched_church_id: targetChurchId })
-      });
-    }
-
     async function ignoreQueueItem(queueId) {
       await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue?id=eq.${queueId}`, {
         method: "PATCH",
@@ -1477,23 +1459,57 @@
 
     function ChurchDatabase({ churches, onAdd, onUpdate, onPlaceOrder, approvedChurches, churchQueue, onQueueAction }) {
 
+      // Generic words that don't distinguish one church from another —
+      // shared only on these, two names shouldn't be treated as a likely match.
+      const NAME_STOPWORDS = new Set(["church","christian","tabernacle","assembly","fellowship","message","end","time","local","village","town","district","the","and"]);
+
       function strSimilarity(a, b) {
         a = (a||"").toLowerCase().trim().replace(/\s+/g,' ');
         b = (b||"").toLowerCase().trim().replace(/\s+/g,' ');
+        if (!a || !b) return 0;
         if (a === b) return 1;
         if (a.includes(b) || b.includes(a)) return 0.85;
         const bigrams = s => { const bg = new Set(); for (let i=0;i<s.length-1;i++) bg.add(s[i]+s[i+1]); return bg; };
         const bg1 = bigrams(a), bg2 = bigrams(b);
         let intersect = 0; bg1.forEach(bg => { if (bg2.has(bg)) intersect++; });
-        const denom = bg1.size + bg2.size; return denom ? (2*intersect)/denom : 0;
+        const denom = bg1.size + bg2.size;
+        const bigramScore = denom ? (2*intersect)/denom : 0;
+        // Word-overlap: reward a shared distinctive word (e.g. "Nsinda") even when
+        // the rest of the name differs, since that's how these names actually drift.
+        const words = s => new Set(s.split(' ').filter(w => w.length >= 4 && !NAME_STOPWORDS.has(w)));
+        const w1 = words(a), w2 = words(b);
+        let sharedWords = 0; w1.forEach(w => { if (w2.has(w)) sharedWords++; });
+        const wordScore = sharedWords > 0 ? 0.6 + 0.1*Math.min(sharedWords,2) : 0;
+        return Math.max(bigramScore, wordScore);
       }
 
-      function getFuzzyMatches(rawName, churches) {
-        return (churches||[])
-          .map(c => ({ church: c, score: strSimilarity(rawName, c.name) }))
+      // Matches a raw submitted name against the real church roster (church_name,
+      // location, and pastor — whichever fields a given church has filled in),
+      // not the separate/legacy "approved names" list.
+      function getFuzzyMatches(rawName, churchList) {
+        return (churchList||[])
+          .filter(c => !c.archived)
+          .map(c => {
+            const candidates = [c.church_name, c.location, c.pastor].filter(Boolean);
+            const score = candidates.length ? Math.max(...candidates.map(v => strSimilarity(rawName, v))) : 0;
+            const name = c.church_name || c.location || c.pastor || `Church #${c.id}`;
+            return { church: { id: c.id, name }, score };
+          })
           .filter(m => m.score >= 0.55)
           .sort((a,b) => b.score - a.score)
           .slice(0, 3);
+      }
+
+      // Flags another PENDING queue item that looks like the same church, so the
+      // existing two-item "Merge Selected" tool can be reached in one click.
+      function getQueueDuplicate(item, allItems) {
+        let best = null;
+        (allItems||[]).forEach(other => {
+          if (other.id === item.id || other.status !== "pending") return;
+          const score = strSimilarity(item.raw_name, other.raw_name);
+          if (score >= 0.75 && (!best || score > best.score)) best = { item: other, score };
+        });
+        return best;
       }
 
       // ── Column definitions ─────────────────────────────────────────────────
@@ -1906,7 +1922,8 @@
               {showQueue && (
                 <div style={{ padding:"0 16px 16px", display:"flex", flexDirection:"column", gap:10 }}>
                   {churchQueue.map(item => {
-                    const matches = getFuzzyMatches(item.raw_name, approvedChurches||[]);
+                    const matches = getFuzzyMatches(item.raw_name, churches||[]);
+                    const dupe = getQueueDuplicate(item, churchQueue);
                     const working = queueWorking[item.id];
                     return (
                       <div key={item.id} style={{ background: queueMergeSel.includes(item.id) ? "rgba(255,149,0,0.07)" : "var(--surface2)", borderRadius:10, padding:"12px 14px", border: queueMergeSel.includes(item.id) ? "1px solid var(--warn)" : "1px solid var(--border)" }}>
@@ -1936,6 +1953,14 @@
                                 ))}
                               </div>
                             )}
+                            {dupe && (
+                              <div style={{ marginTop:4 }}>
+                                <button onClick={e => { e.stopPropagation(); setQueueMergeSel([item.id, dupe.item.id]); setShowQueueMerge(true); }}
+                                  style={{ fontSize:11, color:"var(--warn)", fontWeight:600, border:"none", background:"transparent", cursor:"pointer", padding:0, textDecoration:"underline" }}>
+                                  ⚠ Looks like a duplicate of "{dupe.item.raw_name}" — compare &amp; merge
+                                </button>
+                              </div>
+                            )}
                           </div>
                           <div style={{ display:"flex", gap:6, alignItems:"center", flexWrap:"wrap" }}>
                             {matches.length > 0 && (
@@ -1943,8 +1968,8 @@
                                 value={mergeTargets[item.id]||""}
                                 onChange={e => setMergeTargets(t=>({...t,[item.id]:e.target.value}))}
                                 style={{ fontSize:12, padding:"5px 8px", borderRadius:7, border:"1px solid var(--border-strong)", background:"var(--surface)", color:"var(--text)", maxWidth:180 }}>
-                                <option value="">Merge into…</option>
-                                {(approvedChurches||[]).map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                                <option value="">Attach to church…</option>
+                                {(churches||[]).filter(c=>!c.archived).map(c => <option key={c.id} value={c.id}>{c.church_name || c.location || c.pastor || `Church #${c.id}`}</option>)}
                               </select>
                             )}
                             <button disabled={working} onClick={async () => {
@@ -1955,9 +1980,15 @@
                             {mergeTargets[item.id] && (
                               <button disabled={working} onClick={async () => {
                                 setQueueWorking(w=>({...w,[item.id]:true}));
-                                await mergeQueueItem(item.id, mergeTargets[item.id], item.raw_name);
+                                const target = (churches||[]).find(c => c.id === Number(mergeTargets[item.id]));
+                                if (target) onUpdate({ ...target, church_name: item.raw_name });
+                                await fetch(`${SUPABASE_URL}/rest/v1/church_name_queue?id=eq.${item.id}`, {
+                                  method: "PATCH",
+                                  headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}`, "Content-Type": "application/json", Prefer: "return=minimal" },
+                                  body: JSON.stringify({ status: "merged" })
+                                });
                                 onQueueAction && onQueueAction();
-                              }} style={{ fontSize:12, padding:"5px 10px", borderRadius:7, border:"none", background:"var(--accent)", color:"#fff", fontWeight:600, cursor:"pointer", opacity:working?0.5:1 }}>Merge</button>
+                              }} style={{ fontSize:12, padding:"5px 10px", borderRadius:7, border:"none", background:"var(--accent)", color:"#fff", fontWeight:600, cursor:"pointer", opacity:working?0.5:1 }}>Attach</button>
                             )}
                             <button disabled={working} onClick={async () => {
                               setQueueWorking(w=>({...w,[item.id]:true}));
