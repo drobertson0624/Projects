@@ -24,6 +24,7 @@
       --warn:#FF9500; --warn-light:rgba(255,149,0,0.10);
       --danger:#FF3B30; --danger-light:rgba(255,59,48,0.09);
       --success:#34C759; --success-light:rgba(52,199,89,0.10);
+      --purple:#8b5cf6; --purple-light:rgba(139,92,246,0.10);
       --shadow-sm:0 1px 3px rgba(0,0,0,0.08),0 1px 2px rgba(0,0,0,0.04);
       --shadow-lg:0 12px 40px rgba(0,0,0,0.10),0 2px 8px rgba(0,0,0,0.05);
       --radius:18px; --radius-sm:12px; --radius-xs:8px;
@@ -1447,7 +1448,7 @@
         <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"32px 16px" }}>
           <div style={{ width:"100%", maxWidth:400, background:"var(--surface)", border:"1px solid var(--border)", borderRadius:22, overflow:"hidden", boxShadow:"var(--shadow-lg)" }}>
             <div style={{ padding:"36px 32px 0" }}>
-              <div style={{ width:48, height:48, borderRadius:13, background:"rgba(0,122,255,0.09)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
+              <div style={{ width:48, height:48, borderRadius:13, background:"var(--accent-light)", display:"flex", alignItems:"center", justifyContent:"center", marginBottom:18 }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
               </div>
               <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.02em", marginBottom:5 }}>Admin Portal</div>
@@ -1881,7 +1882,7 @@
             <div style={{ margin:"12px 16px 0", background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:14, overflow:"hidden" }}>
               <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", padding:"12px 16px", background:"rgba(255,149,0,0.06)" }}>
                 <div onClick={() => setShowQueue(q=>!q)} style={{ display:"flex", alignItems:"center", gap:10, cursor:"pointer", flex:1 }}>
-                  <span style={{ background:"#FF9500", color:"#fff", borderRadius:10, fontSize:11, fontWeight:700, padding:"2px 8px" }}>{churchQueue.length}</span>
+                  <span style={{ background:"var(--warn)", color:"#fff", borderRadius:10, fontSize:11, fontWeight:700, padding:"2px 8px" }}>{churchQueue.length}</span>
                   <span style={{ fontWeight:600, fontSize:14 }}>Church Names to Review</span>
                   <span style={{ fontSize:12, color:"var(--text-muted)" }}>
                     {churchQueue.filter(i=>i.source==="survey").length > 0 && `${churchQueue.filter(i=>i.source==="survey").length} from survey · `}
@@ -1890,7 +1891,7 @@
                 </div>
                 <div style={{ display:"flex", gap:8, alignItems:"center" }}>
                   {queueMergeSel.length === 2 && (
-                    <button onClick={() => setShowQueueMerge(true)} style={{ fontSize:12, padding:"5px 12px", border:"none", borderRadius:7, background:"#FF9500", color:"#fff", fontWeight:600, cursor:"pointer" }}>
+                    <button onClick={() => setShowQueueMerge(true)} style={{ fontSize:12, padding:"5px 12px", border:"none", borderRadius:7, background:"var(--warn)", color:"#fff", fontWeight:600, cursor:"pointer" }}>
                       Merge Selected
                     </button>
                   )}
@@ -1908,7 +1909,7 @@
                     const matches = getFuzzyMatches(item.raw_name, approvedChurches||[]);
                     const working = queueWorking[item.id];
                     return (
-                      <div key={item.id} style={{ background: queueMergeSel.includes(item.id) ? "rgba(255,149,0,0.07)" : "var(--surface2)", borderRadius:10, padding:"12px 14px", border: queueMergeSel.includes(item.id) ? "1px solid #FF9500" : "1px solid var(--border)" }}>
+                      <div key={item.id} style={{ background: queueMergeSel.includes(item.id) ? "rgba(255,149,0,0.07)" : "var(--surface2)", borderRadius:10, padding:"12px 14px", border: queueMergeSel.includes(item.id) ? "1px solid var(--warn)" : "1px solid var(--border)" }}>
                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", flexWrap:"wrap", gap:8 }}>
                           <div style={{ display:"flex", alignItems:"flex-start", gap:8 }}>
                             <input type="checkbox" checked={queueMergeSel.includes(item.id)} onChange={e => {
@@ -1918,7 +1919,7 @@
                                 if (sel.length >= 2) return sel;
                                 return [...sel, item.id];
                               });
-                            }} style={{ marginTop:3, cursor:"pointer", accentColor:"#FF9500", flexShrink:0 }} />
+                            }} style={{ marginTop:3, cursor:"pointer", accentColor:"var(--warn)", flexShrink:0 }} />
                           <div>
                             <span style={{ fontWeight:600, fontSize:14 }}>{item.raw_name}</span>
                             {item.source === "survey" && (
@@ -1927,7 +1928,7 @@
                             <span style={{ marginLeft:8, fontSize:12, color:"var(--text-muted)" }}>{item.submission_count} submission{item.submission_count!==1?"s":""}</span>
                             {matches.length > 0 && (
                               <div style={{ marginTop:4 }}>
-                                <span style={{ fontSize:11, color:"#FF9500", fontWeight:600 }}>Possible match: </span>
+                                <span style={{ fontSize:11, color:"var(--warn)", fontWeight:600 }}>Possible match: </span>
                                 {matches.map((m,i) => (
                                   <span key={i} style={{ fontSize:11, color:"var(--text-secondary)", marginRight:6 }}>
                                     "{m.church.name}" ({Math.round(m.score*100)}%)
@@ -1950,13 +1951,13 @@
                               setQueueWorking(w=>({...w,[item.id]:true}));
                               await approveQueueItem(item.id, item.raw_name);
                               onQueueAction && onQueueAction();
-                            }} style={{ fontSize:12, padding:"5px 10px", borderRadius:7, border:"none", background:"#34C759", color:"#fff", fontWeight:600, cursor:"pointer", opacity:working?0.5:1 }}>Approve</button>
+                            }} style={{ fontSize:12, padding:"5px 10px", borderRadius:7, border:"none", background:"var(--success)", color:"#fff", fontWeight:600, cursor:"pointer", opacity:working?0.5:1 }}>Approve</button>
                             {mergeTargets[item.id] && (
                               <button disabled={working} onClick={async () => {
                                 setQueueWorking(w=>({...w,[item.id]:true}));
                                 await mergeQueueItem(item.id, mergeTargets[item.id], item.raw_name);
                                 onQueueAction && onQueueAction();
-                              }} style={{ fontSize:12, padding:"5px 10px", borderRadius:7, border:"none", background:"#007AFF", color:"#fff", fontWeight:600, cursor:"pointer", opacity:working?0.5:1 }}>Merge</button>
+                              }} style={{ fontSize:12, padding:"5px 10px", borderRadius:7, border:"none", background:"var(--accent)", color:"#fff", fontWeight:600, cursor:"pointer", opacity:working?0.5:1 }}>Merge</button>
                             )}
                             <button disabled={working} onClick={async () => {
                               setQueueWorking(w=>({...w,[item.id]:true}));
@@ -2261,7 +2262,7 @@
                 <div style={{ borderTop:"1px solid var(--border)", paddingTop:16 }}>
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                     <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em" }}>Visit History</div>
-                    <button onClick={() => setShowVisitForm(v=>!v)} style={{ padding:"5px 12px", background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", borderRadius:8, fontSize:12, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>
+                    <button onClick={() => setShowVisitForm(v=>!v)} style={{ padding:"5px 12px", background:"var(--accent-light)", border:"1px solid rgba(0,122,255,0.2)", borderRadius:8, fontSize:12, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>
                       {showVisitForm ? "Cancel" : "+ Log a Visit"}
                     </button>
                   </div>
@@ -2417,7 +2418,7 @@
             <div style={{ display:"flex", alignItems:"center", gap:8 }}>
               <span style={{ fontSize:12, color:"var(--text-muted)" }}>Rows:</span>
               {[10,25,50].map(n => (
-                <button key={n} onClick={() => { setPageSize(n); setPage(1); }} style={{ padding:"3px 9px", borderRadius:7, border:"1px solid", fontSize:12, cursor:"pointer", borderColor:pageSize===n?"var(--accent)":"var(--border-strong)", background:pageSize===n?"rgba(0,122,255,0.09)":"transparent", color:pageSize===n?"var(--accent)":"var(--text-muted)", fontWeight:pageSize===n?600:400 }}>{n}</button>
+                <button key={n} onClick={() => { setPageSize(n); setPage(1); }} style={{ padding:"3px 9px", borderRadius:7, border:"1px solid", fontSize:12, cursor:"pointer", borderColor:pageSize===n?"var(--accent)":"var(--border-strong)", background:pageSize===n?"var(--accent-light)":"transparent", color:pageSize===n?"var(--accent)":"var(--text-muted)", fontWeight:pageSize===n?600:400 }}>{n}</button>
               ))}
             </div>
             <div style={{ fontSize:12, color:"var(--text-muted)" }}>
@@ -2566,7 +2567,7 @@
                 <div style={{ borderTop:"1px solid var(--border)", paddingTop:16, marginBottom:16 }}>
                   <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12 }}>
                     <div style={{ fontSize:11, fontWeight:600, textTransform:"uppercase", color:"var(--text-muted)", letterSpacing:"0.06em" }}>Visit Log</div>
-                    <button onClick={() => setShowVisitForm(v=>!v)} style={{ padding:"5px 12px", background:"rgba(0,122,255,0.09)", border:"1px solid rgba(0,122,255,0.2)", borderRadius:8, fontSize:12, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>
+                    <button onClick={() => setShowVisitForm(v=>!v)} style={{ padding:"5px 12px", background:"var(--accent-light)", border:"1px solid rgba(0,122,255,0.2)", borderRadius:8, fontSize:12, fontWeight:600, color:"var(--accent)", cursor:"pointer" }}>
                       {showVisitForm ? "Cancel" : "+ Log a Visit"}
                     </button>
                   </div>
@@ -2834,7 +2835,7 @@
         byRegion[c.region].churches.push(c);
       });
 
-      const sCol = s => s==="STRONG"?"#34C759":s==="Growing"?"#FF9500":"#007AFF";
+      const sCol = s => s==="STRONG"?"var(--success)":s==="Growing"?"var(--warn)":"var(--accent)";
 
       // Add CSS for pulse animation once
       React.useEffect(() => {
@@ -2894,9 +2895,9 @@
             <div style="font-family:-apple-system,sans-serif;min-width:180px;">
               <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;">
                 <div style="width:10px;height:10px;border-radius:50%;background:${rp.color};flex-shrink:0;"></div>
-                <div style="font-size:15px;font-weight:700;color:#1d1d1f;">Rally Point: ${rp.name}</div>
+                <div style="font-size:15px;font-weight:700;color:var(--text);">Rally Point: ${rp.name}</div>
               </div>
-              <div style="padding:8px;background:#f7f7f7;border-radius:8px;font-size:13px;color:#444;">
+              <div style="padding:8px;background:var(--surface2);border-radius:8px;font-size:13px;color:#444;">
                 <div style="margin-bottom:4px;"><strong>Radius:</strong> ${rp.radiusMiles} miles</div>
                 <div><strong>Coords:</strong> ${rp.lat.toFixed(4)}, ${rp.lng.toFixed(4)}</div>
               </div>
@@ -2936,7 +2937,7 @@
               iconSize:[r*2,r*2], iconAnchor:[r,r], popupAnchor:[0,-r-4],
             });
             const marker = window.L.marker([c.lat,c.lng], {icon});
-            marker.bindPopup(`<div style="font-family:-apple-system,sans-serif;min-width:200px;"><div style="font-size:14px;font-weight:700;color:#1d1d1f;margin-bottom:4px;">${c.pastor}</div><div style="font-size:12px;color:#86868b;margin-bottom:10px;">${c.location}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Members</div><div style="font-size:14px;font-weight:700;color:#007AFF;">${c.members||"?"}</div></div><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Standing</div><div style="font-size:12px;font-weight:600;color:${col};">${c.standing||"—"}</div></div><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Region</div><div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.region}</div></div><div style="padding:7px 9px;background:#f7f7f7;border-radius:7px;"><div style="font-size:10px;font-weight:600;color:#86868b;text-transform:uppercase;margin-bottom:2px;">Country</div><div style="font-size:12px;font-weight:500;color:#1d1d1f;">${c.country}</div></div></div></div>`, {maxWidth:260});
+            marker.bindPopup(`<div style="font-family:-apple-system,sans-serif;min-width:200px;"><div style="font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px;">${c.pastor}</div><div style="font-size:12px;color:var(--text-muted);margin-bottom:10px;">${c.location}</div><div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;"><div style="padding:7px 9px;background:var(--surface2);border-radius:7px;"><div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;">Members</div><div style="font-size:14px;font-weight:700;color:var(--accent);">${c.members||"?"}</div></div><div style="padding:7px 9px;background:var(--surface2);border-radius:7px;"><div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;">Standing</div><div style="font-size:12px;font-weight:600;color:${col};">${c.standing||"—"}</div></div><div style="padding:7px 9px;background:var(--surface2);border-radius:7px;"><div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;">Region</div><div style="font-size:12px;font-weight:500;color:var(--text);">${c.region}</div></div><div style="padding:7px 9px;background:var(--surface2);border-radius:7px;"><div style="font-size:10px;font-weight:600;color:var(--text-muted);text-transform:uppercase;margin-bottom:2px;">Country</div><div style="font-size:12px;font-weight:500;color:var(--text);">${c.country}</div></div></div></div>`, {maxWidth:260});
             marker.addTo(map);
             markersRef.current.push(marker);
           });
@@ -3035,7 +3036,7 @@
                     <div style={{ display:"flex", gap:5 }}>
                       {RALLY_COLORS.map(col => (
                         <button key={col} onClick={() => updateRally(rp.id, { color:col })}
-                          style={{ width:20, height:20, borderRadius:"50%", background:col, border: rp.color===col?"2px solid #1d1d1f":"2px solid transparent", cursor:"pointer", transition:"transform 0.1s" }} />
+                          style={{ width:20, height:20, borderRadius:"50%", background:col, border: rp.color===col?"2px solid var(--text)":"2px solid transparent", cursor:"pointer", transition:"transform 0.1s" }} />
                       ))}
                     </div>
 
@@ -3078,7 +3079,7 @@
                       <div style={{ display:"flex", gap:7, marginTop:6 }}>
                         {RALLY_COLORS.map(col => (
                           <button key={col} onClick={() => setNewRally(p=>({...p,color:col}))}
-                            style={{ width:26, height:26, borderRadius:"50%", background:col, border: newRally.color===col?"3px solid #1d1d1f":"2px solid transparent", cursor:"pointer" }} />
+                            style={{ width:26, height:26, borderRadius:"50%", background:col, border: newRally.color===col?"3px solid var(--text)":"2px solid transparent", cursor:"pointer" }} />
                         ))}
                       </div>
                     </div>
@@ -3170,7 +3171,7 @@
                         <div style={{ display:"flex", gap:8, marginTop:8 }}>
                           {RALLY_COLORS.map(col => (
                             <button key={col} onClick={() => setEditingRally(r=>({...r,color:col}))}
-                              style={{ width:26, height:26, borderRadius:"50%", background:col, border: editingRally.color===col?"3px solid #1d1d1f":"2px solid transparent", cursor:"pointer" }} />
+                              style={{ width:26, height:26, borderRadius:"50%", background:col, border: editingRally.color===col?"3px solid var(--text)":"2px solid transparent", cursor:"pointer" }} />
                           ))}
                         </div>
                       </div>
@@ -3191,7 +3192,7 @@
           {viewMode==="map" && (
             <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", overflow:"hidden", boxShadow:"var(--shadow-sm)" }}>
               <div style={{ padding:"12px 20px", borderBottom:"1px solid var(--border)", display:"flex", gap:18, flexWrap:"wrap", alignItems:"center" }}>
-                {[["STRONG","#34C759"],["Growing","#FF9500"],["Stable","#007AFF"]].map(([l,c]) => (
+                {[["STRONG","var(--success)"],["Growing","var(--warn)"],["Stable","var(--accent)"]].map(([l,c]) => (
                   <div key={l} style={{ display:"flex", alignItems:"center", gap:6, fontSize:12, color:"var(--text-secondary)" }}>
                     <div style={{ width:10, height:10, borderRadius:"50%", background:c }} />{l}
                   </div>
@@ -3355,7 +3356,7 @@
         if (selected?.id===id) setSelected(s=>({...s, status}));
       };
 
-      const STATUS_COLORS = { Pending:"#FF9500", Approved:"#34C759", Denied:"#FF3B30", Amendment:"#8b5cf6" };
+      const STATUS_COLORS = { Pending:"var(--warn)", Approved:"var(--success)", Denied:"var(--danger)", Amendment:"var(--purple)" };
 
       const fmtDate = (d) => d ? new Date(d+"T00:00:00").toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
       const fmtUSD  = (n) => n != null ? "$"+parseFloat(n).toFixed(2) : "—";
@@ -3413,14 +3414,14 @@
             <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
               <button onClick={() => setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>← Back</button>
               <div style={{ fontSize:18, fontWeight:700 }}>{selected.requester_name}</div>
-              <span style={{ background: STATUS_COLORS[selected.status]||"#8e8e93", color:"#fff", borderRadius:8, fontSize:12, fontWeight:700, padding:"3px 10px" }}>{selected.status}</span>
+              <span style={{ background: STATUS_COLORS[selected.status]||"var(--text-muted)", color:"#fff", borderRadius:8, fontSize:12, fontWeight:700, padding:"3px 10px" }}>{selected.status}</span>
               <div style={{ marginLeft:"auto", display:"flex", gap:6, flexWrap:"wrap" }}>
                 <button onClick={() => editTrip(selected)}
                   style={{ padding:"6px 14px", border:"1.5px solid var(--accent)", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"var(--accent)" }}>
                   Edit Trip
                 </button>
                 <a href={buildAdminMailto(selected)}
-                   style={{ padding:"6px 14px", border:"1.5px solid #FF9500", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"#FF9500", textDecoration:"none" }}>
+                   style={{ padding:"6px 14px", border:"1.5px solid var(--warn)", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"var(--warn)", textDecoration:"none" }}>
                   Resend Email
                 </a>
                 {selected.requester_email && (
@@ -3429,7 +3430,7 @@
                     const body = `Hi ${selected.requester_name},\n\nYour trip request for ${selected.departure_date ? new Date(selected.departure_date+"T00:00:00").toLocaleDateString("en-US",{month:"long",day:"numeric",year:"numeric"}) : "upcoming trip"} has been reviewed.\n\nStatus: ${selected.status}\n\nPlease reach out if you have any questions.\n\nDavid Robertson\nProject Kanyea`;
                     return `mailto:${selected.requester_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
                   })()}
-                     style={{ padding:"6px 12px", border:"1.5px solid #34C759", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"#34C759", textDecoration:"none" }}>
+                     style={{ padding:"6px 12px", border:"1.5px solid var(--success)", borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color:"var(--success)", textDecoration:"none" }}>
                     Email
                   </a>
                 )}
@@ -3442,9 +3443,9 @@
                 )}
                 {["Pending","Approved","Denied","Amendment"].map(s => (
                   <button key={s} onClick={() => updateStatus(selected.id, s)}
-                    style={{ padding:"6px 12px", border:`1.5px solid ${STATUS_COLORS[s]||"#8e8e93"}`, borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer",
-                      background: selected.status===s ? (STATUS_COLORS[s]||"#8e8e93") : "transparent",
-                      color: selected.status===s ? "#fff" : (STATUS_COLORS[s]||"#8e8e93") }}>{s}</button>
+                    style={{ padding:"6px 12px", border:`1.5px solid ${STATUS_COLORS[s]||"var(--text-muted)"}`, borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer",
+                      background: selected.status===s ? (STATUS_COLORS[s]||"var(--text-muted)") : "transparent",
+                      color: selected.status===s ? "#fff" : (STATUS_COLORS[s]||"var(--text-muted)") }}>{s}</button>
                 ))}
               </div>
             </div>
@@ -3553,7 +3554,7 @@
                   <div style={{ flex:1 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                       <span style={{ fontWeight:700, fontSize:15 }}>{t.requester_name}</span>
-                      <span style={{ background: STATUS_COLORS[t.status]||"#8e8e93", color:"#fff", borderRadius:8, fontSize:11, fontWeight:700, padding:"2px 8px" }}>{t.status}</span>
+                      <span style={{ background: STATUS_COLORS[t.status]||"var(--text-muted)", color:"#fff", borderRadius:8, fontSize:11, fontWeight:700, padding:"2px 8px" }}>{t.status}</span>
                     </div>
                     <div style={{ fontSize:12, color:"var(--text-muted)" }}>
                       {t.region && <span>{t.region} &nbsp;·&nbsp; </span>}
@@ -3697,7 +3698,7 @@
           <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", overflow:"hidden", boxShadow:"var(--shadow-sm)", marginBottom:20 }}>
             {users.map((u,i) => (
               <div key={u.id} style={{ display:"flex", alignItems:"center", padding:"14px 18px", borderBottom:i<users.length-1?"1px solid var(--border)":"none", gap:12 }}>
-                <div style={{ width:36, height:36, borderRadius:"50%", background:"rgba(0,122,255,0.09)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:700, color:"var(--accent)", flexShrink:0 }}>{u.name.charAt(0)}</div>
+                <div style={{ width:36, height:36, borderRadius:"50%", background:"var(--accent-light)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:14, fontWeight:700, color:"var(--accent)", flexShrink:0 }}>{u.name.charAt(0)}</div>
                 <div style={{ flex:1 }}><div style={{ fontSize:14, fontWeight:600 }}>{u.name}</div><div style={{ fontSize:12, color:"var(--text-muted)" }}>{u.email}</div></div>
                 <span className={`tag ${u.role==="Admin"?"tag-green":"tag-gray"}`}>{u.role}</span>
                 <div style={{ fontSize:11, color:"var(--text-muted)" }}>{u.added}</div>
@@ -3943,7 +3944,7 @@
                   style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:14, padding:"16px 18px", boxShadow:"var(--shadow-sm)", cursor:"pointer", transition:"box-shadow 0.15s" }}>
                   {/* Row header */}
                   <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
-                    <div style={{ width:34, height:34, borderRadius:"50%", background:"rgba(0,122,255,0.09)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:"var(--accent)", flexShrink:0 }}>
+                    <div style={{ width:34, height:34, borderRadius:"50%", background:"var(--accent-light)", display:"flex", alignItems:"center", justifyContent:"center", fontSize:13, fontWeight:700, color:"var(--accent)", flexShrink:0 }}>
                       {(r.name||"?").charAt(0).toUpperCase()}
                     </div>
                     <div style={{ flex:1, minWidth:120 }}>
@@ -3954,7 +3955,7 @@
                       {r.overall_rating && <span className={`tag ${ratingColor(r.overall_rating)}`}>{r.overall_rating}</span>}
                       {r.network_type && <span className="tag tag-gray">{r.network_type}</span>}
                       {r.avg_start_time!=null && <span style={{ fontSize:12, fontWeight:600, color: r.avg_start_time>10?"var(--warn)":"var(--accent)" }}>{Number(r.avg_start_time).toFixed(1)}s</span>}
-                      {r.admin_notes && <span className="tag tag-blue" style={{ background:"rgba(0,122,255,0.09)", color:"var(--accent)" }}>📝 Note</span>}
+                      {r.admin_notes && <span className="tag tag-blue" style={{ background:"var(--accent-light)", color:"var(--accent)" }}>📝 Note</span>}
                       <div style={{ fontSize:11, color:"var(--text-muted)" }}>{r.created_at?new Date(r.created_at).toLocaleDateString("en-US",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):""}</div>
                     </div>
                     {/* Delete button */}
@@ -4112,7 +4113,7 @@
           {/* RSS Link card */}
           <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius)", padding:24, boxShadow:"var(--shadow-sm)", marginBottom:16 }}>
             <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:16 }}>
-              <div style={{ width:36, height:36, borderRadius:10, background:"rgba(0,122,255,0.09)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
+              <div style={{ width:36, height:36, borderRadius:10, background:"var(--accent-light)", display:"flex", alignItems:"center", justifyContent:"center", flexShrink:0 }}>
                 <SvgIcon name="link" size={16} color="var(--accent)" />
               </div>
               <div>
@@ -4369,7 +4370,7 @@
                   {items.map(item => {
                     const inOrder = orderItems.find(i => i.id === item.id);
                     return (
-                      <button key={item.id} onClick={() => addItem(item)} style={{ padding:"7px 13px", borderRadius:20, border:"1px solid", fontSize:13, fontWeight:500, cursor:"pointer", transition:"all 0.15s", borderColor: inOrder?"var(--accent)":"var(--border-strong)", background: inOrder?"rgba(0,122,255,0.09)":"var(--surface2)", color: inOrder?"var(--accent)":"var(--text)" }}>
+                      <button key={item.id} onClick={() => addItem(item)} style={{ padding:"7px 13px", borderRadius:20, border:"1px solid", fontSize:13, fontWeight:500, cursor:"pointer", transition:"all 0.15s", borderColor: inOrder?"var(--accent)":"var(--border-strong)", background: inOrder?"var(--accent-light)":"var(--surface2)", color: inOrder?"var(--accent)":"var(--text)" }}>
                         {inOrder && <span style={{ marginRight:5, fontWeight:700 }}>{inOrder.qty}×</span>}{item.name}
                       </button>
                     );
@@ -4448,7 +4449,7 @@
 
       const STATUS = ["New","In Progress","Shipped"];
       const statusColor = s => s==="New"?"tag-blue":s==="In Progress"?"tag-warn":"tag-green";
-      const statusBg    = s => s==="New"?"rgba(0,122,255,0.09)":s==="In Progress"?"var(--warn-light)":"var(--success-light)";
+      const statusBg    = s => s==="New"?"var(--accent-light)":s==="In Progress"?"var(--warn-light)":"var(--success-light)";
       const statusFg    = s => s==="New"?"var(--accent)":s==="In Progress"?"#8a5200":"#1a7a3a";
 
       const changeStatus = async (order, newStatus) => {
@@ -4635,8 +4636,8 @@
 
           {/* Copy toast */}
           {toast && (
-            <div style={{ position:"fixed", bottom:32, left:"50%", transform:"translateX(-50%)", background:"#1d1d1f", color:"#fff", padding:"12px 22px", borderRadius:100, fontSize:14, fontWeight:600, boxShadow:"0 4px 24px rgba(0,0,0,0.22)", zIndex:500, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap" }}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#34C759" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
+            <div style={{ position:"fixed", bottom:32, left:"50%", transform:"translateX(-50%)", background:"var(--text)", color:"#fff", padding:"12px 22px", borderRadius:100, fontSize:14, fontWeight:600, boxShadow:"0 4px 24px rgba(0,0,0,0.22)", zIndex:500, display:"flex", alignItems:"center", gap:8, whiteSpace:"nowrap" }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5"/></svg>
               {toast}
             </div>
           )}
@@ -4840,7 +4841,7 @@
                   <button key={key} onClick={() => switchTab(key)} className={`nav-tab${tab===key?" active":""}`}>
                     {label}
                     {key==="churches" && churchQueue.length > 0 && (
-                      <span style={{ marginLeft:5, background:"#FF9500", color:"#fff", borderRadius:10, fontSize:10, fontWeight:700, padding:"1px 6px", verticalAlign:"middle" }}>{churchQueue.length}</span>
+                      <span style={{ marginLeft:5, background:"var(--warn)", color:"#fff", borderRadius:10, fontSize:10, fontWeight:700, padding:"1px 6px", verticalAlign:"middle" }}>{churchQueue.length}</span>
                     )}
                   </button>
                 ))}
