@@ -3708,6 +3708,437 @@
       );
     }
 
+    // ── Equipment Requests ────────────────────────────────────────────────────
+    const EQ_PUBLIC_FORM_URL = "https://drobertson0624.github.io/Projects/equipment-request.html";
+    const EQ_CURRENCIES = [
+      { code:"UGX", label:"Uganda (UGX)", fallback:3700 },
+      { code:"KES", label:"Kenya (KES)",  fallback:129  },
+    ];
+    const EQ_STATUS_COLORS = { Pending:"var(--warn)", Approved:"var(--success)", Denied:"var(--danger)" };
+    const eqInp = { width:"100%", padding:"9px 12px", border:"1.5px solid var(--border-strong)", borderRadius:8, fontSize:14, color:"var(--text)", background:"var(--surface2)", fontFamily:"inherit" };
+    const eqLabel = { fontSize:11, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.4px", color:"var(--text-muted)" };
+    const eqSection = { fontSize:12, fontWeight:700, textTransform:"uppercase", letterSpacing:"0.6px", color:"var(--accent)", marginBottom:14 };
+    const eqCard = { background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:12, padding:20, marginBottom:14 };
+    // Defined outside the component so inputs keep focus while typing
+    function EqField({ label, children }) {
+      return (
+        <div style={{ display:"flex", flexDirection:"column", gap:5 }}>
+          <label style={eqLabel}>{label}</label>
+          {children}
+        </div>
+      );
+    }
+    const eqLineTotal = (it) => (parseFloat(it.qty)||0) * (parseFloat(it.unit_cost)||0);
+    const eqFmtLocal  = (n, code) => `${Math.round(parseFloat(n)||0).toLocaleString()} ${code||""}`.trim();
+    const eqFmtUSD    = (n) => "$" + (parseFloat(n)||0).toFixed(2);
+
+    function EquipmentTab() {
+      const [view, setView]           = React.useState("list"); // "list" | "form"
+      const [requests, setRequests]   = React.useState([]);
+      const [loading, setLoading]     = React.useState(true);
+      const [loadError, setLoadError] = React.useState("");
+      const [selected, setSelected]   = React.useState(null);
+      const [saving, setSaving]       = React.useState(false);
+      const [editingId, setEditingId] = React.useState(null);
+      const [copied, setCopied]       = React.useState(false);
+
+      const blankItem = () => ({ item:"", notes:"", qty:1, unit_cost:"" });
+      const blank = () => ({ requester_name:"", region:"", reason:"", notes:"", submitted_by:"", requester_email:"", requester_whatsapp:"", currency_code:"UGX", exchange_rate:3700, items:[blankItem()] });
+      const [form, setForm] = React.useState(blank());
+
+      const loadRequests = async () => {
+        setLoading(true); setLoadError("");
+        try {
+          const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_requests?order=submitted_at.desc`, {
+            headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}` }
+          });
+          if (res.ok) setRequests(await res.json());
+          else setLoadError("Could not load equipment requests. Has the equipment_requests table been created in Supabase?");
+        } catch(e) { console.warn("loadRequests:", e); setLoadError("Could not reach the database."); }
+        setLoading(false);
+      };
+      React.useEffect(() => { loadRequests(); }, []);
+
+      const rate      = parseFloat(form.exchange_rate) || 1;
+      const code      = form.currency_code || "UGX";
+      const totalLocal = form.items.reduce((s,it) => s + eqLineTotal(it), 0);
+      const totalUSD   = totalLocal / rate;
+
+      const setField   = (k, v) => setForm(f => ({ ...f, [k]: v }));
+      const updateItem = (i, k, v) => setForm(f => { const items = [...f.items]; items[i] = { ...items[i], [k]: v }; return { ...f, items }; });
+      const addItem    = () => setForm(f => ({ ...f, items: [...f.items, blankItem()] }));
+      const removeItem = (i) => setForm(f => ({ ...f, items: f.items.filter((_,idx) => idx !== i) }));
+      const changeCurrency = (c) => {
+        const cur = EQ_CURRENCIES.find(x => x.code === c);
+        setForm(f => ({ ...f, currency_code:c, exchange_rate: cur ? cur.fallback : f.exchange_rate }));
+      };
+
+      const openNew = () => { setForm(blank()); setEditingId(null); setView("form"); };
+      const closeForm = () => { setView("list"); setEditingId(null); setForm(blank()); };
+
+      const editRequest = (r) => {
+        setForm({
+          requester_name:     r.requester_name || "",
+          region:             r.region || "",
+          reason:             r.reason || "",
+          notes:              r.notes || "",
+          submitted_by:       r.submitted_by || "",
+          requester_email:    r.requester_email || "",
+          requester_whatsapp: r.requester_whatsapp || "",
+          currency_code:      r.currency_code || "UGX",
+          exchange_rate:      r.exchange_rate || 3700,
+          items: (r.items_json && r.items_json.length ? r.items_json : [blankItem()]).map(it => ({
+            item: it.item || "", notes: it.notes || "", qty: it.qty ?? 1, unit_cost: it.unit_cost ?? ""
+          })),
+        });
+        setEditingId(r.id);
+        setSelected(null);
+        setView("form");
+      };
+
+      const submitForm = async () => {
+        if (!form.requester_name.trim()) { alert("Full name is required."); return; }
+        if (!form.reason.trim())         { alert("Please explain why this equipment is needed."); return; }
+        const items = form.items
+          .filter(it => it.item.trim())
+          .map(it => ({ item: it.item.trim(), notes: it.notes.trim(), qty: parseFloat(it.qty)||0, unit_cost: parseFloat(it.unit_cost)||0, line_total: eqLineTotal(it) }));
+        if (!items.length) { alert("Please add at least one item."); return; }
+        const local = items.reduce((s,it) => s + it.line_total, 0);
+        setSaving(true);
+        const payload = {
+          requester_name:     form.requester_name.trim(),
+          region:             form.region.trim(),
+          reason:             form.reason.trim(),
+          items_json:         items,
+          currency_code:      code,
+          exchange_rate:      rate,
+          total_local:        local,
+          total_usd:          parseFloat((local / rate).toFixed(2)),
+          notes:              form.notes.trim(),
+          submitted_by:       form.submitted_by.trim(),
+          requester_email:    form.requester_email.trim() || null,
+          requester_whatsapp: form.requester_whatsapp.trim() || null,
+        };
+        const isEdit = !!editingId;
+        if (!isEdit) payload.status = "Pending";
+        const res = await fetch(isEdit ? `${SUPABASE_URL}/rest/v1/equipment_requests?id=eq.${editingId}` : `${SUPABASE_URL}/rest/v1/equipment_requests`, {
+          method: isEdit ? "PATCH" : "POST",
+          headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json", Prefer:"return=minimal" },
+          body: JSON.stringify(payload)
+        });
+        setSaving(false);
+        if (res.ok) { closeForm(); loadRequests(); }
+        else alert("Save failed: " + await res.text());
+      };
+
+      const updateStatus = async (id, status) => {
+        await fetch(`${SUPABASE_URL}/rest/v1/equipment_requests?id=eq.${id}`, {
+          method:"PATCH",
+          headers:{ apikey:SUPABASE_KEY, Authorization:`Bearer ${SUPABASE_KEY}`, "Content-Type":"application/json", Prefer:"return=minimal" },
+          body: JSON.stringify({ status })
+        });
+        setRequests(rs => rs.map(r => r.id===id ? { ...r, status } : r));
+        if (selected?.id===id) setSelected(s => ({ ...s, status }));
+      };
+
+      const copyLink = () => {
+        try { navigator.clipboard.writeText(EQ_PUBLIC_FORM_URL); setCopied(true); setTimeout(() => setCopied(false), 1800); } catch(e) {}
+      };
+
+      const buildAdminMailto = (r) => {
+        const c = r.currency_code || "UGX";
+        const div = "------------------------------------------------------------";
+        const lines = [];
+        lines.push("EAST AFRICA EQUIPMENT REQUEST - PROJECT KANYEA");
+        lines.push(div);
+        lines.push(`Requester:    ${r.requester_name}`);
+        lines.push(`Region:       ${r.region || "Not specified"}`);
+        lines.push(`Submitted By: ${r.submitted_by || "Not specified"}`);
+        lines.push(`Status:       ${r.status}`);
+        lines.push(`Currency:     ${c}`);
+        lines.push("");
+        lines.push("REASON FOR EQUIPMENT");
+        lines.push(r.reason || "Not specified");
+        lines.push("");
+        lines.push(div);
+        lines.push("ITEMS");
+        (r.items_json || []).forEach((it, i) => {
+          const note = it.notes ? `  [${it.notes}]` : "";
+          lines.push(`  ${i+1}. ${it.item}  x${it.qty}  @ ${eqFmtLocal(it.unit_cost, c)}  =  ${eqFmtLocal(it.line_total, c)}${note}`);
+        });
+        lines.push(div);
+        lines.push(`TOTAL: ${eqFmtLocal(r.total_local, c)} / ${eqFmtUSD(r.total_usd)} USD`);
+        if (r.notes) { lines.push(""); lines.push("NOTES"); lines.push(r.notes); }
+        lines.push("");
+        lines.push("Submitted via East Africa Equipment Request Form");
+        return `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${encodeURIComponent(`Equipment Request - ${r.requester_name}`)}&body=${encodeURIComponent(lines.join("\n"))}`;
+      };
+
+      const fmtSubmitted = (d) => d ? new Date(d).toLocaleDateString("en-US",{month:"short",day:"numeric",year:"numeric"}) : "—";
+      const badge = (s, size=12) => (
+        <span style={{ background: EQ_STATUS_COLORS[s]||"var(--text-muted)", color:"#fff", borderRadius:8, fontSize:size-1, fontWeight:700, padding: size>11 ? "3px 10px" : "2px 8px" }}>{s}</span>
+      );
+
+      // ── Detail view ──
+      if (selected) {
+        const r = selected;
+        const c = r.currency_code || "UGX";
+        const btn = (color) => ({ padding:"6px 14px", border:`1.5px solid ${color}`, borderRadius:8, fontSize:12, fontWeight:600, cursor:"pointer", background:"transparent", color, textDecoration:"none" });
+        return (
+          <div style={{ flex:1, overflowY:"auto", padding:"24px", maxWidth:860, margin:"0 auto", width:"100%" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20, flexWrap:"wrap" }}>
+              <button onClick={() => setSelected(null)} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>← Back</button>
+              <div style={{ fontSize:18, fontWeight:700 }}>{r.requester_name}</div>
+              {badge(r.status)}
+              <div style={{ marginLeft:"auto", display:"flex", gap:6, flexWrap:"wrap" }}>
+                <button onClick={() => editRequest(r)} style={btn("var(--accent)")}>Edit Request</button>
+                <a href={buildAdminMailto(r)} style={btn("var(--warn)")}>Resend Email</a>
+                {r.requester_email && (
+                  <a href={`mailto:${r.requester_email}?subject=${encodeURIComponent(`Equipment Request ${r.status} - ${r.requester_name}`)}&body=${encodeURIComponent(`Hi ${r.requester_name},\n\nYour equipment request has been reviewed.\n\nStatus: ${r.status}\n\nPlease reach out if you have any questions.\n\nDavid Robertson\nProject Kanyea`)}`} style={btn("var(--success)")}>Email</a>
+                )}
+                {r.requester_whatsapp && (
+                  <a href={`https://wa.me/${r.requester_whatsapp.replace(/\D/g,"")}?text=${encodeURIComponent(`Hi ${r.requester_name}, your equipment request status is: ${r.status}. Please reach out if you have questions. - David`)}`}
+                     target="_blank" rel="noopener noreferrer" style={btn("#25D366")}>WhatsApp</a>
+                )}
+                {["Pending","Approved","Denied"].map(s => (
+                  <button key={s} onClick={() => updateStatus(r.id, s)}
+                    style={{ ...btn(EQ_STATUS_COLORS[s]), padding:"6px 12px", background: r.status===s ? EQ_STATUS_COLORS[s] : "transparent", color: r.status===s ? "#fff" : EQ_STATUS_COLORS[s] }}>{s}</button>
+                ))}
+              </div>
+            </div>
+
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:16 }}>
+              {[["Region", r.region],["Submitted By", r.submitted_by],["Submitted", fmtSubmitted(r.submitted_at)],["Total", eqFmtUSD(r.total_usd)+" USD"]].map(([l,v]) => (
+                <div key={l} style={{ background:"var(--surface2)", borderRadius:10, padding:"12px 14px" }}>
+                  <div style={{ ...eqLabel, marginBottom:4 }}>{l}</div>
+                  <div style={{ fontSize:14, fontWeight:600 }}>{v||"—"}</div>
+                </div>
+              ))}
+            </div>
+
+            {r.reason && (
+              <div style={{ background:"var(--surface2)", borderRadius:10, padding:"14px 16px", marginBottom:14 }}>
+                <div style={{ ...eqLabel, marginBottom:6 }}>Reason for Equipment</div>
+                <div style={{ fontSize:14, lineHeight:1.5, whiteSpace:"pre-wrap" }}>{r.reason}</div>
+              </div>
+            )}
+
+            <div style={{ border:"1.5px solid var(--border-strong)", borderRadius:12, padding:18, marginBottom:12 }}>
+              <div style={{ fontSize:13, fontWeight:700, color:"var(--accent)", textTransform:"uppercase", letterSpacing:"0.5px", marginBottom:10 }}>Items</div>
+              <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+                <thead><tr>{["Item","Notes","Qty",`Unit (${c})`,`Total (${c})`,"USD"].map((h,i) => <th key={h} style={{ ...eqLabel, textAlign: i>=2 ? "right" : "left", paddingBottom:6 }}>{h}</th>)}</tr></thead>
+                <tbody>
+                  {(r.items_json||[]).map((it,i) => (
+                    <tr key={i}>
+                      <td style={{ padding:"4px 0", fontWeight:500 }}>{it.item}</td>
+                      <td style={{ padding:"4px 8px", color:"var(--text-muted)", fontSize:12 }}>{it.notes||""}</td>
+                      <td style={{ textAlign:"right", padding:"4px 0" }}>{it.qty}</td>
+                      <td style={{ textAlign:"right", padding:"4px 0 4px 8px" }}>{Math.round(it.unit_cost||0).toLocaleString()}</td>
+                      <td style={{ textAlign:"right", padding:"4px 0 4px 8px" }}>{Math.round(it.line_total||0).toLocaleString()}</td>
+                      <td style={{ textAlign:"right", padding:"4px 0 4px 8px", fontWeight:600, color:"#065f46" }}>{eqFmtUSD((it.line_total||0) / (r.exchange_rate||1))}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ borderTop:"1.5px solid var(--border)" }}>
+                    <td colSpan={4} style={{ paddingTop:8, fontWeight:700 }}>Subtotal</td>
+                    <td style={{ textAlign:"right", paddingTop:8, fontWeight:700 }}>{Math.round(r.total_local||0).toLocaleString()}</td>
+                    <td style={{ textAlign:"right", paddingTop:8, fontWeight:700, color:"#065f46" }}>{eqFmtUSD(r.total_usd)}</td>
+                  </tr>
+                </tbody>
+              </table>
+              {r.exchange_rate && <div style={{ fontSize:11, color:"var(--text-muted)", marginTop:10 }}>Rate used: 1 USD = {parseFloat(r.exchange_rate).toLocaleString()} {c}</div>}
+            </div>
+
+            {r.notes && (
+              <div style={{ background:"var(--surface2)", borderRadius:10, padding:"14px 16px", marginTop:4 }}>
+                <div style={{ ...eqLabel, marginBottom:6 }}>Notes</div>
+                <div style={{ fontSize:14, lineHeight:1.5, whiteSpace:"pre-wrap" }}>{r.notes}</div>
+              </div>
+            )}
+
+            <div style={{ marginTop:16, display:"flex", gap:8 }}>
+              <div style={{ flex:1, background:"var(--surface2)", borderRadius:10, padding:"14px 18px", textAlign:"center" }}>
+                <div style={{ fontSize:12, color:"var(--text-muted)" }}>Total ({c})</div>
+                <div style={{ fontSize:18, fontWeight:800 }}>{eqFmtLocal(r.total_local, c)}</div>
+              </div>
+              <div style={{ flex:1, background:"#f0fdf8", border:"1.5px solid #a7f3d0", borderRadius:10, padding:"14px 18px", textAlign:"center" }}>
+                <div style={{ fontSize:12, color:"#065f46" }}>Total Requested (USD)</div>
+                <div style={{ fontSize:22, fontWeight:800, color:"#065f46" }}>{eqFmtUSD(r.total_usd)}</div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      // ── List view ──
+      if (view === "list") return (
+        <div style={{ flex:1, overflowY:"auto", padding:"24px" }}>
+          <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:20, gap:10, flexWrap:"wrap" }}>
+            <div>
+              <div style={{ fontSize:20, fontWeight:700, letterSpacing:"-0.025em" }}>Equipment Requests</div>
+              <div style={{ fontSize:13, color:"var(--text-muted)", marginTop:2 }}>Field equipment requests — Project Kanyea</div>
+            </div>
+            <div style={{ display:"flex", gap:8 }}>
+              <button onClick={copyLink} style={{ padding:"9px 14px", border:"1.5px solid var(--border-strong)", borderRadius:9, background:"var(--surface)", color:"var(--text-secondary)", fontSize:13, fontWeight:600, cursor:"pointer" }}>{copied ? "Link Copied" : "Copy Public Form Link"}</button>
+              <button onClick={openNew} style={{ padding:"9px 16px", border:"none", borderRadius:9, background:"var(--accent)", color:"#fff", fontSize:13, fontWeight:600, cursor:"pointer" }}>+ New Request</button>
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={{ textAlign:"center", padding:"60px", color:"var(--text-muted)" }}>Loading…</div>
+          ) : loadError ? (
+            <div style={{ textAlign:"center", padding:"60px", color:"var(--danger)", fontSize:14 }}>{loadError}</div>
+          ) : requests.length === 0 ? (
+            <div style={{ textAlign:"center", padding:"60px", color:"var(--text-muted)", fontSize:14 }}>No equipment requests yet. Submit the first one.</div>
+          ) : (
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {requests.map(r => {
+                const items = r.items_json || [];
+                const count = items.length;
+                return (
+                  <div key={r.id} onClick={() => setSelected(r)} style={{ background:"var(--surface)", border:"1px solid var(--border-strong)", borderRadius:12, padding:"16px 18px", cursor:"pointer", display:"flex", alignItems:"center", gap:14 }}>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                        <span style={{ fontWeight:700, fontSize:15 }}>{r.requester_name}</span>
+                        {badge(r.status, 11)}
+                      </div>
+                      <div style={{ fontSize:12, color:"var(--text-muted)" }}>
+                        {r.region && <span>{r.region} &nbsp;·&nbsp; </span>}
+                        <span>{fmtSubmitted(r.submitted_at)} &nbsp;·&nbsp; </span>
+                        <span>{count} item{count!==1?"s":""}</span>
+                      </div>
+                      {items.length > 0 && <div style={{ fontSize:12, color:"var(--text-secondary)", marginTop:4, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:500 }}>{items.map(it => it.item).join(", ")}</div>}
+                    </div>
+                    <div style={{ textAlign:"right", flexShrink:0 }}>
+                      <div style={{ fontSize:16, fontWeight:800, color:"#065f46" }}>{eqFmtUSD(r.total_usd)}</div>
+                      <div style={{ fontSize:11, color:"var(--text-muted)" }}>{eqFmtLocal(r.total_local, r.currency_code || "UGX")}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+      );
+
+      // ── Form view ──
+      const cell = { ...eqInp, padding:"6px 8px", fontSize:13 };
+      return (
+        <div style={{ flex:1, overflowY:"auto", padding:"24px", maxWidth:860, margin:"0 auto", width:"100%" }}>
+          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:20 }}>
+            <button onClick={closeForm} style={{ border:"none", background:"var(--surface3)", borderRadius:8, padding:"6px 12px", cursor:"pointer", fontSize:13, color:"var(--text-muted)" }}>← Back</button>
+            <div style={{ fontSize:18, fontWeight:700 }}>{editingId ? "Edit Equipment Request" : "New Equipment Request"}</div>
+            {editingId && <span style={{ background:"#f5f3ff", color:"#7c3aed", border:"1px solid #c4b5fd", borderRadius:8, fontSize:12, fontWeight:600, padding:"3px 10px" }}>Editing</span>}
+          </div>
+
+          {/* Requester Info */}
+          <div style={eqCard}>
+            <div style={eqSection}>Requester Information</div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12, marginBottom:12 }}>
+              <EqField label="Full Name"><input style={eqInp} value={form.requester_name} onChange={e=>setField("requester_name", e.target.value)} placeholder="e.g. Brother Isaac Okuru" /></EqField>
+              <EqField label="Country / Region"><input style={eqInp} value={form.region} onChange={e=>setField("region", e.target.value)} placeholder="e.g. Uganda" /></EqField>
+            </div>
+            <EqField label="Reason for Equipment"><textarea style={{ ...eqInp, minHeight:70, resize:"vertical" }} value={form.reason} onChange={e=>setField("reason", e.target.value)} placeholder="What is this equipment for, and which churches will it serve?" /></EqField>
+          </div>
+
+          {/* Exchange rate */}
+          <div style={{ background:"#f0f9ff", border:"1px solid #bae6fd", borderRadius:8, padding:"10px 14px", fontSize:12, color:"#0369a1", display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:14, gap:10, flexWrap:"wrap" }}>
+            <span>Exchange rate: <strong>1 USD =</strong></span>
+            <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+              <input type="number" value={form.exchange_rate} onChange={e=>setField("exchange_rate", e.target.value)}
+                style={{ width:100, padding:"4px 8px", border:"1.5px solid #7dd3fc", borderRadius:6, fontSize:12, textAlign:"right", background:"white" }} />
+              <select value={code} onChange={e=>changeCurrency(e.target.value)} style={{ width:"auto", padding:"4px 8px", border:"1.5px solid #7dd3fc", borderRadius:6, fontSize:12, background:"white", fontWeight:700, color:"#0369a1" }}>
+                {EQ_CURRENCIES.map(c => <option key={c.code} value={c.code}>{c.code}</option>)}
+              </select>
+              <span style={{ whiteSpace:"nowrap" }}>(update as needed)</span>
+            </div>
+          </div>
+
+          {/* Items */}
+          <div style={eqCard}>
+            <div style={eqSection}>Equipment & Cost Breakdown</div>
+            <table style={{ width:"100%", borderCollapse:"collapse", fontSize:13 }}>
+              <thead><tr>
+                {["Item","Notes","Qty",`Unit Cost (${code})`,`Total (${code})`,"USD",""].map((h,i) => (
+                  <th key={i} style={{ ...eqLabel, textAlign: i>=2 && i<=5 ? "right" : "left", paddingBottom:8 }}>{h}</th>
+                ))}
+              </tr></thead>
+              <tbody>
+                {form.items.map((it, i) => (
+                  <tr key={i}>
+                    <td style={{ padding:"4px 4px 4px 0", width:"26%" }}><input style={cell} value={it.item} onChange={e=>updateItem(i,"item",e.target.value)} placeholder="e.g. Bluetooth speaker" /></td>
+                    <td style={{ padding:"4px" }}><input style={cell} value={it.notes} onChange={e=>updateItem(i,"notes",e.target.value)} placeholder="Optional" /></td>
+                    <td style={{ padding:"4px", width:64 }}><input type="number" min="0" style={{ ...cell, textAlign:"right" }} value={it.qty} onChange={e=>updateItem(i,"qty",e.target.value)} /></td>
+                    <td style={{ padding:"4px", width:120 }}><input type="number" min="0" style={{ ...cell, textAlign:"right" }} value={it.unit_cost} onChange={e=>updateItem(i,"unit_cost",e.target.value)} placeholder="0" /></td>
+                    <td style={{ textAlign:"right", padding:"4px", width:100, fontWeight:500 }}>{Math.round(eqLineTotal(it)).toLocaleString()}</td>
+                    <td style={{ textAlign:"right", padding:"4px", fontWeight:600, color:"#065f46", width:72 }}>{eqFmtUSD(eqLineTotal(it)/rate)}</td>
+                    <td style={{ width:28, textAlign:"right" }}>
+                      {form.items.length > 1 && <button onClick={() => removeItem(i)} title="Remove item" style={{ background:"none", border:"none", color:"var(--text-muted)", cursor:"pointer", fontSize:16, padding:"2px 6px" }}>×</button>}
+                    </td>
+                  </tr>
+                ))}
+                <tr style={{ borderTop:"1.5px solid var(--border)" }}>
+                  <td colSpan={4} style={{ paddingTop:8, fontWeight:700 }}>Subtotal</td>
+                  <td style={{ textAlign:"right", paddingTop:8, fontWeight:700 }}>{Math.round(totalLocal).toLocaleString()} {code}</td>
+                  <td style={{ textAlign:"right", paddingTop:8, fontWeight:700, color:"#065f46" }}>{eqFmtUSD(totalUSD)}</td>
+                  <td />
+                </tr>
+              </tbody>
+            </table>
+            <button onClick={addItem} style={{ marginTop:12, padding:"9px 16px", border:"1.5px solid var(--accent)", borderRadius:9, background:"transparent", color:"var(--accent)", fontSize:13, fontWeight:600, cursor:"pointer" }}>+ Add Item</button>
+          </div>
+
+          {/* Grand Total */}
+          <div style={{ background:"#f0fdf8", border:"1.5px solid #a7f3d0", borderRadius:10, padding:"16px 20px", marginBottom:14 }}>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:14, padding:"3px 0" }}><span>Total ({code})</span><span>{Math.round(totalLocal).toLocaleString()} {code}</span></div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:14, padding:"3px 0" }}><span>Total (USD)</span><span>{eqFmtUSD(totalUSD)}</span></div>
+            <div style={{ display:"flex", justifyContent:"space-between", fontSize:16, fontWeight:800, color:"#065f46", borderTop:"1.5px solid #6ee7b7", marginTop:8, paddingTop:10 }}><span>Total Requested</span><span>{eqFmtUSD(totalUSD)} USD</span></div>
+          </div>
+
+          {/* Notes & Signature */}
+          <div style={{ ...eqCard, marginBottom:16 }}>
+            <div style={eqSection}>Notes & Signature</div>
+            <EqField label="Additional Notes"><textarea style={{ ...eqInp, minHeight:70, resize:"vertical", marginBottom:12 }} value={form.notes} onChange={e=>setField("notes", e.target.value)} placeholder="Where it should be delivered, timing, or anything else trustees should know" /></EqField>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+              <EqField label="Submitted By"><input style={eqInp} value={form.submitted_by} onChange={e=>setField("submitted_by", e.target.value)} placeholder="Your name" /></EqField>
+              <EqField label="Requester Email"><input style={eqInp} type="email" value={form.requester_email} onChange={e=>setField("requester_email", e.target.value)} placeholder="Optional" /></EqField>
+              <EqField label="Requester WhatsApp"><input style={eqInp} type="tel" value={form.requester_whatsapp} onChange={e=>setField("requester_whatsapp", e.target.value)} placeholder="e.g. +256 700 000000" /></EqField>
+            </div>
+          </div>
+
+          <div style={{ display:"flex", gap:10 }}>
+            <button onClick={closeForm} style={{ flex:1, padding:"11px", border:"1px solid var(--border-strong)", background:"var(--surface2)", borderRadius:10, fontSize:13, cursor:"pointer", color:"var(--text-secondary)" }}>Cancel</button>
+            <button onClick={submitForm} disabled={saving} style={{ flex:2, padding:"11px", border:"none", borderRadius:10, fontSize:13, fontWeight:700, cursor:saving?"not-allowed":"pointer", background:"var(--accent)", color:"#fff", opacity:saving?0.6:1 }}>
+              {saving ? "Saving…" : editingId ? "Save Changes" : "Submit Equipment Request"}
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    // ── Requests tab: toggle between Equipment and Travel ──────────────────────
+    function RequestsTab() {
+      const [kind, setKind] = React.useState(() => {
+        try { return localStorage.getItem("ea_requests_kind") || "equipment"; } catch(e) { return "equipment"; }
+      });
+      const choose = (k) => { try { localStorage.setItem("ea_requests_kind", k); } catch(e) {} setKind(k); };
+      const opt = (k, label) => (
+        <button onClick={() => choose(k)} style={{ padding:"7px 16px", border:"none", borderRadius:8, fontSize:13, fontWeight:600, cursor:"pointer",
+          background: kind===k ? "var(--surface)" : "transparent", color: kind===k ? "var(--text)" : "var(--text-muted)",
+          boxShadow: kind===k ? "0 1px 3px rgba(0,0,0,0.10)" : "none" }}>{label}</button>
+      );
+      return (
+        <div>
+          <div style={{ display:"flex", justifyContent:"center", padding:"20px 24px 0" }}>
+            <div style={{ display:"inline-flex", gap:2, padding:3, background:"var(--surface3)", borderRadius:10 }}>
+              {opt("equipment", "Equipment Requests")}
+              {opt("travel", "Travel Requests")}
+            </div>
+          </div>
+          {kind === "equipment" ? <EquipmentTab /> : <TripsTab />}
+        </div>
+      );
+    }
+
     function AdminUsers() {
       const [users, setUsers] = useState([
         { id:1, name:"David Robertson", email:"drobertson0624@gmail.com", role:"Admin", added:"2026-05-10" },
@@ -4859,7 +5290,7 @@
         ["results",  "Results"],
         ["churches", "Churches"],
         ["orders",   "Orders"],
-        ["trips",    "Trips"],
+        ["trips",    "Requests"],
         ["map",      "Map"],
         ["users",    "Users"],
         ["settings", "Settings"],
@@ -4991,7 +5422,7 @@
               });
             }} onUpdate={updateChurch} />}
             {tab==="orders"   && <OrdersTab />}
-            {tab==="trips"    && <TripsTab />}
+            {tab==="trips"    && <RequestsTab />}
             {tab==="map"      && <ChurchMap churches={churches} />}
             {tab==="users"    && <AdminUsers />}
             {tab==="settings" && <PortalSettings rssLink={rssLink} onRssUpdate={onRssUpdate} />}
