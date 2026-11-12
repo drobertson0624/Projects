@@ -1,432 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <link rel="apple-touch-icon" href="data:image/png;base64,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">
-  <meta name="apple-mobile-web-app-title" content="East Africa">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>East Africa Equipment Request — Project Kenya</title>
+<meta charset="UTF-8" />
+<link rel="apple-touch-icon" href="data:image/png;base64,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">
+<meta name="apple-mobile-web-app-title" content="East Africa" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>East Africa Work Order — Project East Africa</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background:#f0f9ff; color:#1a1a1a; padding:32px 16px 64px; font-size:15px; }
+  .page { max-width: 920px; margin: 0 auto; }
+  .header { background:#fff; border-radius:14px 14px 0 0; padding:26px 32px 22px; display:flex; align-items:center; gap:20px; border-bottom:2px solid #42C6EE; }
+  .logo-circle { width:56px; height:56px; background:#42C6EE; border-radius:50%; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+  .logo-circle svg { width:38px; height:38px; }
+  .header-text h1 { font-size:22px; font-weight:700; letter-spacing:-0.3px; }
+  .header-text p { font-size:13px; color:#42C6EE; margin-top:3px; font-weight:600; }
+  .card { background:#fff; padding:26px 32px; border-left:1px solid #e2e8f0; border-right:1px solid #e2e8f0; border-top:1px solid #eef2f6; }
+  .card.last { border-radius:0 0 14px 14px; border-bottom:1px solid #e2e8f0; }
+  .sec-head { display:flex; align-items:baseline; gap:10px; margin-bottom:4px; }
+  .sec-num { font-size:11px; font-weight:800; color:#fff; background:#42C6EE; border-radius:20px; padding:3px 10px; letter-spacing:.5px; text-transform:uppercase; }
+  .sec-title { font-size:17px; font-weight:700; }
+  .sec-sub { font-size:13px; color:#64748b; margin-bottom:18px; }
+  .sub-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.6px; color:#42C6EE; margin:20px 0 10px; }
+  .grid { display:grid; gap:14px; }
+  .cols-2 { grid-template-columns:1fr 1fr; }
+  .cols-3 { grid-template-columns:1fr 1fr 1fr; }
+  .field label, .lbl { display:block; font-size:11px; font-weight:700; color:#64748b; margin-bottom:5px; text-transform:uppercase; letter-spacing:.4px; }
+  .req { color:#ef4444; }
+  input[type=text], input[type=email], input[type=tel], input[type=number], input[type=date], select, textarea {
+    width:100%; border:1.5px solid #dbe4ec; border-radius:8px; padding:10px 12px; font-size:14px; font-family:inherit; background:#fff; color:#1a1a1a; }
+  input:focus, select:focus, textarea:focus { outline:none; border-color:#42C6EE; box-shadow:0 0 0 3px rgba(66,198,238,.18); }
+  textarea { min-height:78px; resize:vertical; line-height:1.5; }
+  .hint { font-size:12px; color:#64748b; margin-top:5px; line-height:1.45; }
+  .warn { font-size:12.5px; color:#92400e; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:9px 12px; margin-top:10px; line-height:1.45; }
+  .banner { background:#eff6ff; border:1px solid #bfdbfe; color:#1e3a8a; border-radius:10px; padding:12px 16px; font-size:13.5px; line-height:1.5; margin:0 0 0; }
+  .banner.sample { background:#fef3c7; border-color:#fcd34d; color:#78350f; }
+  .checks { display:flex; flex-wrap:wrap; gap:8px 18px; }
+  .checks label { display:flex; align-items:center; gap:7px; font-size:13.5px; font-weight:500; color:#1a1a1a; text-transform:none; letter-spacing:0; margin:0; }
+  .checks input { width:auto; }
+  .divider { border:none; border-top:1px solid #e8edf2; margin:22px 0; }
 
-  <script>
-    // ── Supabase ──
-    const SUPABASE_URL = "https://gwvaarvwmptbsnanxmij.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_ziOlB_rYW9yh9-DMRPqzXg_7ZWV6THq";
-  </script>
+  .currency-bar { background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px 16px; margin-bottom:16px; }
+  .currency-bar select { max-width:340px; }
+  .rate-info-box { font-size:13px; color:#334155; }
 
-  <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+  /* Work order rows */
+  .wo-head, .wo-row { display:grid; grid-template-columns: 3fr .7fr 1.7fr 1.2fr 1.3fr 1.4fr 30px; gap:10px; align-items:start; }
+  .wo-head { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#94a3b8; padding:0 0 6px; border-bottom:1.5px solid #e2e8f0; }
+  .wo-head .r { text-align:right; }
+  .wo-row { padding:12px 0; border-bottom:1px solid #eef2f6; }
+  .wo-row .specline { font-size:12px; color:#64748b; margin-top:6px; line-height:1.45; }
+  .wo-row .badge { display:inline-block; font-size:10.5px; font-weight:700; border-radius:20px; padding:2px 8px; margin-top:6px; }
+  .badge.spec { background:#fee2e2; color:#991b1b; }
+  .badge.custom { background:#fef3c7; color:#92400e; }
+  .badge.power { background:#e0f2fe; color:#075985; }
+  .wo-row .line-total { text-align:right; font-size:13.5px; font-weight:600; padding-top:10px; white-space:nowrap; }
+  .wo-row .line-total small { display:block; font-weight:500; color:#94a3b8; font-size:11.5px; }
+  .wo-row textarea { min-height:56px; margin-top:6px; font-size:13px; }
+  .wo-row input.it-name, .wo-row input.vendor-other { margin-top:6px; }
+  .btn-remove { background:none; border:none; color:#cbd5e1; font-size:22px; cursor:pointer; line-height:1; padding:6px 0 0; }
+  .btn-remove:hover { color:#ef4444; }
+  .wo-row .c-lbl { display:none; }
 
-    body {
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-      background: #f0f9ff;
-      color: #1a1a1a;
-      padding: 32px 16px 64px;
-      font-size: 15px;
-    }
+  .extra-grid { display:grid; grid-template-columns: 1.6fr 1fr; gap:10px 16px; align-items:center; max-width:560px; }
+  .extra-grid .nm { font-size:14px; font-weight:500; }
+  .extra-grid .nm small { display:block; font-weight:400; color:#94a3b8; font-size:12px; }
 
-    .page { max-width: 820px; margin: 0 auto; }
+  .totals-box { margin-top:18px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:16px 18px; }
+  .total-line { display:flex; justify-content:space-between; font-size:14px; padding:4px 0; color:#334155; }
+  .total-line.grand { font-size:17px; font-weight:800; color:#0f172a; border-top:1.5px solid #cbd5e1; margin-top:8px; padding-top:10px; }
 
-    .header {
-      background: white;
-      border-radius: 14px 14px 0 0;
-      padding: 28px 32px 24px;
-      display: flex;
-      align-items: center;
-      gap: 20px;
-      border-bottom: 2px solid #42C6EE;
-    }
+  .btn-row { display:flex; gap:12px; flex-wrap:wrap; margin-top:8px; }
+  .btn { border:none; border-radius:9px; padding:13px 22px; font-size:14.5px; font-weight:700; cursor:pointer; font-family:inherit; }
+  .btn:disabled { opacity:.55; cursor:not-allowed; }
+  .btn-primary { background:#42C6EE; color:#fff; flex:1; min-width:210px; }
+  .btn-primary:hover:not(:disabled) { background:#2bb5de; }
+  .btn-outline { background:#fff; color:#0f172a; border:1.5px solid #cbd5e1; }
+  .btn-outline:hover { border-color:#42C6EE; }
+  .btn-ghost { background:none; color:#64748b; }
+  .error-msg { display:none; margin-top:14px; background:#fef2f2; border:1px solid #fecaca; color:#991b1b; border-radius:9px; padding:12px 16px; font-size:13.5px; line-height:1.55; }
+  .error-msg ul { margin:6px 0 0 18px; }
 
-    .logo-circle {
-      width: 56px; height: 56px;
-      background: #42C6EE; border-radius: 50%;
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
+  details.outcome { border:1.5px dashed #cbd5e1; border-radius:12px; padding:0 18px; }
+  details.outcome summary { cursor:pointer; font-weight:700; font-size:14px; padding:14px 0; color:#334155; }
+  details.outcome[open] { padding-bottom:18px; }
 
-    .logo-circle svg { width: 38px; height: 38px; }
+  .success-screen { display:none; background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:44px 32px; text-align:center; }
+  .success-icon { width:64px; height:64px; border-radius:50%; background:#dcfce7; color:#16a34a; font-size:32px; display:flex; align-items:center; justify-content:center; margin:0 auto 18px; }
+  .wo-pill { display:inline-block; background:#0f172a; color:#fff; font-weight:700; font-size:15px; border-radius:30px; padding:7px 18px; margin:8px 0 16px; letter-spacing:.3px; }
 
-    .header-text h1 { font-size: 22px; font-weight: 700; color: #1a1a1a; letter-spacing: -0.3px; }
-    .header-text p  { font-size: 13px; color: #42C6EE; margin-top: 3px; font-weight: 600; }
+  /* Print document */
+  #print-doc { display:none; }
+  @media print {
+    @page { size:A4; margin:16mm 14mm; }
+    body { background:#fff; padding:0; }
+    body > *:not(#print-doc) { display:none !important; }
+    #print-doc { display:block !important; font-family:"Helvetica Neue", Arial, sans-serif; color:#111; font-size:9.5pt; line-height:1.45; }
+    #print-doc .ph { font-size:18pt; font-weight:700; letter-spacing:-.3px; }
+    #print-doc .ps { display:flex; justify-content:space-between; font-size:9pt; color:#555; padding:4px 0 10px; border-bottom:2px solid #111; margin-bottom:6px; }
+    #print-doc .ps b { color:#111; }
+    #print-doc .sec { font-size:8.5pt; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:#0e7fa3; margin:16px 0 6px; padding-bottom:3px; border-bottom:1px solid #ddd; }
+    #print-doc .kv { display:grid; grid-template-columns:140px 1fr 140px 1fr; column-gap:10px; row-gap:3px; font-size:9pt; }
+    #print-doc .kv .k { color:#777; }
+    #print-doc .kv .v { font-weight:600; }
+    #print-doc .kv .wide { grid-column: 2 / -1; font-weight:600; }
+    #print-doc table { width:100%; border-collapse:collapse; font-size:8.5pt; }
+    #print-doc th { font-size:7.5pt; text-transform:uppercase; letter-spacing:.5px; color:#888; text-align:left; padding:4px 5px; border-bottom:1px solid #bbb; }
+    #print-doc td { padding:5px; border-bottom:1px solid #eee; vertical-align:top; }
+    #print-doc .r { text-align:right; }
+    #print-doc tr { page-break-inside:avoid; }
+    #print-doc .sm { font-size:7.5pt; color:#777; }
+    #print-doc .tot { margin-top:10px; margin-left:auto; width:60%; font-size:9.5pt; }
+    #print-doc .tot div { display:flex; justify-content:space-between; padding:2px 0; }
+    #print-doc .tot .g { font-weight:700; font-size:11pt; border-top:1.5px solid #111; margin-top:4px; padding-top:5px; }
+    #print-doc .box { border:1px solid #ccc; border-radius:3px; padding:8px 10px; min-height:34px; white-space:pre-wrap; font-size:9pt; }
+    #print-doc .flag { color:#92400e; font-weight:700; }
+    #print-doc .sig { display:grid; grid-template-columns:1fr 1fr; gap:30px; margin-top:26px; }
+    #print-doc .sig div { border-top:1px solid #111; padding-top:4px; font-size:8pt; color:#555; }
+    #print-doc .foot { margin-top:18px; font-size:7.5pt; color:#999; border-top:1px solid #eee; padding-top:6px; }
+    #print-doc .pb { page-break-before:always; }
+  }
 
-    .card {
-      background: white;
-      padding: 28px 32px;
-      border-left: 1px solid #e2e8f0;
-      border-right: 1px solid #e2e8f0;
-    }
-
-    .card:last-of-type {
-      border-radius: 0 0 14px 14px;
-      border-bottom: 1px solid #e2e8f0;
-    }
-
-    .section-title {
-      font-size: 12px; font-weight: 700;
-      text-transform: uppercase; letter-spacing: 0.6px;
-      color: #42C6EE; margin-bottom: 16px;
-    }
-
-    .divider { border: none; border-top: 1px solid #e8edf2; margin: 24px 0; }
-
-    .field-grid { display: grid; gap: 14px; }
-    .field-grid.cols-2 { grid-template-columns: 1fr 1fr; }
-
-    .field label {
-      display: block; font-size: 11px; font-weight: 700;
-      color: #64748b; margin-bottom: 5px;
-      text-transform: uppercase; letter-spacing: 0.4px;
-    }
-
-    .field input,
-    .field select,
-    .field textarea {
-      width: 100%; padding: 10px 13px;
-      border: 1.5px solid #dce3ec; border-radius: 8px;
-      font-size: 14px; color: #1a1a1a; background: #fafbfc;
-      transition: border-color 0.15s; font-family: inherit;
-    }
-
-    .field input:focus,
-    .field select:focus,
-    .field textarea:focus {
-      outline: none; border-color: #42C6EE; background: white;
-    }
-
-    .field textarea { resize: vertical; min-height: 80px; }
-
-    /* ── Currency bar ── */
-    .currency-bar {
-      background: #f8fafc; border: 1px solid #e2e8f0;
-      border-radius: 10px; padding: 14px 16px;
-      margin-bottom: 20px;
-    }
-
-    .currency-bar select {
-      padding: 9px 12px; border: 1.5px solid #dce3ec;
-      border-radius: 8px; font-size: 14px; background: white;
-      color: #1a1a1a; cursor: pointer; font-family: inherit;
-      min-width: 260px;
-    }
-
-    .currency-bar select:focus { outline: none; border-color: #42C6EE; }
-
-    .rate-info-box {
-      background: #f0f9ff; border: 1px solid #bae6fd;
-      border-radius: 8px; padding: 10px 14px;
-      font-size: 13px; color: #0369a1;
-    }
-
-    /* ── Stop cards ── */
-    .stop-card {
-      border: 1.5px solid #e2e8f0; border-radius: 12px;
-      padding: 20px; margin-bottom: 12px; background: #fafbfc;
-    }
-
-    .stop-header {
-      display: flex; justify-content: space-between;
-      align-items: center; margin-bottom: 16px;
-    }
-
-    .stop-number {
-      font-weight: 700; font-size: 12px; color: #42C6EE;
-      text-transform: uppercase; letter-spacing: 0.5px;
-    }
-
-    .btn-remove {
-      background: none; border: none; color: #94a3b8;
-      cursor: pointer; font-size: 12px; padding: 3px 8px;
-      border-radius: 6px; transition: background 0.1s, color 0.1s;
-    }
-    .btn-remove:hover { background: #fee2e2; color: #dc2626; }
-
-    /* ── Expense table ── */
-    .expense-table { width: 100%; border-collapse: collapse; margin-top: 14px; }
-
-    .expense-table th {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
-      letter-spacing: 0.5px; color: #94a3b8;
-      text-align: left; padding: 0 6px 8px;
-    }
-    .expense-table th:last-child, .expense-table th:nth-child(3) { text-align: right; }
-
-    .expense-table td { padding: 4px 6px; vertical-align: middle; }
-
-    .expense-table input {
-      width: 100%; padding: 7px 10px;
-      border: 1.5px solid #dce3ec; border-radius: 7px;
-      font-size: 13px; background: white; font-family: inherit;
-    }
-    .expense-table input:focus { outline: none; border-color: #42C6EE; }
-    .expense-table input.local-amt { text-align: right; min-width: 160px; font-size: 14px; }
-
-    .expense-table .usd-cell {
-      font-size: 13px; font-weight: 600; color: #065f46;
-      text-align: right; white-space: nowrap; min-width: 72px;
-    }
-
-    .expense-table .subtotal-row td {
-      padding-top: 10px; border-top: 1.5px solid #e2e8f0;
-      font-weight: 700; font-size: 13px;
-    }
-
-    /* ── Totals ── */
-    .totals-box {
-      background: #f0fdf8; border: 1.5px solid #a7f3d0;
-      border-radius: 10px; padding: 16px 20px; margin-top: 20px;
-    }
-
-    .totals-box .total-line {
-      display: flex; justify-content: space-between;
-      align-items: center; font-size: 14px; padding: 3px 0;
-    }
-
-    .totals-box .total-line.grand {
-      border-top: 1.5px solid #6ee7b7; margin-top: 8px;
-      padding-top: 10px; font-weight: 800; font-size: 17px; color: #065f46;
-    }
-
-    /* ── Buttons ── */
-    .btn-row { display: flex; gap: 10px; margin-top: 20px; }
-
-    .btn {
-      padding: 11px 20px; border-radius: 9px;
-      font-size: 14px; font-weight: 600;
-      cursor: pointer; border: none; transition: opacity 0.15s; font-family: inherit;
-    }
-    .btn:hover { opacity: 0.88; }
-    .btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-    .btn-primary { background: #42C6EE; color: white; flex: 2; }
-    .btn-outline  { background: white; color: #42C6EE; border: 2px solid #42C6EE; }
-    .btn-ghost    { background: #f1f5f9; color: #475569; }
-
-    /* ── Success ── */
-    .success-screen {
-      display: none;
-      background: white; border: 1px solid #e2e8f0;
-      border-radius: 0 0 14px 14px;
-      border-left: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0;
-      border-bottom: 1px solid #e2e8f0;
-      padding: 60px 32px; text-align: center;
-    }
-
-    .success-icon {
-      width: 64px; height: 64px; background: #f0fdf8;
-      border-radius: 50%; display: flex; align-items: center; justify-content: center;
-      margin: 0 auto 20px; font-size: 28px;
-    }
-
-    .error-msg {
-      display: none; background: #fff1f2; border: 1px solid #fecdd3;
-      border-radius: 8px; padding: 12px 16px; font-size: 13px;
-      color: #be123c; margin-top: 12px;
-    }
-
-    /* ── Print / PDF ── */
-    #print-summary { display: none; }
-
-    @media print {
-      @page { margin: 18mm 16mm; size: A4; }
-      body * { visibility: hidden; }
-      #print-summary, #print-summary * { visibility: visible; }
-      #print-summary {
-        display: block !important;
-        position: absolute; top: 0; left: 0; width: 100%;
-        background: white;
-        font-family: "Helvetica Neue", Arial, sans-serif;
-        color: #111; font-size: 9.5pt; line-height: 1.5;
-      }
-
-      /* Header */
-      #print-summary .ph {
-        font-size: 17pt; font-weight: 700; letter-spacing: -0.3px;
-        color: #111; margin-bottom: 2px;
-      }
-      #print-summary .ps {
-        font-size: 8.5pt; color: #666; margin-bottom: 14px;
-        padding-bottom: 10px; border-bottom: 2px solid #111;
-      }
-
-      /* Section label */
-      #print-summary .sec {
-        font-size: 8pt; font-weight: 700; text-transform: uppercase;
-        letter-spacing: 0.8px; color: #42C6EE;
-        margin: 16px 0 6px; padding-bottom: 3px;
-        border-bottom: 1px solid #e0e0e0;
-      }
-
-      /* Key-value rows (trip details) */
-      #print-summary .detail-grid {
-        display: grid; grid-template-columns: 130px 1fr;
-        row-gap: 3px; column-gap: 12px;
-        font-size: 9pt;
-      }
-      #print-summary .detail-grid .lbl { color: #777; }
-      #print-summary .detail-grid .val { font-weight: 600; color: #111; }
-
-      /* Stop block */
-      #print-summary .stop-block {
-        margin: 10px 0; padding: 10px 12px 8px;
-        border: 1px solid #ddd; border-left: 3px solid #42C6EE;
-        border-radius: 3px; page-break-inside: avoid;
-      }
-      #print-summary .stop-title {
-        font-weight: 700; font-size: 10pt; margin-bottom: 1px; color: #111;
-      }
-      #print-summary .stop-purpose {
-        font-size: 8.5pt; color: #666; margin-bottom: 8px;
-      }
-
-      /* Expense table — fixed layout so all stops align identically */
-      #print-summary table {
-        width: 100%; border-collapse: collapse;
-        table-layout: fixed; font-size: 8.5pt;
-      }
-      #print-summary table colgroup col:nth-child(1) { width: 32%; }
-      #print-summary table colgroup col:nth-child(2) { width: 26%; }
-      #print-summary table colgroup col:nth-child(3) { width: 26%; }
-      #print-summary table colgroup col:nth-child(4) { width: 16%; }
-      #print-summary table th {
-        font-size: 7.5pt; font-weight: 700; text-transform: uppercase;
-        letter-spacing: 0.5px; color: #999;
-        text-align: left; padding: 4px 6px 4px;
-        border-bottom: 1px solid #ccc;
-      }
-      #print-summary table th.r,
-      #print-summary table td.r { text-align: right; }
-      #print-summary table td {
-        padding: 4px 6px; border-bottom: 1px solid #eee;
-        overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-      }
-      #print-summary table tfoot td {
-        border-top: 1.5px solid #bbb; border-bottom: none;
-        font-weight: 700; padding-top: 6px; font-size: 9pt;
-      }
-
-      /* Grand total */
-      #print-summary .grand-row {
-        margin-top: 14px; padding: 10px 14px;
-        background: #f0fdf8; border: 1px solid #a7f3d0;
-        display: flex; justify-content: space-between;
-        font-weight: 700; font-size: 11pt; color: #065f46;
-      }
-
-      /* Notes */
-      #print-summary .notes-text {
-        font-size: 9pt; line-height: 1.55; color: #333;
-        white-space: pre-wrap;
-      }
-
-      /* Footer */
-      #print-summary .footer {
-        margin-top: 20px; font-size: 7.5pt; color: #aaa;
-        border-top: 1px solid #eee; padding-top: 8px;
-      }
-    }
-
-    /* ── Tablet ── */
-    @media (max-width: 900px) {
-      .page { max-width: 100%; }
-      .card { padding: 24px; }
-      .header { padding: 22px 24px; }
-      .expense-table input.local-amt { min-width: 140px; }
-    }
-
-    /* ── Mobile ── */
-    @media (max-width: 640px) {
-      body { padding: 12px 10px 60px; font-size: 14px; }
-
-      .page { max-width: 100%; }
-      .header { padding: 16px 14px; border-radius: 10px 10px 0 0; gap: 12px; }
-      .header-text h1 { font-size: 18px; }
-      .logo-circle { width: 44px; height: 44px; }
-      .logo-circle svg { width: 30px; height: 30px; }
-
-      .card { padding: 16px 14px; }
-      .field-grid.cols-2 { grid-template-columns: 1fr; }
-
-      /* 16px on inputs prevents iOS Safari from auto-zooming */
-      .field input,
-      .field select,
-      .field textarea,
-      .expense-table input { font-size: 16px !important; }
-
-      /* Touch-friendly tap targets */
-      .field input,
-      .field select { padding: 12px 13px; min-height: 44px; }
-      .field textarea { padding: 12px 13px; }
-
-      /* Currency bar — stack vertically */
-      .currency-bar { gap: 10px; }
-      .currency-bar select { width: 100%; min-width: unset; font-size: 15px; padding: 12px; min-height: 44px; }
-      .rate-info-box { width: 100%; }
-
-      /* Stop cards */
-      .stop-card { padding: 14px; }
-      .btn-remove { padding: 6px 12px; font-size: 13px; min-height: 36px; }
-
-      /* Expense table:
-         - Wrap in scrollable container (added in JS)
-         - Hide optional description column to reduce width
-         - Widen amount column for big numbers */
-      .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin: 0 -4px; padding: 0 4px 4px; }
-      .expense-table th:nth-child(2),
-      .expense-table td:nth-child(2) { display: none; }
-      .expense-table input.local-amt { min-width: 150px; padding: 10px; }
-      .expense-table .usd-cell { min-width: 64px; font-size: 12px; }
-      .expense-table th { font-size: 9px; padding: 0 4px 8px; }
-      .expense-table td { padding: 3px 4px; }
-
-      /* Totals */
-      .totals-box { padding: 14px; }
-      .totals-box .total-line { font-size: 13px; }
-      .totals-box .total-line.grand { font-size: 15px; }
-
-      /* Buttons — stack vertically, full width */
-      .btn-row { flex-direction: column; gap: 8px; }
-      .btn { padding: 14px 20px; font-size: 15px; text-align: center; }
-      .btn-primary { flex: unset; }
-      .btn-ghost { flex: unset; }
-    }
-    /* ── Equipment item table ── */
-    .item-table input.local-amt, .item-table .it-qty { min-width: 0; }
-    .item-table .line-local { text-align: right; font-size: 13px; font-weight: 500; white-space: nowrap; }
-    @media (max-width: 640px) {
-      /* Stack each item as a card so totals stay on screen */
-      .item-card-wrap .table-wrap { overflow: visible; margin: 0; padding: 0; }
-      .item-table thead { display: none; }
-      .item-table, .item-table tbody, .item-table tfoot { display: block; width: 100%; }
-      .item-table tr.item-row {
-        display: grid; grid-template-columns: 1fr 1fr; gap: 10px;
-        padding: 14px 0; border-bottom: 1px solid #e2e8f0; position: relative;
-      }
-      .item-table tr.item-row:first-child { padding-top: 0; }
-      .item-table tr.item-row td { display: block; padding: 0; }
-      .item-table tr.item-row td:nth-child(1) { grid-column: 1 / -1; padding-right: 40px; }
-      .item-table tr.item-row td:nth-child(2) { display: block; grid-column: 1 / -1; }
-      .item-table tr.item-row td[data-label]::before {
-        content: attr(data-label); display: block; font-size: 10px; font-weight: 700;
-        text-transform: uppercase; letter-spacing: 0.4px; color: #94a3b8; margin-bottom: 4px; text-align: left;
-      }
-      .item-table tr.item-row td.line-local,
-      .item-table tr.item-row td.line-usd { font-size: 14px; text-align: left; }
-      .item-table tr.item-row td.line-usd { text-align: right; }
-      .item-table tr.item-row td.line-usd::before { text-align: right; }
-      .item-table tr.item-row td:nth-child(7) { position: absolute; top: 12px; right: 0; }
-      .item-table tr.item-row:first-child td:nth-child(7) { top: -2px; }
-      .item-table tr.item-row input { min-width: 0; padding: 12px 13px; min-height: 44px; }
-      .item-table tfoot tr.subtotal-row td:nth-child(2) { display: block; font-size: 13px; }
-      .item-table tfoot tr.subtotal-row { display: flex; align-items: center; gap: 12px; padding-top: 12px; }
-      .item-table tfoot tr.subtotal-row td { padding: 0; border: none; }
-      .item-table tfoot tr.subtotal-row td:first-child { flex: 1; }
-      .item-table tfoot tr.subtotal-row td:last-child { display: none; }
-    }
-  </style>
+  @media (max-width: 900px) { .page { max-width:100%; } .card { padding:22px; } .header { padding:20px 22px; } }
+  @media (max-width: 760px) {
+    body { padding:12px 10px 60px; font-size:14px; }
+    .header { padding:16px 14px; gap:12px; border-radius:10px 10px 0 0; }
+    .header-text h1 { font-size:18px; }
+    .logo-circle { width:44px; height:44px; } .logo-circle svg { width:30px; height:30px; }
+    .card { padding:18px 14px; }
+    .cols-2, .cols-3 { grid-template-columns:1fr; }
+    input[type=text], input[type=email], input[type=tel], input[type=number], input[type=date], select, textarea { font-size:16px; min-height:44px; }
+    .wo-head { display:none; }
+    .wo-row { grid-template-columns:1fr 1fr; padding:16px 0; position:relative; }
+    .wo-row > div { min-width:0; }
+    .wo-row > .c-item { grid-column:1 / -1; padding-right:34px; }
+    .wo-row .c-lbl { display:block; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; color:#94a3b8; margin-bottom:4px; }
+    .wo-row .line-total { text-align:left; padding-top:0; }
+    .wo-row .btn-remove { position:absolute; top:8px; right:0; }
+    .extra-grid { grid-template-columns:1fr; max-width:none; }
+    .btn-row { flex-direction:column; } .btn { width:100%; text-align:center; }
+  }
+</style>
 </head>
 <body>
-<div class="page">
+<div class="page" id="page">
 
-  <!-- Header -->
   <div class="header">
     <div class="logo-circle">
       <svg viewBox="0 0 100 110" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -435,401 +153,894 @@
       </svg>
     </div>
     <div class="header-text">
-      <h1>East Africa Equipment Request</h1>
-      <p>Project Kenya</p>
+      <h1>East Africa Work Order</h1>
+      <p>Project East Africa &nbsp;·&nbsp; One document per church</p>
     </div>
   </div>
 
-  <!-- Form -->
+  <div id="banner-area"></div>
+
   <div id="form-wrap">
 
-    <!-- Section 1: Requester Info -->
-    <div class="card" style="border-top:none;">
-      <div class="section-title">Requester Information</div>
-      <div class="field-grid cols-2">
+    <!-- Requester -->
+    <div class="card">
+      <div class="grid cols-2">
         <div class="field">
-          <label>Full Name <span style="color:#ef4444">*</span></label>
-          <input type="text" id="req-name" placeholder="e.g. Brother Isaac Okuru" />
+          <label>Your Full Name <span class="req">*</span></label>
+          <input type="text" id="req-name" placeholder="e.g. Brother Isaac Okiru" />
         </div>
         <div class="field">
-          <label>Country / Region</label>
-          <input type="text" id="req-region" placeholder="e.g. Uganda" />
+          <label>Needed By</label>
+          <input type="date" id="needed-by" />
         </div>
-      </div>
-      <hr class="divider" />
-      <div class="section-title">Reason for Equipment</div>
-      <div class="field">
-        <label>Why is this equipment needed? <span style="color:#ef4444">*</span></label>
-        <textarea id="reason" placeholder="Describe what the equipment is for and which churches or believers it will serve, for example playing recorded messages, charging devices, or replacing broken equipment."></textarea>
       </div>
     </div>
 
-    <!-- Section 2: Items & Budget -->
+    <!-- SECTION 1 -->
     <div class="card">
-      <div class="section-title">Equipment &amp; Cost Breakdown</div>
+      <div class="sec-head"><span class="sec-num">Section 1</span><span class="sec-title">Assessment</span></div>
+      <div class="sec-sub">Who this church is and what it has today. Pick a church to fill this in from the survey data, then correct anything that has changed.</div>
 
-      <!-- Currency picker -->
-      <div class="currency-bar">
-        <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:#64748b;margin-bottom:10px;">Currency</div>
-        <div style="display:flex;align-items:center;gap:14px;flex-wrap:wrap;">
-          <select id="currency-select" onchange="onCurrencyChange()">
-            <option value="">Loading…</option>
-          </select>
-          <div class="rate-info-box" id="rate-info-box">
-            <div id="rate-loading" style="color:#94a3b8;">Fetching live rates…</div>
-            <div id="rate-info" style="display:none;">
-              <div id="rate-line-1" style="font-weight:700;font-size:14px;"></div>
-              <div id="rate-line-2" style="font-size:12px;margin-top:2px;opacity:0.75;"></div>
-            </div>
-          </div>
-          <div id="rate-error" style="display:none;font-size:12px;color:#dc2626;">Could not load live rates — using estimates.</div>
+      <div class="field" style="margin-bottom:14px;">
+        <label>Church <span class="req">*</span></label>
+        <select id="church-select" onchange="onChurchPick()"><option value="">Loading churches…</option></select>
+        <div class="hint">Not on the list? Choose "Other / not listed" and fill in the details below.</div>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="field"><label>Pastor</label><input type="text" id="a-pastor" /></div>
+        <div class="field"><label>Church name and location <span class="req">*</span></label><input type="text" id="a-location" /></div>
+        <div class="field"><label>District / region</label><input type="text" id="a-region" /></div>
+        <div class="field"><label>Country</label>
+          <select id="a-country" onchange="onCountryChange()"><option>Uganda</option><option>Kenya</option><option>Other</option></select></div>
+        <div class="field"><label>Language(s)</label><input type="text" id="a-language" /></div>
+        <div class="field"><label>Members (approx.)</label><input type="number" id="a-members" min="0" inputmode="numeric" /></div>
+        <div class="field"><label>Spiritual standing</label>
+          <select id="a-standing"><option value="">Select</option><option>Strong</option><option>Stable</option><option>Developing</option><option>Needs attention</option><option>Unknown</option></select></div>
+        <div class="field"><label>Building type</label>
+          <select id="a-building"><option value="">Select</option><option>Permanent building</option><option>Temporary or no permanent building</option><option>Rented or shared space</option><option>Open air</option></select></div>
+        <div class="field"><label>Grid power</label>
+          <select id="a-grid"><option value="">Select</option><option>Reliable</option><option>Unreliable</option><option>Far from grid</option><option>No power</option></select></div>
+        <div class="field"><label>Internet</label><input type="text" id="a-internet" placeholder="e.g. Not available" /></div>
+        <div class="field"><label>Cell signal</label><input type="text" id="a-cell" placeholder="e.g. Okay" /></div>
+        <div class="field"><label>Distance from Kampala</label><input type="text" id="a-distance" placeholder="e.g. 481 km" /></div>
+      </div>
+
+      <div style="margin-top:16px;">
+        <label class="lbl">Equipment the church already has</label>
+        <div class="checks" id="a-existing">
+          <label><input type="checkbox" value="Sound system" /> Sound system</label>
+          <label><input type="checkbox" value="TV or screen" /> TV or screen</label>
+          <label><input type="checkbox" value="Tablet" /> Tablet</label>
+          <label><input type="checkbox" value="Laptop" /> Laptop</label>
+          <label><input type="checkbox" value="Keyboard or instruments" /> Keyboard or instruments</label>
+          <label><input type="checkbox" value="Generator" /> Generator</label>
+          <label><input type="checkbox" value="Solar" /> Solar</label>
         </div>
       </div>
 
-      <div class="stop-card item-card-wrap">
-        <div class="table-wrap"><table class="expense-table item-table" style="margin-top:0;">
-          <thead><tr>
-            <th style="width:25%">Item</th>
-            <th>Notes</th>
-            <th class="qty-col" style="width:64px;text-align:right">Qty</th>
-            <th class="local-currency-header" style="width:130px;text-align:right">Unit Cost (UGX)</th>
-            <th class="local-total-header" style="width:105px;text-align:right">Total (UGX)</th>
-            <th style="width:76px;text-align:right">USD</th>
-            <th style="width:30px"></th>
-          </tr></thead>
-          <tbody id="items-body"></tbody>
-          <tfoot>
-            <tr class="subtotal-row">
-              <td colspan="4">Subtotal</td>
-              <td style="text-align:right" id="sub-local">0 UGX</td>
-              <td class="usd-cell" id="sub-usd">$0.00</td>
-              <td></td>
-            </tr>
-          </tfoot>
-        </table></div>
+      <div class="grid cols-2" style="margin-top:16px;">
+        <div class="field"><label>Photos or documents link</label><input type="text" id="a-photos" placeholder="Google Drive link" /></div>
+        <div></div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label>Assessment notes</label>
+        <textarea id="a-notes" placeholder="History with the project, who the pastor is, what the congregation is like, anything that explains why this equipment is the right fit."></textarea>
+      </div>
+    </div>
+
+    <!-- SECTION 2 -->
+    <div class="card">
+      <div class="sec-head"><span class="sec-num">Section 2</span><span class="sec-title">Work Order</span></div>
+      <div class="sec-sub">What we are buying for this church, from whom, and what it costs. Costs are entered each time from current quotes.</div>
+
+      <div class="field" style="margin-bottom:16px;">
+        <label>Why this equipment, for this church <span class="req">*</span></label>
+        <textarea id="reason" placeholder="What will it be used for and who will it serve, for example playing recorded messages for the congregation."></textarea>
       </div>
 
-      <div class="btn-row" style="margin-top:0;">
-        <button class="btn btn-outline" style="flex:0 0 auto;" onclick="addItem()">+ Add Item</button>
+      <div class="grid cols-2" style="margin-bottom:16px;">
+        <div class="field">
+          <label>Where is it being bought?</label>
+          <select id="sourcing" onchange="onSourcingChange()">
+            <option value="Uganda">Uganda (local purchase, recommended)</option>
+            <option value="Kenya">Kenya</option>
+            <option value="USA">USA</option>
+          </select>
+          <div class="hint">Buying outside Uganda adds a clearance cost line below.</div>
+        </div>
+      </div>
+
+      <div class="currency-bar">
+        <label class="lbl">Currency</label>
+        <div style="display:flex;gap:14px;flex-wrap:wrap;align-items:center;">
+          <select id="currency-select" onchange="updateRateDisplay()"></select>
+          <div class="rate-info-box" id="rate-info-box">Fetching live rates…</div>
+        </div>
+        <div id="rate-error" class="hint" style="display:none;color:#b91c1c;">Could not load live rates, using estimates.</div>
+      </div>
+
+      <div class="sub-title" style="margin-top:6px;">Equipment</div>
+      <div class="wo-head">
+        <div>Item (standard list)</div><div class="r">Qty</div><div>Vendor</div><div>Quote ref</div><div class="r" id="h-cost">Unit cost</div><div class="r" id="h-total">Line total</div><div></div>
+      </div>
+      <div id="items"></div>
+      <div class="btn-row" style="margin-top:12px;"><button class="btn btn-outline" onclick="addItem()">+ Add item</button></div>
+      <div id="item-warnings"></div>
+
+      <div class="sub-title">Power plan</div>
+      <div class="grid cols-2">
+        <div class="field">
+          <label>Power plan for this church <span class="req">*</span></label>
+          <select id="power-plan" onchange="checkWarnings()">
+            <option value="">Select</option>
+            <option>Solar kit</option>
+            <option>Generator</option>
+            <option>Portable power station</option>
+            <option>Grid connection</option>
+            <option>None needed (reliable grid power confirmed)</option>
+            <option>Undecided, needs review</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>What will be plugged in (load)</label>
+          <input type="text" id="power-load" placeholder="e.g. TV, powered speaker, tablet charger, lights" />
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px;">
+        <label>Power notes</label>
+        <textarea id="power-notes" placeholder="Hours of use, whether the church has a permanent building to mount panels, who will install."></textarea>
+      </div>
+      <div id="power-warnings"></div>
+
+      <div class="sub-title">Other costs</div>
+      <div class="extra-grid">
+        <div class="nm">Transport and delivery<small>Hired van, bus, or onward travel to the church</small></div>
+        <input type="number" id="x-transport" min="0" inputmode="numeric" placeholder="0" oninput="recalcAll()" />
+        <div class="nm">Installation labour<small>Installer fees, mounting, wiring</small></div>
+        <input type="number" id="x-install" min="0" inputmode="numeric" placeholder="0" oninput="recalcAll()" />
+        <div class="nm" id="x-clear-nm" style="display:none;">Import duty and clearance<small>Required when buying outside Uganda. Get this from a licensed clearing agent.</small></div>
+        <input type="number" id="x-clearance" min="0" inputmode="numeric" placeholder="0" oninput="recalcAll()" style="display:none;" />
+        <div class="nm"><input type="text" id="x-other-label" placeholder="Other cost (describe)" /></div>
+        <input type="number" id="x-other" min="0" inputmode="numeric" placeholder="0" oninput="recalcAll()" />
       </div>
 
       <div class="totals-box">
-        <div class="total-line"><span id="grand-local-label">Total (UGX)</span><span id="grand-local">0</span></div>
-        <div class="total-line"><span>Total (USD)</span><span id="grand-usd">$0.00</span></div>
-        <div class="total-line grand"><span>Total Requested</span><span id="grand-both">$0.00 USD</span></div>
+        <div class="total-line"><span>Equipment subtotal</span><span id="t-items">0</span></div>
+        <div class="total-line"><span>Other costs</span><span id="t-extra">0</span></div>
+        <div class="total-line"><span id="t-local-lbl">Total (UGX)</span><span id="t-local">0</span></div>
+        <div class="total-line grand"><span>Total requested (USD)</span><span id="t-usd">$0.00</span></div>
+      </div>
+
+      <div class="sub-title">Delivery and quotes</div>
+      <div class="field">
+        <label>Delivery plan</label>
+        <textarea id="d-plan" placeholder="Vehicle, route, who pays what and where, who receives the equipment at the church."></textarea>
+      </div>
+      <div class="grid cols-2" style="margin-top:14px;">
+        <div class="field"><label>Warranty offered (months)</label><input type="number" id="d-warranty" min="0" inputmode="numeric" /></div>
+        <div class="field"><label>Quote documents link</label><input type="text" id="d-quotes-link" placeholder="Google Drive folder or file" /></div>
+      </div>
+      <div class="field" style="margin-top:14px;">
+        <label>Vendors compared, and why this vendor</label>
+        <textarea id="d-compared" placeholder="Three vendors quoted is the goal. Say who else quoted and why this one was chosen."></textarea>
       </div>
     </div>
 
-    <!-- Section 3: Notes & Submit -->
-    <div class="card" style="border-radius:0 0 14px 14px;border-bottom:1px solid #e2e8f0;">
-      <div class="section-title">Additional Notes</div>
-      <div class="field" style="margin-bottom:20px;">
-        <label>Notes</label>
-        <textarea id="notes" placeholder="Where the equipment should be delivered, when it is needed, or anything else we should know."></textarea>
+    <!-- SECTION 3 -->
+    <div class="card">
+      <div class="sec-head"><span class="sec-num">Section 3</span><span class="sec-title">Final Outcome</span></div>
+      <div class="sec-sub">Complete this after delivery and install, by opening this work order again from its link. Leave it empty on a new request.</div>
+
+      <details class="outcome" id="outcome-box">
+        <summary>Open Final Outcome</summary>
+        <div class="sub-title" style="margin-top:4px;">Checked before payment and on delivery</div>
+        <div class="checks" id="o-verify">
+          <label><input type="checkbox" value="Sealed factory boxes inspected" /> Sealed factory boxes inspected</label>
+          <label><input type="checkbox" value="Serial numbers recorded" /> Serial numbers recorded</label>
+          <label><input type="checkbox" value="EFRIS tax invoice received" /> EFRIS tax invoice received</label>
+          <label><input type="checkbox" value="Written warranty received" /> Written warranty received</label>
+          <label><input type="checkbox" value="Speaker drivers inspected" /> Speaker drivers inspected (audio gear)</label>
+        </div>
+        <div class="grid cols-3" style="margin-top:16px;">
+          <div class="field"><label>Date delivered</label><input type="date" id="o-delivered" /></div>
+          <div class="field"><label>Date installed</label><input type="date" id="o-installed" /></div>
+          <div class="field"><label>Installed by</label><input type="text" id="o-installer" /></div>
+          <div class="field"><label id="o-actual-lbl">Actual total paid</label><input type="number" id="o-actual" min="0" inputmode="numeric" /></div>
+          <div class="field"><label id="o-invoice-lbl">Final invoice amount</label><input type="number" id="o-invoice" min="0" inputmode="numeric" /></div>
+          <div class="field"><label>Status</label><select id="o-status"></select></div>
+        </div>
+        <div class="grid cols-2" style="margin-top:14px;">
+          <div class="field"><label>Receipts and invoices link</label><input type="text" id="o-receipts" placeholder="Google Drive link" /></div>
+          <div class="field"><label>Install photos link</label><input type="text" id="o-photos" placeholder="Google Drive link" /></div>
+        </div>
+        <div class="field" style="margin-top:14px;">
+          <label>How it went</label>
+          <textarea id="o-notes" placeholder="What worked, what did not, and what we would repeat for the next church."></textarea>
+        </div>
+      </details>
+    </div>
+
+    <!-- Notes & submit -->
+    <div class="card last">
+      <div class="field" style="margin-bottom:18px;">
+        <label>Additional notes</label>
+        <textarea id="notes" placeholder="Anything else the trustees should know."></textarea>
       </div>
-
-      <hr class="divider" />
-
-      <div class="section-title">Submitter Signature</div>
-      <div class="field-grid cols-2" style="margin-bottom:20px;">
-        <div class="field">
-          <label>Submitted By</label>
-          <input type="text" id="sig-name" placeholder="Your name" />
-        </div>
-        <div class="field">
-          <label>Date Submitted</label>
-          <input type="date" id="sig-date" />
-        </div>
-        <div class="field">
-          <label>Your Email</label>
-          <input type="email" id="sig-email" placeholder="e.g. jima@example.com" />
-        </div>
-        <div class="field">
-          <label>WhatsApp Number</label>
-          <input type="tel" id="sig-whatsapp" placeholder="e.g. +256 700 000000" />
-        </div>
+      <hr class="divider" style="margin-top:0;" />
+      <div class="sub-title" style="margin-top:0;">Submitted by</div>
+      <div class="grid cols-2" style="margin-bottom:20px;">
+        <div class="field"><label>Name</label><input type="text" id="sig-name" placeholder="Your name" /></div>
+        <div class="field"><label>Date</label><input type="date" id="sig-date" /></div>
+        <div class="field"><label>Your email</label><input type="email" id="sig-email" placeholder="e.g. isaac@example.com" /></div>
+        <div class="field"><label>WhatsApp number</label><input type="tel" id="sig-whatsapp" placeholder="e.g. +256 700 000000" /></div>
       </div>
-
       <div class="btn-row">
-        <button class="btn btn-primary" id="submit-btn" onclick="submitRequest()">Submit Equipment Request</button>
-        <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+        <button class="btn btn-primary" id="submit-btn" onclick="submitWO()">Submit Work Order</button>
+        <button class="btn btn-outline" onclick="previewPrint()">Preview / Save as PDF</button>
+        <button class="btn btn-ghost" onclick="clearForm()" id="clear-btn">Clear</button>
       </div>
       <div class="error-msg" id="error-msg"></div>
     </div>
-
-  </div><!-- /form-wrap -->
-
-  <!-- Success screen -->
-  <div class="success-screen" id="success-screen">
-    <div class="success-icon">✓</div>
-    <div style="font-size:20px;font-weight:700;margin-bottom:8px;">Request Saved</div>
-    <div style="font-size:14px;color:#64748b;max-width:420px;margin:0 auto 24px;line-height:1.6;">
-      Your equipment request has been recorded. Tap the button below to send your approval request by email.
-    </div>
-    <div style="max-width:380px;margin:0 auto 20px;background:#f8fafc;border:1px solid #e2e8f0;
-                border-radius:10px;padding:16px 18px;text-align:left;">
-      <a id="mailto-link" href="#"
-         style="display:block;background:#42C6EE;color:white;border-radius:8px;
-                padding:14px 20px;font-size:15px;font-weight:700;text-decoration:none;text-align:center;">
-        Open Email to Send Approval
-      </a>
-      <div style="font-size:12px;color:#94a3b8;margin-top:8px;">
-        This will open your email app with everything pre-filled.<br>
-        Just tap Send — it goes to David and Brother Greg automatically.
-      </div>
-    </div>
-    <button class="btn btn-outline" style="display:inline-block;" onclick="location.reload()">Submit Another Request</button>
   </div>
 
-</div><!-- /page -->
+  <div class="success-screen" id="success-screen">
+    <div class="success-icon">&#10003;</div>
+    <div style="font-size:21px;font-weight:700;">Work Order Saved</div>
+    <div class="wo-pill" id="ok-wo">WO</div>
+    <div style="font-size:14px;color:#64748b;max-width:480px;margin:0 auto 22px;line-height:1.6;" id="ok-text"></div>
+    <div style="max-width:420px;margin:0 auto 18px;display:grid;gap:10px;">
+      <a id="mailto-link" href="#" class="btn btn-primary" style="text-decoration:none;display:block;">1. Open email to send for approval</a>
+      <button class="btn btn-outline" onclick="window.print()">2. Save as PDF to attach</button>
+    </div>
+    <div class="hint" style="max-width:460px;margin:0 auto 18px;">Come back to this work order any time to add the Final Outcome after install:<br><a id="ok-link" href="#" style="word-break:break-all;"></a></div>
+    <button class="btn btn-ghost" onclick="location.href=location.pathname">Start another work order</button>
+  </div>
+</div>
+
+<div id="print-doc"></div>
 
 <script>
-  /* ── Config (same currency list and live-rate source as the Travel Request form) ── */
-  const EA_CURRENCIES = [
-    { code:"UGX", name:"Ugandan Shilling",      country:"Uganda",       fallback:3700  },
-    { code:"KES", name:"Kenyan Shilling",        country:"Kenya",        fallback:129   },
-    { code:"TZS", name:"Tanzanian Shilling",     country:"Tanzania",     fallback:2600  },
-    { code:"RWF", name:"Rwandan Franc",          country:"Rwanda",       fallback:1350  },
-    { code:"ETB", name:"Ethiopian Birr",         country:"Ethiopia",     fallback:57    },
-    { code:"BIF", name:"Burundian Franc",        country:"Burundi",      fallback:2900  },
-    { code:"SSP", name:"South Sudanese Pound",   country:"South Sudan",  fallback:1300  },
-    { code:"DJF", name:"Djiboutian Franc",       country:"Djibouti",     fallback:178   },
-    { code:"SOS", name:"Somali Shilling",        country:"Somalia",      fallback:571   },
-    { code:"MGA", name:"Malagasy Ariary",        country:"Madagascar",   fallback:4500  },
-    { code:"MZN", name:"Mozambican Metical",     country:"Mozambique",   fallback:64    },
-    { code:"ERN", name:"Eritrean Nakfa",         country:"Eritrea",      fallback:15    },
-  ];
+/* ============================================================
+   East Africa Work Order
+   Single file, no build step. Reads from Supabase, falls back to
+   the embedded copies below if the database cannot be reached.
+   ============================================================ */
+const SUPABASE_URL = "https://gwvaarvwmptbsnanxmij.supabase.co";
+const SUPABASE_KEY = "sb_publishable_ziOlB_rYW9yh9-DMRPqzXg_7ZWV6THq";
+const APPROVAL_EMAIL = "natgoyco@yahoo.com";
+const APPROVAL_CC    = "drobconsultingroup@gmail.com";
+const FORM_URL = "https://drobertson0624.github.io/Projects/equipment-request.html";
 
-  let itemCount           = 0;
-  let liveRates           = {};
-  let currentCurrencyCode = "UGX";
-  let currentRate         = 3700;
+const SBH = { apikey: SUPABASE_KEY, Authorization: "Bearer " + SUPABASE_KEY, "Content-Type": "application/json" };
 
-  const sel = document.getElementById("currency-select");
-  sel.innerHTML = "";
-  EA_CURRENCIES.forEach(c => {
-    const opt = document.createElement("option");
-    opt.value = c.code;
-    opt.textContent = `${c.country} — ${c.name} (${c.code})`;
-    if (c.code === "UGX") opt.selected = true;
-    sel.appendChild(opt);
-  });
+/* Embedded fallbacks (kept in step with work_orders_migration.sql). No prices. */
+let CATALOG  = [{"id": "EQ-001", "sort": 1, "category": "Playback device", "name": "Android tablet", "brand": "Samsung", "model": "Galaxy Tab S10 FE", "spec": "5G + dual SIM; IP68; S Pen included; 8GB RAM / 128GB ROM", "unit": "each", "power": false, "spec_required": false, "notes": "Verify 5G variant"}, {"id": "EQ-002", "sort": 2, "category": "Cables & adapters", "name": "USB-C to HDMI adapter", "brand": "UGREEN", "model": "CM716 / 25854", "spec": "USB-C to HDMI female; 4K@60Hz support", "unit": "each", "power": false, "spec_required": false, "notes": "Check exact part number"}, {"id": "EQ-003", "sort": 3, "category": "Cables & adapters", "name": "AUX cable, 3 m", "brand": "Soundking", "model": "1/8-inch / 3.5mm", "spec": "3 m stereo 3.5mm male-to-male jack audio cable", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-004", "sort": 4, "category": "Display", "name": "Android smart TV, 43 inch", "brand": "Skyworth", "model": "43G6500G", "spec": "43-inch Google-certified Android TV; 2GB RAM / 16GB ROM", "unit": "each", "power": false, "spec_required": false, "notes": "Exact model stock needs a formal quote"}, {"id": "EQ-005", "sort": 5, "category": "Audio", "name": "Powered speaker, 12 inch", "brand": "Wharfedale", "model": "TOURUS-AX12 MBT", "spec": "12-inch active bi-amplified; 350W RMS / 700W peak", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-006", "sort": 6, "category": "Audio", "name": "Corded microphone", "brand": "Shure", "model": "SV100", "spec": "Cardioid dynamic wired microphone with cable", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-007", "sort": 7, "category": "Audio", "name": "Passive midrange speaker, 15 inch", "brand": "Wharfedale", "model": "EVP-X15", "spec": "15-inch passive; 300W RMS / 600W program / 1200W peak", "unit": "each", "power": false, "spec_required": false, "notes": "Report spec says pair, price says per unit. Confirm unit of measure with Isaac."}, {"id": "EQ-008", "sort": 8, "category": "Audio", "name": "Powered mixer, 16 channel", "brand": "Behringer", "model": "EUROPOWER PMP4000", "spec": "16-channel powered mixer; 2 x 800W; multi-FX", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-009", "sort": 9, "category": "Audio", "name": "Wireless microphone system", "brand": "Explorer", "model": "EXM330", "spec": "UHF wireless; 520-830MHz; dual handheld; range to 50 m", "unit": "set", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-010", "sort": 10, "category": "Audio", "name": "Power amplifier", "brand": "Behringer", "model": "EUROPOWER EP2000", "spec": "2 x 1000W @ 2 ohm / 2 x 750W @ 4 ohm / 2000W bridged", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-011", "sort": 11, "category": "Audio", "name": "Full-range speakers, dual 15 inch", "brand": "Wharfedale", "model": "IMPACT-X215L", "spec": "Dual 15-inch cabinet; 700W AES / 2800W peak each", "unit": "pair", "power": false, "spec_required": false, "notes": "For larger congregations (100+)"}, {"id": "EQ-012", "sort": 12, "category": "Instruments", "name": "Keyboard, 61 key", "brand": "Yamaha", "model": "PSR-E483", "spec": "61 touch-sensitive keys; 860 voices / 345 styles; sampling", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-013", "sort": 13, "category": "Connectivity", "name": "4G router", "brand": "TP-Link", "model": "TL-MR6400", "spec": "4G LTE up to 150Mbps; Wi-Fi 300Mbps; SIM slot", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-014", "sort": 14, "category": "Cables & adapters", "name": "HDMI cable, 10 m", "brand": "Vention", "model": "ALHSL", "spec": "HDMI 2.0; 10 m; 4K@60Hz; 7.5mm OD", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-015", "sort": 15, "category": "Cables & adapters", "name": "AUX cable, standard length", "brand": "Soundking", "model": "1/8-inch / 3.5mm", "spec": "3.5mm audio cable; 1.5 m to 3 m", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-016", "sort": 16, "category": "Storage", "name": "USB flash drive, 128GB", "brand": "SanDisk", "model": "Ultra Flair USB 3.0", "spec": "128GB; USB 3.0 up to 150MB/s read", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-017", "sort": 17, "category": "Power", "name": "Petrol generator, 2.5 kVA", "brand": "Dayliff", "model": "DG3000S", "spec": "Air-cooled OHV petrol engine; low-oil shutdown; DC output", "unit": "each", "power": true, "spec_required": false, "notes": "Power option: generator"}, {"id": "EQ-018", "sort": 18, "category": "Power", "name": "Solar component kit", "brand": "Davis & Shirtliff / various", "model": null, "spec": "600W panel + 2000W inverter + 200Ah gel battery", "unit": "set", "power": true, "spec_required": false, "notes": "Component budget, not a turnkey kit. Installation, protection devices and wiring are extra. Power option: solar."}, {"id": "EQ-019", "sort": 19, "category": "Power", "name": "Solar equipment (spec required)", "brand": null, "model": null, "spec": "No wattage or load details supplied. Obtain spec before quotation.", "unit": "set", "power": true, "spec_required": true, "notes": "Spec required before ordering"}, {"id": "EQ-020", "sort": 20, "category": "Power", "name": "Portable power station", "brand": "Vestwoods", "model": "Rescube VEP1K-20B", "spec": "2009.6Wh LiFePO4; 1000W continuous / 1500W peak; UPS mode", "unit": "each", "power": true, "spec_required": false, "notes": "Power option: portable power station"}, {"id": "EQ-021", "sort": 21, "category": "Power", "name": "Power stabilizer (AVR)", "brand": "Airstar", "model": "ST-2000A", "spec": "2 kVA / 2000W automatic voltage regulator", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-022", "sort": 22, "category": "Power", "name": "Extension reel, 25 m", "brand": "Tronic", "model": "25m 1.5mm2 3-core", "spec": "13A; 220-240V; 3600W max; 3-core copper flex", "unit": "each", "power": false, "spec_required": false, "notes": null}, {"id": "EQ-023", "sort": 23, "category": "Translation", "name": "Interpretation equipment (spec required)", "brand": "Miratude / equivalent", "model": null, "spec": "Simultaneous interpretation system (mics, receivers, headsets)", "unit": "set", "power": false, "spec_required": true, "notes": "Spec required before ordering"}];
+let VENDORS  = [{"name": "Davis & Shirtliff Uganda", "focus": "Generators, solar systems, power pumps", "location": "Jinja Rd & 3rd St Corner, Industrial Area, Kampala", "phone": "+256 323 346000"}, {"name": "TilyExpress Uganda", "focus": "IT hardware, TVs, routers, accessories", "location": "Plot 25 Martin Road, Old Kampala", "phone": "+256 775 189705"}, {"name": "PRO AV Africa", "focus": "Pro audio, speakers, amplifiers, mics", "location": "84B Luthuli Avenue, Bugolobi, Kampala", "phone": "+256 41 4666665"}, {"name": "Eminent Sounds", "focus": "Behringer, Wharfedale, microphones", "location": "Africa House, Kampala Road", "phone": "+256 790 809970"}, {"name": "Tronic Uganda Ltd", "focus": "Extension reels, breakers, electricals", "location": "Plot 6 Jinja Road (opp. Victoria Univ.)", "phone": "+256 789 331407"}];
+let CHURCHES = [{"id": 1, "pastor": "Richard Muwanguzi", "location": "Kyomya village", "region": "Jinja", "country": "Uganda", "members": 50, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 9, "distKampala": "109 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 2, "pastor": "Grace Ikomba", "location": "Magamaga village", "region": "Jinja", "country": "Uganda", "members": 25, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 9, "distKampala": "116 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 3, "pastor": "Stephen Ikomba", "location": "Namwendwa village", "region": "Kamuli", "country": "Uganda", "members": 50, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 9, "distKampala": "132 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 4, "pastor": "Paul Musulube", "location": "Iganga town", "region": "Iganga", "country": "Uganda", "members": 40, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 9, "distKampala": "136 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 5, "pastor": "Edward Bwanga", "location": "Buyende district", "region": "Buyende", "country": "Uganda", "members": 25, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 9, "distKampala": "155 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 6, "pastor": "David Mukisa", "location": "Namusita village", "region": "Mayuge", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "", "priority": 8, "distKampala": "155 km", "internet": "", "cell_signal": "", "elect_power": "", "tablet": "", "laptop": "", "sound_system": "", "tv_screen": ""}, {"id": 7, "pastor": "Moses Mukisa", "location": "Nsinda Mayuge", "region": "Mayuge", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "", "priority": 8, "distKampala": "153 km", "internet": "", "cell_signal": "", "elect_power": "", "tablet": "", "laptop": "", "sound_system": "", "tv_screen": ""}, {"id": 8, "pastor": "Joshua Otaget", "location": "Grace Tabernacle Busia", "region": "Busia", "country": "Uganda", "members": 130, "standing": "Stable", "spiritual_standing": "Stable", "language": "Samia/Ateso/Luganda", "priority": 9, "distKampala": "171 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 9, "pastor": "Robert Kirungi", "location": "Namukunyu village", "region": "Kamuli", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "", "priority": 7, "distKampala": "135 km", "internet": "", "cell_signal": "", "elect_power": "", "tablet": "", "laptop": "", "sound_system": "", "tv_screen": ""}, {"id": 10, "pastor": "Julius Nturyabuza", "location": "Kasana Mubende", "region": "Mubende", "country": "Uganda", "members": 90, "standing": "Stable", "spiritual_standing": "Stable", "language": "Lukiga/Lunyankole", "priority": 4, "distKampala": "135 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 11, "pastor": "Livingstone Okape", "location": "Kalachai Tororo", "region": "Tororo", "country": "Uganda", "members": 43, "standing": "Stable", "spiritual_standing": "Stable", "language": "Ateso", "priority": 7, "distKampala": "226 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 12, "pastor": "Henry Mulugo", "location": "Mayuge town", "region": "Mayuge", "country": "Uganda", "members": 20, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 7, "distKampala": "134 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 13, "pastor": "Charles Bameka", "location": "Wandago village", "region": "Jinja", "country": "Uganda", "members": 30, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 7, "distKampala": "113 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 14, "pastor": "Tumwebaze Gideon", "location": "Kiryadongo", "region": "Kiryadongo", "country": "Uganda", "members": 50, "standing": "Stable", "spiritual_standing": "Stable", "language": "Swahili/Luo/Ateso", "priority": 4, "distKampala": "240 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 15, "pastor": "Jimmy Opoo", "location": "Central Division Lira", "region": "Lira", "country": "Uganda", "members": 25, "standing": "Weak", "spiritual_standing": "Weak", "language": "Langi/Luo", "priority": 5, "distKampala": "342 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 16, "pastor": "Agensi Emmanuel", "location": "Teko Kisoro", "region": "Kisoro", "country": "Uganda", "members": 85, "standing": "Stable", "spiritual_standing": "Stable", "language": "Lukiga/Lunyankole/Kinyarwanda", "priority": 9, "distKampala": "481 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 17, "pastor": "John Adungo", "location": "Iyolwa Tororo", "region": "Tororo", "country": "Uganda", "members": 17, "standing": "Stable", "spiritual_standing": "Stable", "language": "Japadhola", "priority": 4, "distKampala": "195 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 18, "pastor": "David Anwongowroth", "location": "Kasokoso Wakiso", "region": "Wakiso", "country": "Uganda", "members": 40, "standing": "Stable", "spiritual_standing": "Stable", "language": "English/Luganda", "priority": 3, "distKampala": "", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 19, "pastor": "Rodgers Buyinza", "location": "Iringa village", "region": "Mayuge", "country": "Uganda", "members": 30, "standing": "STRONG", "spiritual_standing": "STRONG", "language": "Luganda/Lusoga", "priority": 0, "distKampala": "160 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "", "laptop": "", "sound_system": "No", "tv_screen": "No"}, {"id": 20, "pastor": "Jackson Imai", "location": "Kirinya Kampala", "region": "Kampala", "country": "Uganda", "members": 79, "standing": "Stable", "spiritual_standing": "Stable", "language": "Luganda/Swahili", "priority": 0, "distKampala": "13 km", "internet": "Available", "cell_signal": "Okay", "elect_power": "Yes", "tablet": "No", "laptop": "Small", "sound_system": "Projector", "tv_screen": "No"}, {"id": 21, "pastor": "Peter Opendi", "location": "Katerema Tororo", "region": "Tororo", "country": "Uganda", "members": 63, "standing": "Stable", "spiritual_standing": "Stable", "language": "Ateso/Japadhola", "priority": 0, "distKampala": "183 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 22, "pastor": "Wakuma Julius", "location": "Nabitchiki Namisindwa", "region": "Namisindwa", "country": "Uganda", "members": 92, "standing": "Stable", "spiritual_standing": "Stable", "language": "Lugisu", "priority": 0, "distKampala": "250 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 23, "pastor": "Aron Ssemaganda", "location": "Kyegwegwa", "region": "Kyegegwa", "country": "Uganda", "members": 210, "standing": "Stable", "spiritual_standing": "Stable", "language": "Lukiga/Lunyankole", "priority": 0, "distKampala": "172 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 24, "pastor": "Gershom Twinomugisha", "location": "Katikara Kakumiro", "region": "Kakumiro", "country": "Uganda", "members": 150, "standing": "Stable", "spiritual_standing": "Stable", "language": "Lukiga/Lunyankole", "priority": 0, "distKampala": "184 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 25, "pastor": "Alfred Caleb", "location": "Kapapi Buliisa", "region": "Buliisa", "country": "Uganda", "members": 80, "standing": "Stable", "spiritual_standing": "Stable", "language": "Luo", "priority": 0, "distKampala": "292 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 26, "pastor": "Marvin Mukungu", "location": "Busamu Mayuge", "region": "Mayuge", "country": "Uganda", "members": 68, "standing": "Growing", "spiritual_standing": "Growing", "language": "Lusoga/Luganda", "priority": 0, "distKampala": "101 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 27, "pastor": "Peter Musasizi", "location": "Bwondha Mayuge", "region": "Mayuge", "country": "Uganda", "members": 200, "standing": "Growing", "spiritual_standing": "Growing", "language": "Lusoga/Luganda", "priority": 0, "distKampala": "145 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 28, "pastor": "Moses Mufumbiro", "location": "Nakabale Malongo", "region": "Mayuge", "country": "Uganda", "members": 63, "standing": "Growing", "spiritual_standing": "Growing", "language": "Lusoga/Luganda", "priority": 0, "distKampala": "101 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 29, "pastor": "Vincent Karugambe", "location": "Jakuzi Namba Six Mayuge", "region": "Mayuge", "country": "Uganda", "members": 50, "standing": "Growing", "spiritual_standing": "Growing", "language": "Lusoga/Luganda", "priority": 0, "distKampala": "115 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 30, "pastor": "Martin (Bunamwayi)", "location": "Bunamwayi Mbale", "region": "Mbale", "country": "Uganda", "members": 65, "standing": "Growing", "spiritual_standing": "Growing", "language": "Lugisu/Luganda", "priority": 0, "distKampala": "226 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 31, "pastor": "Ronald Sabiti", "location": "Tondo Kiboga", "region": "Kiboga", "country": "Uganda", "members": 65, "standing": "Growing", "spiritual_standing": "Growing", "language": "Luganda", "priority": 0, "distKampala": "124 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 32, "pastor": "Patrick Obiya", "location": "Kwania", "region": "Kwania", "country": "Uganda", "members": 40, "standing": "Stable", "spiritual_standing": "Stable", "language": "Langi/Luo", "priority": 0, "distKampala": "292 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 33, "pastor": "Joseph Omoding", "location": "Kotido Karamoja", "region": "Kotido", "country": "Uganda", "members": 80, "standing": "Stable", "spiritual_standing": "Stable", "language": "Karamojong/Ateso", "priority": 0, "distKampala": "343 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 34, "pastor": "Caleb Dhafa", "location": "Namayemba", "region": "Bugiri", "country": "Uganda", "members": 55, "standing": "Stable", "spiritual_standing": "Stable", "language": "Lusoga/Luganda/Samia", "priority": 0, "distKampala": "49 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 35, "pastor": "Gabriel Okobu", "location": "Oditel Kapelebyong", "region": "Kapelebyong", "country": "Uganda", "members": 71, "standing": "Stable", "spiritual_standing": "Stable", "language": "Ateso", "priority": 0, "distKampala": "374 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Near", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 36, "pastor": "Philip Kaputunuwo", "location": "Nsambya", "region": "Kampala", "country": "Uganda", "members": 40, "standing": "Stable", "spiritual_standing": "Stable", "language": "Swahili/Luo/Ateso", "priority": 0, "distKampala": "245 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 37, "pastor": "Peter Ujiki", "location": "Nyaful Akorwo Nebbi", "region": "Nebbi", "country": "Uganda", "members": 65, "standing": "Stable", "spiritual_standing": "Stable", "language": "Luo", "priority": 0, "distKampala": "423 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 38, "pastor": "Cyprean Amballah Oyasi", "location": "Bungoma Western Kenya", "region": "Bungoma", "country": "Kenya", "members": 65, "standing": "Growing", "spiritual_standing": "Growing", "language": "Swahili", "priority": 0, "distKampala": "222 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 39, "pastor": "Charles Okello", "location": "Lumino Busia", "region": "Busia", "country": "Uganda", "members": 89, "standing": "Stable", "spiritual_standing": "Stable", "language": "Samia/Luganda", "priority": 1, "distKampala": "186 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 40, "pastor": "Daniel Omella", "location": "Morukebu Tororo", "region": "Tororo", "country": "Uganda", "members": 56, "standing": "Stable", "spiritual_standing": "Stable", "language": "Ateso", "priority": 1, "distKampala": "222 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "Far", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 41, "pastor": "", "location": "Paya village", "region": "Iganga", "country": "Uganda", "members": 5, "standing": "", "spiritual_standing": "", "language": "Lusoga/Luganda", "priority": 7, "distKampala": "145 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "No", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 42, "pastor": "", "location": "Oyam", "region": "Oyam", "country": "Uganda", "members": 0, "standing": "Weak", "spiritual_standing": "Weak", "language": "Langi/Luo", "priority": 0, "distKampala": "310 km", "internet": "Not Available", "cell_signal": "Okay", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 43, "pastor": "", "location": "Gulu town", "region": "Gulu", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Acholi/Luo", "priority": 7, "distKampala": "337 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 44, "pastor": "Jimmy Okello", "location": "Life Tabernacle Latwong", "region": "Pader", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Acholi/Luo", "priority": 6, "distKampala": "~380 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "No", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 45, "pastor": "", "location": "Lawiyadul village", "region": "Gulu", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Acholi/Luo", "priority": 6, "distKampala": "~340 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 46, "pastor": "Morris Godson", "location": "Word Bride Tabernacle", "region": "Gulu", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Acholi/Luo", "priority": 7, "distKampala": "337 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 47, "pastor": "Isaac Osinde Okiru", "location": "Ephesians Tabernacle", "region": "Kampala", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Luganda/English", "priority": 6, "distKampala": "0 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "Yes", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 48, "pastor": "", "location": "LCA Kampala", "region": "Kampala", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Luganda/English", "priority": 5, "distKampala": "0 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "Yes", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 49, "pastor": "Ebbu Emmanuel", "location": "Branham Tabernacle", "region": "Tororo", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Lugisu/Luo", "priority": 6, "distKampala": "225 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 50, "pastor": "Nicholas Gonakubyoma", "location": "Little Bethlehem Church", "region": "Jinja", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Lusoga/Luganda", "priority": 6, "distKampala": "80 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 51, "pastor": "Musulube Paul", "location": "Nakavule Believers Tab", "region": "Iganga", "country": "Uganda", "members": 0, "standing": "", "spiritual_standing": "", "language": "Lusoga", "priority": 5, "distKampala": "130 km", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 52, "pastor": "Joseph Matingwony", "location": "Headlight Assembly Motero", "region": "Kericho", "country": "Kenya", "members": 0, "standing": "", "spiritual_standing": "", "language": "Kipsigis/Swahili", "priority": 4, "distKampala": "", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 53, "pastor": "Joseph Irungu", "location": "Amberstone Tabernacle", "region": "Nairobi", "country": "Kenya", "members": 0, "standing": "", "spiritual_standing": "", "language": "Kikuyu/Swahili/English", "priority": 4, "distKampala": "", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 54, "pastor": "Cosmas Langat", "location": "LCA Bomet", "region": "Bomet", "country": "Kenya", "members": 0, "standing": "", "spiritual_standing": "", "language": "Kipsigis/Swahili", "priority": 4, "distKampala": "", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 55, "pastor": "Simon Mwangi Njoroge", "location": "Trump of God-Molo", "region": "Nakuru", "country": "Kenya", "members": 0, "standing": "", "spiritual_standing": "", "language": "Kikuyu/Swahili", "priority": 4, "distKampala": "", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 56, "pastor": "Muiru Mucheru", "location": "LCA E Ravine", "region": "Mombasa", "country": "Kenya", "members": 0, "standing": "", "spiritual_standing": "", "language": "Swahili/English", "priority": 4, "distKampala": "", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}, {"id": 57, "pastor": "Isaiah Kishoiyan", "location": "Ololulunga LCA", "region": "Narok", "country": "Kenya", "members": 0, "standing": "", "spiritual_standing": "", "language": "Maasai/Swahili", "priority": 4, "distKampala": "", "internet": "Available", "cell_signal": "Yes", "elect_power": "", "tablet": "No", "laptop": "No", "sound_system": "No", "tv_screen": "No"}];
 
-  async function fetchLiveRates() {
-    try {
-      const res = await fetch("https://open.er-api.com/v6/latest/USD");
-      if (res.ok) { const data = await res.json(); liveRates = data.rates || {}; }
-      else document.getElementById("rate-error").style.display = "block";
-    } catch(e) {
-      document.getElementById("rate-error").style.display = "block";
-    }
-    updateRateDisplay();
+const EA_CURRENCIES = [
+  { code:"UGX", name:"Ugandan Shilling", country:"Uganda", fallback:3700 },
+  { code:"KES", name:"Kenyan Shilling", country:"Kenya", fallback:129 },
+  { code:"TZS", name:"Tanzanian Shilling", country:"Tanzania", fallback:2600 },
+  { code:"RWF", name:"Rwandan Franc", country:"Rwanda", fallback:1350 },
+  { code:"USD", name:"US Dollar", country:"United States", fallback:1 },
+];
+
+const params   = new URLSearchParams(location.search);
+const SAMPLE   = params.get("sample") === "kisoro";
+const EDIT_WO  = params.get("wo");
+
+let liveRates = {}, currentCode = "UGX", currentRate = 3700, itemSeq = 0;
+let editing = null;       // existing row when ?wo= is used
+let savedWO = null;       // wo number after save, used by the print document
+
+const $  = id => document.getElementById(id);
+const esc = s => String(s == null ? "" : s).replace(/[&<>"']/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+const num = v => { const n = parseFloat(v); return isFinite(n) ? n : 0; };
+const fmt = n => Math.round(n).toLocaleString();
+const money = n => "$" + n.toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
+const countryCode = c => c === "Kenya" ? "KE" : "UG";
+
+/* ---------- Reference data ---------- */
+async function sbGet(path) {
+  const ctl = new AbortController(); const t = setTimeout(() => ctl.abort(), 7000);
+  try {
+    const r = await fetch(SUPABASE_URL + "/rest/v1/" + path, { headers: SBH, signal: ctl.signal });
+    if (!r.ok) return null;
+    return await r.json();
+  } catch (e) { return null; } finally { clearTimeout(t); }
+}
+
+async function loadReference() {
+  const [cat, ven, ovr] = await Promise.all([
+    sbGet("equipment_catalog?select=*&active=eq.true&order=sort_order"),
+    sbGet("equipment_vendors?select=*&active=eq.true&order=name"),
+    sbGet("church_overrides?select=*"),
+  ]);
+  if (Array.isArray(cat) && cat.length) {
+    CATALOG = cat.map(r => ({ id:r.id, sort:r.sort_order, category:r.category, name:r.name, brand:r.brand, model:r.model, spec:r.spec, unit:r.unit, power:r.power_option, spec_required:r.spec_required, notes:r.notes }));
   }
+  if (Array.isArray(ven) && ven.length) VENDORS = ven.map(r => ({ name:r.name, focus:r.focus, location:r.location, phone:r.phone }));
+  if (Array.isArray(ovr)) mergeOverrides(ovr);
+}
 
-  function getRateForCode(code) {
-    if (liveRates[code]) return liveRates[code];
-    const c = EA_CURRENCIES.find(c => c.code === code);
-    return c ? c.fallback : 1;
-  }
-
-  function updateRateDisplay() {
-    const code = document.getElementById("currency-select").value;
-    currentCurrencyCode = code;
-    currentRate = getRateForCode(code);
-    const usdPer = 1 / currentRate;
-    document.getElementById("rate-loading").style.display = "none";
-    document.getElementById("rate-info").style.display    = "block";
-    document.getElementById("rate-line-1").textContent =
-      `1 USD = ${currentRate.toLocaleString(undefined,{maximumFractionDigits:2})} ${code}`;
-    document.getElementById("rate-line-2").textContent =
-      `1 ${code} = $${usdPer.toFixed(usdPer < 0.01 ? 6 : 4)} USD  ·  ${Object.keys(liveRates).length ? "Live rate" : "Estimate"}`;
-    document.querySelector(".local-currency-header").textContent = `Unit Cost (${code})`;
-    document.querySelector(".local-total-header").textContent    = `Total (${code})`;
-    document.getElementById("grand-local-label").textContent     = `Total (${code})`;
-    recalcAll();
-  }
-  function onCurrencyChange() { updateRateDisplay(); }
-
-  document.getElementById("sig-date").value = new Date().toISOString().split("T")[0];
-
-  /* ── Item rows ── */
-  function addItem() {
-    itemCount++;
-    const tr = document.createElement("tr");
-    tr.className = "item-row";
-    tr.id = `item-${itemCount}`;
-    tr.innerHTML = `
-      <td data-label="Item"><input type="text" class="it-name" placeholder="e.g. Bluetooth speaker" /></td>
-      <td data-label="Notes"><input type="text" class="it-notes" placeholder="Optional" /></td>
-      <td data-label="Qty"><input type="number" class="it-qty" min="0" value="1" inputmode="numeric" style="text-align:right" oninput="recalcAll()" /></td>
-      <td data-label="Unit Cost"><input type="number" class="it-cost local-amt" min="0" placeholder="0" inputmode="numeric" oninput="recalcAll()" /></td>
-      <td class="line-local" data-label="Line Total">0</td>
-      <td class="usd-cell line-usd" data-label="USD">$0.00</td>
-      <td><button class="btn-remove" title="Remove item" onclick="removeItem('${tr.id}')">&times;</button></td>`;
-    document.getElementById("items-body").appendChild(tr);
-    recalcAll();
-  }
-
-  function removeItem(id) {
-    if (document.querySelectorAll(".item-row").length <= 1) return;
-    document.getElementById(id)?.remove();
-    recalcAll();
-  }
-
-  function recalcAll() {
-    const rate = currentRate || 1;
-    let total = 0;
-    document.querySelectorAll(".item-row").forEach(row => {
-      const qty  = parseFloat(row.querySelector(".it-qty").value)  || 0;
-      const cost = parseFloat(row.querySelector(".it-cost").value) || 0;
-      const line = qty * cost;
-      total += line;
-      row.querySelector(".line-local").textContent = Math.round(line).toLocaleString() + (window.innerWidth <= 640 ? " " + currentCurrencyCode : "");
-      row.querySelector(".line-usd").textContent   = "$" + (line / rate).toFixed(2);
-    });
-    const usd = total / rate;
-    document.getElementById("sub-local").textContent  = Math.round(total).toLocaleString() + " " + currentCurrencyCode;
-    document.getElementById("sub-usd").textContent    = "$" + usd.toFixed(2);
-    document.getElementById("grand-local").textContent = Math.round(total).toLocaleString() + " " + currentCurrencyCode;
-    document.getElementById("grand-usd").textContent   = "$" + usd.toFixed(2);
-    document.getElementById("grand-both").textContent  = "$" + usd.toFixed(2) + " USD";
-  }
-
-  /* ── Collect form data ── */
-  function collectForm() {
-    const rate  = currentRate || 1;
-    const items = [];
-    document.querySelectorAll(".item-row").forEach(row => {
-      const item = row.querySelector(".it-name").value.trim();
-      if (!item) return;
-      const qty       = parseFloat(row.querySelector(".it-qty").value)  || 0;
-      const unit_cost = parseFloat(row.querySelector(".it-cost").value) || 0;
-      items.push({ item, notes: row.querySelector(".it-notes").value.trim(), qty, unit_cost, line_total: qty * unit_cost });
-    });
-    const totalLocal = items.reduce((s, it) => s + it.line_total, 0);
-    return {
-      requester_name:     document.getElementById("req-name").value.trim(),
-      region:             document.getElementById("req-region").value.trim(),
-      reason:             document.getElementById("reason").value.trim(),
-      items,
-      notes:              document.getElementById("notes").value.trim(),
-      submitted_by:       document.getElementById("sig-name").value.trim(),
-      requester_email:    document.getElementById("sig-email").value.trim(),
-      requester_whatsapp: document.getElementById("sig-whatsapp").value.trim(),
-      currency_code:      currentCurrencyCode,
-      exchange_rate:      rate,
-      total_local:        totalLocal,
-      total_usd:          parseFloat((totalLocal / rate).toFixed(2)),
-    };
-  }
-
-  /* ── Plain-text email summary (ASCII only so mailto links do not break) ── */
-  function buildSummary(data) {
-    const code = data.currency_code;
-    const rate = data.exchange_rate || 1;
-    const div  = "------------------------------------------------------------";
-    const n    = v => Math.round(v).toLocaleString();
-    const lines = [];
-    lines.push("EAST AFRICA EQUIPMENT REQUEST - PROJECT KENYA");
-    lines.push(div);
-    lines.push(`Requester:    ${data.requester_name}`);
-    lines.push(`Region:       ${data.region || "Not specified"}`);
-    lines.push(`Submitted By: ${data.submitted_by || "Not specified"}`);
-    lines.push(`Currency:     ${code}  (1 USD = ${rate.toLocaleString(undefined,{maximumFractionDigits:2})} ${code})`);
-    lines.push("");
-    lines.push("REASON FOR EQUIPMENT");
-    lines.push(data.reason);
-    lines.push("");
-    lines.push(div);
-    lines.push("ITEMS");
-    lines.push("");
-    data.items.forEach((it, i) => {
-      const note = it.notes ? `  [${it.notes}]` : "";
-      lines.push(`  ${i+1}. ${it.item}`);
-      lines.push(`     ${it.qty} x ${n(it.unit_cost)} ${code} = ${n(it.line_total)} ${code}  /  $${(it.line_total/rate).toFixed(2)} USD${note}`);
-    });
-    lines.push("");
-    lines.push(div);
-    lines.push("TOTALS");
-    lines.push(div);
-    lines.push(`Total (${code}):  ${n(data.total_local)} ${code}`);
-    lines.push(`Total (USD):    $${data.total_usd.toFixed(2)}`);
-    lines.push("");
-    if (data.notes) { lines.push("NOTES"); lines.push(data.notes); lines.push(""); }
-    lines.push(div);
-    lines.push("Submitted via East Africa Equipment Request Form");
-    lines.push("drobertson0624.github.io/Projects/equipment-request.html");
-    return lines.join("\n");
-  }
-
-  /* ── Submit ── */
-  async function submitRequest() {
-    const data = collectForm();
-    if (!data.requester_name) { showError("Full name is required before submitting."); return; }
-    if (!data.reason)         { showError("Please explain why this equipment is needed."); return; }
-    if (!data.items.length)   { showError("Please add at least one item."); return; }
-
-    const btn = document.getElementById("submit-btn");
-    btn.disabled = true;
-    btn.textContent = "Saving…";
-    hideError();
-
-    try {
-      const res = await fetch(`${SUPABASE_URL}/rest/v1/equipment_requests`, {
-        method: "POST",
-        headers: {
-          apikey: SUPABASE_KEY,
-          Authorization: `Bearer ${SUPABASE_KEY}`,
-          "Content-Type": "application/json",
-          Prefer: "return=minimal",
-        },
-        body: JSON.stringify({
-          requester_name:     data.requester_name,
-          region:             data.region,
-          reason:             data.reason,
-          items_json:         data.items,
-          currency_code:      data.currency_code,
-          exchange_rate:      data.exchange_rate,
-          total_local:        data.total_local,
-          total_usd:          data.total_usd,
-          notes:              data.notes,
-          submitted_by:       data.submitted_by,
-          requester_email:    data.requester_email || null,
-          requester_whatsapp: data.requester_whatsapp || null,
-          status:             "Pending",
-        }),
+function mergeOverrides(rows) {
+  const byId = new Map(CHURCHES.map(c => [c.id, c]));
+  rows.forEach(r => {
+    if (r.church_id == null) return;
+    const base = byId.get(r.church_id);
+    const o = { ...r, distKampala: r.dist_kampala || r.distKampala };
+    if (base) {
+      ["standing","spiritual_standing","language","members","priority","bldg_type","internet","cell_signal","elect_power","tablet","laptop","sound_system","tv_screen","distKampala","pastor","location","region","country"].forEach(k => {
+        if (o[k] !== undefined && o[k] !== null && o[k] !== "") base[k] = o[k];
       });
-      if (!res.ok) throw new Error("Save failed: " + await res.text());
-
-      const summary = buildSummary(data);
-      const subject = `Equipment Request - ${data.requester_name}`;
-      document.getElementById("mailto-link").href =
-        `mailto:natgoyco@yahoo.com?cc=drobconsultingroup@gmail.com&subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(summary)}`;
-
-      document.getElementById("form-wrap").style.display = "none";
-      document.getElementById("success-screen").style.display = "block";
-    } catch(e) {
-      console.error(e);
-      showError("Something went wrong: " + e.message + ". Please try again.");
-      btn.disabled = false;
-      btn.textContent = "Submit Equipment Request";
+      if (o.archived) base.archived = true;
+    } else if (o.location || o.pastor) {
+      const n = { id:o.church_id, pastor:o.pastor||"", location:o.location||"", region:o.region||"", country:o.country||"Uganda", members:o.members||0,
+        spiritual_standing:o.spiritual_standing||"", language:o.language||"", distKampala:o.distKampala||"", internet:o.internet||"", cell_signal:o.cell_signal||"",
+        elect_power:o.elect_power||"", tablet:o.tablet||"", laptop:o.laptop||"", sound_system:o.sound_system||"", tv_screen:o.tv_screen||"", priority:o.priority||0, archived:!!o.archived, bldg_type:o.bldg_type||"" };
+      CHURCHES.push(n); byId.set(n.id, n);
     }
+  });
+}
+
+/* ---------- Church picker ---------- */
+function churchLabel(c) {
+  const who = c.pastor ? c.pastor + ", " : "";
+  return who + c.location + (c.region && c.region !== c.location ? " (" + c.region + ")" : "");
+}
+function buildChurchSelect() {
+  const sel = $("church-select");
+  const list = CHURCHES.filter(c => !c.archived);
+  let html = '<option value="">Select a church</option>';
+  ["Uganda", "Kenya"].forEach(country => {
+    const g = list.filter(c => c.country === country).sort((a, b) => (b.priority || 0) - (a.priority || 0) || churchLabel(a).localeCompare(churchLabel(b)));
+    if (!g.length) return;
+    html += `<optgroup label="${country}">` + g.map(c => `<option value="${c.id}">${esc(churchLabel(c))}${c.priority ? " · priority " + c.priority : ""}</option>`).join("") + "</optgroup>";
+  });
+  html += '<option value="other">Other / not listed</option>';
+  sel.innerHTML = html;
+}
+
+function mapGrid(v) {
+  v = String(v || "").trim().toLowerCase();
+  if (!v) return "";
+  if (v === "yes" || v === "reliable") return "Reliable";
+  if (v === "unreliable" || v === "partial") return "Unreliable";
+  if (v === "far") return "Far from grid";
+  if (v === "no" || v === "none") return "No power";
+  return "";
+}
+const yes = v => String(v || "").trim().toLowerCase().startsWith("y");
+
+function onChurchPick() {
+  const v = $("church-select").value;
+  if (!v) return;
+  if (v === "other") { clearAssessment(); return; }
+  const c = CHURCHES.find(x => String(x.id) === v);
+  if (!c) return;
+  $("a-pastor").value = c.pastor || "";
+  $("a-location").value = c.location || "";
+  $("a-region").value = c.region || "";
+  $("a-country").value = ["Uganda","Kenya"].includes(c.country) ? c.country : "Other";
+  $("a-language").value = c.language || "";
+  $("a-members").value = c.members || "";
+  const st = String(c.spiritual_standing || c.standing || "");
+  const stOpt = [...$("a-standing").options].find(o => o.value && o.value.toLowerCase() === st.toLowerCase());
+  $("a-standing").value = stOpt ? stOpt.value : "";
+  const bt = [...$("a-building").options].find(o => o.value && String(c.bldg_type || "").toLowerCase() && o.value.toLowerCase().startsWith(String(c.bldg_type).toLowerCase().slice(0, 5)));
+  $("a-building").value = bt ? bt.value : "";
+  $("a-grid").value = mapGrid(c.elect_power);
+  $("a-internet").value = c.internet || "";
+  $("a-cell").value = c.cell_signal || "";
+  $("a-distance").value = c.distKampala || "";
+  const have = [];
+  if (yes(c.sound_system)) have.push("Sound system");
+  if (yes(c.tv_screen)) have.push("TV or screen");
+  if (yes(c.tablet)) have.push("Tablet");
+  if (yes(c.laptop)) have.push("Laptop");
+  document.querySelectorAll("#a-existing input").forEach(i => { i.checked = have.includes(i.value); });
+  onCountryChange(true);
+  checkWarnings();
+}
+function clearAssessment() {
+  ["a-pastor","a-location","a-region","a-language","a-members","a-internet","a-cell","a-distance"].forEach(id => $(id).value = "");
+  ["a-standing","a-building","a-grid"].forEach(id => $(id).value = "");
+  document.querySelectorAll("#a-existing input").forEach(i => i.checked = false);
+}
+function onCountryChange(fromChurch) {
+  const c = $("a-country").value;
+  const code = c === "Kenya" ? "KES" : c === "Uganda" ? "UGX" : null;
+  if (code && fromChurch !== false) { $("currency-select").value = code; updateRateDisplay(); }
+}
+
+/* ---------- Currency ---------- */
+function initCurrency() {
+  $("currency-select").innerHTML = EA_CURRENCIES.map(c => `<option value="${c.code}">${c.country}, ${c.name} (${c.code})</option>`).join("");
+  $("currency-select").value = "UGX";
+}
+async function fetchLiveRates() {
+  try {
+    const r = await fetch("https://open.er-api.com/v6/latest/USD");
+    if (r.ok) liveRates = (await r.json()).rates || {}; else $("rate-error").style.display = "block";
+  } catch (e) { $("rate-error").style.display = "block"; }
+  updateRateDisplay();
+}
+function rateFor(code) {
+  if (liveRates[code]) return liveRates[code];
+  const c = EA_CURRENCIES.find(x => x.code === code); return c ? c.fallback : 1;
+}
+function updateRateDisplay() {
+  currentCode = $("currency-select").value;
+  currentRate = rateFor(currentCode);
+  $("rate-info-box").innerHTML = `<b>1 USD = ${currentRate.toLocaleString(undefined, { maximumFractionDigits:2 })} ${currentCode}</b> &nbsp;·&nbsp; ${Object.keys(liveRates).length ? "Live rate" : "Estimate"}`;
+  $("h-cost").textContent = "Unit cost (" + currentCode + ")";
+  $("h-total").textContent = "Line total";
+  document.querySelectorAll(".it-cost-lbl").forEach(e => e.textContent = "Unit cost (" + currentCode + ")");
+  $("t-local-lbl").textContent = "Total (" + currentCode + ")";
+  $("o-actual-lbl").textContent = "Actual total paid (" + currentCode + ")";
+  $("o-invoice-lbl").textContent = "Final invoice amount (" + currentCode + ")";
+  recalcAll();
+}
+
+/* ---------- Items ---------- */
+function catalogOptions() {
+  const groups = {};
+  CATALOG.forEach(c => { (groups[c.category] = groups[c.category] || []).push(c); });
+  let html = '<option value="">Choose from the standard list</option>';
+  Object.keys(groups).forEach(cat => {
+    html += `<optgroup label="${esc(cat)}">` + groups[cat].map(c =>
+      `<option value="${esc(c.id)}">${esc(c.id)} · ${esc(c.name)}${c.brand ? " · " + esc(c.brand) : ""}${c.model ? " " + esc(c.model) : ""}</option>`).join("") + "</optgroup>";
+  });
+  return html + '<option value="custom">Custom item (not on the standard list)</option>';
+}
+function vendorOptions() {
+  return '<option value="">Vendor</option>' + VENDORS.map(v => `<option>${esc(v.name)}</option>`).join("") + '<option value="__other">Other vendor…</option>';
+}
+
+function addItem(preset) {
+  itemSeq++;
+  const id = "r" + itemSeq;
+  const row = document.createElement("div");
+  row.className = "wo-row"; row.id = id;
+  row.innerHTML = `
+    <div class="c-item"><span class="c-lbl">Item</span>
+      <select class="it-cat" onchange="onItemPick('${id}')">${catalogOptions()}</select>
+      <div class="it-detail"></div></div>
+    <div><span class="c-lbl">Qty</span><input type="number" class="it-qty" min="1" value="1" inputmode="numeric" style="text-align:right" oninput="recalcAll()" /></div>
+    <div><span class="c-lbl">Vendor</span><select class="it-vendor" onchange="onVendorPick('${id}')">${vendorOptions()}</select><input type="text" class="vendor-other" placeholder="Vendor name" style="display:none" /></div>
+    <div><span class="c-lbl">Quote ref</span><input type="text" class="it-quote" placeholder="Quote no." /></div>
+    <div><span class="c-lbl it-cost-lbl">Unit cost (${esc(currentCode)})</span><input type="number" class="it-cost" min="0" inputmode="numeric" placeholder="0" style="text-align:right" oninput="recalcAll()" /></div>
+    <div class="line-total"><span class="c-lbl">Line total</span><span class="lt-local">0</span><small class="lt-usd">$0.00</small></div>
+    <div><button class="btn-remove" title="Remove item" onclick="removeItem('${id}')">&times;</button></div>`;
+  $("items").appendChild(row);
+  if (preset) {
+    row.querySelector(".it-cat").value = preset.cat || "";
+    onItemPick(id);
+    if (preset.qty) row.querySelector(".it-qty").value = preset.qty;
+    if (preset.name) { const n = row.querySelector(".it-name"); if (n) n.value = preset.name; }
+    if (preset.spec) { const n = row.querySelector(".it-cspec"); if (n) n.value = preset.spec; }
+    if (preset.just) { const n = row.querySelector(".it-just"); if (n) n.value = preset.just; }
+    if (preset.notes) { const n = row.querySelector(".it-notes"); if (n) n.value = preset.notes; }
+    if (preset.vendor) {
+      const vs = row.querySelector(".it-vendor");
+      if ([...vs.options].some(o => o.value === preset.vendor)) vs.value = preset.vendor;
+      else { vs.value = "__other"; onVendorPick(id); row.querySelector(".vendor-other").value = preset.vendor; }
+    }
+    if (preset.quote) row.querySelector(".it-quote").value = preset.quote;
+    if (preset.cost) row.querySelector(".it-cost").value = preset.cost;
   }
+  recalcAll();
+  return row;
+}
 
-  function showError(msg) { const el = document.getElementById("error-msg"); el.textContent = msg; el.style.display = "block"; }
-  function hideError()    { document.getElementById("error-msg").style.display = "none"; }
-
-  function clearForm() {
-    if (!confirm("Clear all form data?")) return;
-    document.querySelectorAll("#form-wrap input[type=text], #form-wrap input[type=email], #form-wrap input[type=tel], #form-wrap textarea").forEach(el => { el.value = ""; });
-    document.getElementById("items-body").innerHTML = "";
-    itemCount = 0;
-    document.getElementById("sig-date").value = new Date().toISOString().split("T")[0];
-    addItem();
+function onItemPick(id) {
+  const row = $(id); const v = row.querySelector(".it-cat").value; const box = row.querySelector(".it-detail");
+  const c = CATALOG.find(x => x.id === v);
+  if (!v) { box.innerHTML = ""; }
+  else if (v === "custom") {
+    box.innerHTML = `<span class="badge custom">Non-standard item, justification required</span>
+      <input type="text" class="it-name" placeholder="Item name, brand and model" />
+      <textarea class="it-cspec" placeholder="Specification"></textarea>
+      <textarea class="it-just" placeholder="Why is this needed and why is nothing on the standard list suitable?"></textarea>`;
+  } else if (c) {
+    const bm = [c.brand, c.model].filter(Boolean).join(" ");
+    let h = `<div class="specline"><b>${esc(c.name)}</b>${bm ? " · " + esc(bm) : ""}<br>${esc(c.spec || "")}<br><span class="sm">Unit: ${esc(c.unit)}${c.notes ? " · " + esc(c.notes) : ""}</span></div>`;
+    if (c.power) h += `<span class="badge power">Power option</span> `;
+    if (c.spec_required) h += `<span class="badge spec">Spec required before ordering</span><textarea class="it-cspec" placeholder="Enter the full specification (wattage, load, quantity) for this church"></textarea>`;
+    h += `<input type="text" class="it-notes" placeholder="Note for this line (optional)" style="margin-top:6px" />`;
+    box.innerHTML = h;
   }
+  checkWarnings();
+}
+function onVendorPick(id) {
+  const row = $(id); row.querySelector(".vendor-other").style.display = row.querySelector(".it-vendor").value === "__other" ? "block" : "none";
+}
+function removeItem(id) {
+  if (document.querySelectorAll(".wo-row").length <= 1) { const r = $(id); r.querySelector(".it-cat").value = ""; onItemPick(id); r.querySelector(".it-cost").value = ""; recalcAll(); return; }
+  $(id)?.remove(); recalcAll(); checkWarnings();
+}
 
-  /* ── Init ── */
-  fetchLiveRates().then(() => { addItem(); });
+function sourcingNeedsClearance() { return $("sourcing").value !== "Uganda"; }
+function onSourcingChange() {
+  const on = sourcingNeedsClearance();
+  $("x-clear-nm").style.display = on ? "block" : "none";
+  $("x-clearance").style.display = on ? "block" : "none";
+  recalcAll();
+}
+
+function totals() {
+  let items = 0;
+  document.querySelectorAll(".wo-row").forEach(r => { items += num(r.querySelector(".it-qty").value) * num(r.querySelector(".it-cost").value); });
+  const extra = num($("x-transport").value) + num($("x-install").value) + (sourcingNeedsClearance() ? num($("x-clearance").value) : 0) + num($("x-other").value);
+  return { items, extra, local: items + extra, usd: (items + extra) / (currentRate || 1) };
+}
+function recalcAll() {
+  const rate = currentRate || 1;
+  document.querySelectorAll(".wo-row").forEach(r => {
+    const line = num(r.querySelector(".it-qty").value) * num(r.querySelector(".it-cost").value);
+    r.querySelector(".lt-local").textContent = fmt(line);
+    r.querySelector(".lt-usd").textContent = money(line / rate);
+  });
+  const t = totals();
+  $("t-items").textContent = fmt(t.items) + " " + currentCode;
+  $("t-extra").textContent = fmt(t.extra) + " " + currentCode;
+  $("t-local").textContent = fmt(t.local) + " " + currentCode;
+  $("t-usd").textContent = money(t.usd);
+}
+
+/* ---------- Guidance warnings (never block) ---------- */
+function checkWarnings() {
+  const ids = [...document.querySelectorAll(".it-cat")].map(s => s.value);
+  const has = id => ids.includes(id);
+  const plan = $("power-plan").value;
+  const grid = $("a-grid").value;
+  const w = [];
+  const powerLines = ids.filter(i => { const c = CATALOG.find(x => x.id === i); return c && c.power; });
+  if (powerLines.length > 1) w.push("More than one power option is on this list (" + powerLines.join(", ") + "). A work order should use one power plan.");
+  const need = { "Solar kit": ["EQ-018","EQ-019"], "Generator": ["EQ-017"], "Portable power station": ["EQ-020"] }[plan];
+  if (need && !need.some(has)) w.push("The power plan is “" + plan + "” but no matching power item is on the list. Add it, or change the plan.");
+  if ((grid === "No power" || grid === "Far from grid") && (!plan || plan.startsWith("None") || plan === "Grid connection")) w.push("This church has no reliable grid power. Choose solar, a generator or a power station, or mark the plan as undecided.");
+  if (plan === "Undecided, needs review") w.push("Power plan is undecided. The trustees will see this flagged on the work order.");
+  $("power-warnings").innerHTML = w.map(x => `<div class="warn">${esc(x)}</div>`).join("");
+  const spec = ids.filter(i => { const c = CATALOG.find(x => x.id === i); return c && c.spec_required; });
+  $("item-warnings").innerHTML = spec.length ? `<div class="warn">${spec.map(esc).join(", ")} needs a full specification before it can be quoted or ordered.</div>` : "";
+}
+
+/* ---------- Collect ---------- */
+function collect() {
+  const items = [];
+  document.querySelectorAll(".wo-row").forEach(r => {
+    const cid = r.querySelector(".it-cat").value;
+    if (!cid) return;
+    const c = CATALOG.find(x => x.id === cid);
+    const qty = num(r.querySelector(".it-qty").value), cost = num(r.querySelector(".it-cost").value);
+    const vsel = r.querySelector(".it-vendor").value;
+    const vendor = vsel === "__other" ? r.querySelector(".vendor-other").value.trim() : vsel;
+    const custom = cid === "custom";
+    const q = sel => { const e = r.querySelector(sel); return e ? e.value.trim() : ""; };
+    items.push({
+      catalog_id: custom ? null : cid,
+      item: custom ? q(".it-name") : c.name,
+      brand: custom ? "" : (c.brand || ""), model: custom ? "" : (c.model || ""),
+      spec: custom || (c && c.spec_required) ? q(".it-cspec") : (c.spec || ""),
+      unit: custom ? "each" : c.unit,
+      notes: q(".it-notes"), custom, justification: q(".it-just"),
+      spec_required: !!(c && c.spec_required),
+      vendor, quote_ref: r.querySelector(".it-quote").value.trim(),
+      qty, unit_cost: cost, line_total: qty * cost,
+    });
+  });
+  const t = totals();
+  const extras = [
+    { type:"transport", label:"Transport and delivery", amount:num($("x-transport").value) },
+    { type:"installation", label:"Installation labour", amount:num($("x-install").value) },
+  ];
+  if (sourcingNeedsClearance()) extras.push({ type:"clearance", label:"Import duty and clearance", amount:num($("x-clearance").value) });
+  if (num($("x-other").value) || $("x-other-label").value.trim()) extras.push({ type:"other", label:$("x-other-label").value.trim() || "Other", amount:num($("x-other").value) });
+  const sv = $("church-select").value;
+  const country = $("a-country").value;
+  const existing = [...document.querySelectorAll("#a-existing input:checked")].map(i => i.value);
+  const verify = [...document.querySelectorAll("#o-verify input")].map(i => ({ check:i.value, done:i.checked }));
+  return {
+    requester_name: $("req-name").value.trim(),
+    needed_by: $("needed-by").value,
+    church_id: sv && sv !== "other" ? parseInt(sv, 10) : null,
+    church_pick: sv,
+    church_name: $("a-location").value.trim(),
+    country, country_code: countryCode(country),
+    assessment: {
+      pastor: $("a-pastor").value.trim(), location: $("a-location").value.trim(), region: $("a-region").value.trim(), country,
+      language: $("a-language").value.trim(), members: $("a-members").value === "" ? null : num($("a-members").value),
+      spiritual_standing: $("a-standing").value, building_type: $("a-building").value, grid_power: $("a-grid").value,
+      internet: $("a-internet").value.trim(), cell_signal: $("a-cell").value.trim(), distance_kampala: $("a-distance").value.trim(),
+      existing_equipment: existing, photos_link: $("a-photos").value.trim(), notes: $("a-notes").value.trim(),
+    },
+    reason: $("reason").value.trim(),
+    sourcing: $("sourcing").value,
+    currency_code: currentCode, exchange_rate: currentRate,
+    items, extras,
+    power_plan: $("power-plan").value, power_load: $("power-load").value.trim(), power_notes: $("power-notes").value.trim(),
+    delivery: { plan: $("d-plan").value.trim(), warranty_months: $("d-warranty").value === "" ? null : num($("d-warranty").value),
+      quotes_link: $("d-quotes-link").value.trim(), vendors_compared: $("d-compared").value.trim(), needed_by: $("needed-by").value },
+    outcome: { verification: verify, delivered_date: $("o-delivered").value, installed_date: $("o-installed").value, installed_by: $("o-installer").value.trim(),
+      actual_total: $("o-actual").value === "" ? null : num($("o-actual").value), invoice_total: $("o-invoice").value === "" ? null : num($("o-invoice").value),
+      receipts_link: $("o-receipts").value.trim(), photos_link: $("o-photos").value.trim(), notes: $("o-notes").value.trim() },
+    outcome_status: $("o-status").value,
+    notes: $("notes").value.trim(),
+    submitted_by: $("sig-name").value.trim(), requester_email: $("sig-email").value.trim(), requester_whatsapp: $("sig-whatsapp").value.trim(),
+    total_local: t.local, total_usd: parseFloat(t.usd.toFixed(2)), items_subtotal: t.items, extras_total: t.extra,
+  };
+}
+
+function validate(d) {
+  const e = [];
+  if (!d.requester_name) e.push("Your full name is required.");
+  if (!d.church_pick) e.push("Choose the church this work order is for.");
+  if (!d.church_name) e.push("Enter the church name and location.");
+  if (!d.reason) e.push("Explain why this equipment is needed.");
+  if (!d.items.length) e.push("Add at least one item.");
+  d.items.forEach((it, i) => {
+    const n = "Item " + (i + 1) + (it.item ? " (" + it.item + ")" : "");
+    if (it.custom && !it.item) e.push(n + ": enter the item name.");
+    if (it.custom && !it.justification) e.push(n + ": explain why a non-standard item is needed.");
+    if ((it.custom || it.spec_required) && !it.spec) e.push(n + ": the full specification is required before this can be ordered.");
+    if (!(it.qty > 0)) e.push(n + ": quantity must be at least 1.");
+    if (!(it.unit_cost > 0)) e.push(n + ": enter the unit cost from the current quote.");
+  });
+  if (!d.power_plan) e.push("Choose a power plan, or mark it undecided.");
+  if (d.sourcing !== "Uganda") { const c = d.extras.find(x => x.type === "clearance"); if (!c || !(c.amount > 0)) e.push("Buying outside Uganda needs an import duty and clearance amount from a clearing agent."); }
+  return e;
+}
+function showErrors(list) {
+  const el = $("error-msg");
+  el.innerHTML = list.length === 1 ? esc(list[0]) : "Please fix the following:<ul>" + list.map(x => "<li>" + esc(x) + "</li>").join("") + "</ul>";
+  el.style.display = "block"; el.scrollIntoView({ behavior:"smooth", block:"center" });
+}
+function hideError() { $("error-msg").style.display = "none"; }
+
+/* ---------- Save ---------- */
+function toRow(d, isEdit) {
+  const row = {
+    requester_name: d.requester_name, region: d.country, reason: d.reason,
+    items_json: d.items, currency_code: d.currency_code, exchange_rate: d.exchange_rate,
+    total_local: d.total_local, total_usd: d.total_usd, notes: d.notes,
+    submitted_by: d.submitted_by || d.requester_name, requester_email: d.requester_email || null, requester_whatsapp: d.requester_whatsapp || null,
+    country_code: d.country_code, church_id: d.church_id, church_name: d.church_name,
+    assessment_json: d.assessment, sourcing: d.sourcing, power_plan: d.power_plan,
+    power_notes: [d.power_load ? "Load: " + d.power_load : "", d.power_notes].filter(Boolean).join("\n"),
+    extra_costs_json: d.extras, delivery_json: d.delivery, outcome_json: d.outcome,
+  };
+  if (isEdit && d.outcome_status) row.status = d.outcome_status;
+  if (!isEdit) row.status = "Pending";
+  return row;
+}
+
+async function submitWO() {
+  hideError();
+  const d = collect(); const errs = validate(d);
+  if (errs.length) { showErrors(errs); return; }
+  const btn = $("submit-btn"); btn.disabled = true; const label = btn.textContent; btn.textContent = "Saving…";
+  try {
+    let res;
+    if (editing) {
+      res = await fetch(SUPABASE_URL + "/rest/v1/equipment_requests?id=eq." + editing.id, { method:"PATCH", headers:{ ...SBH, Prefer:"return=representation" }, body: JSON.stringify(toRow(d, true)) });
+    } else {
+      res = await fetch(SUPABASE_URL + "/rest/v1/equipment_requests", { method:"POST", headers:{ ...SBH, Prefer:"return=representation" }, body: JSON.stringify(toRow(d, false)) });
+    }
+    if (!res.ok) {
+      const txt = await res.text();
+      if (/wo_number|assessment_json|church_id|column/i.test(txt)) throw new Error("The database has not been upgraded for work orders yet. Run work_orders_migration.sql in Supabase first. (" + txt.slice(0, 160) + ")");
+      throw new Error(txt.slice(0, 240));
+    }
+    const out = await res.json(); const saved = Array.isArray(out) ? out[0] : out;
+    savedWO = (saved && saved.wo_number) || (editing && editing.wo_number) || "";
+    const status = (saved && saved.status) || "Pending";
+    d._status = status;
+    document.getElementById("print-doc").innerHTML = renderPrint(d, savedWO, status);
+    $("ok-wo").textContent = savedWO || "Saved";
+    $("ok-text").textContent = editing ? "Your changes to this work order are saved." : "Your work order is recorded. Send it to Pastor Goyco and David for approval: open the email, then save the PDF and attach it.";
+    const link = FORM_URL + "?wo=" + encodeURIComponent(savedWO);
+    $("ok-link").textContent = link; $("ok-link").href = link;
+    const subject = "Work Order " + savedWO + " - " + d.church_name;
+    $("mailto-link").href = "mailto:" + APPROVAL_EMAIL + "?cc=" + APPROVAL_CC + "&subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(buildSummary(d, savedWO, link));
+    $("form-wrap").style.display = "none"; $("banner-area").innerHTML = ""; $("success-screen").style.display = "block"; window.scrollTo(0, 0);
+  } catch (e) {
+    console.error(e); showErrors(["Could not save: " + e.message]);
+    btn.disabled = false; btn.textContent = label;
+  }
+}
+
+/* ---------- Email text (ASCII only so mailto links do not break) ---------- */
+function buildSummary(d, wo, link) {
+  const div = "------------------------------------------------------------";
+  const code = d.currency_code, L = [];
+  const a = d.assessment;
+  L.push("EAST AFRICA WORK ORDER " + wo); L.push(div);
+  L.push("Church:        " + d.church_name + (a.pastor ? " (Pastor " + a.pastor + ")" : ""));
+  L.push("Country:       " + d.country + (a.region ? ", " + a.region : ""));
+  L.push("Members:       " + (a.members == null ? "n/a" : a.members) + "   Standing: " + (a.spiritual_standing || "n/a"));
+  L.push("Grid power:    " + (a.grid_power || "n/a") + "   Building: " + (a.building_type || "n/a"));
+  L.push("Requested by:  " + d.requester_name); if (d.needed_by) L.push("Needed by:     " + d.needed_by);
+  L.push("Sourcing:      " + d.sourcing); L.push("Currency:      " + code + " (1 USD = " + d.exchange_rate.toLocaleString(undefined, { maximumFractionDigits:2 }) + " " + code + ")");
+  L.push(""); L.push("WHY"); L.push(d.reason); L.push(""); L.push(div); L.push("ITEMS");
+  d.items.forEach((it, i) => {
+    L.push("  " + (i + 1) + ". " + (it.catalog_id ? it.catalog_id + " " : "CUSTOM ") + it.item + (it.model ? " (" + it.model + ")" : ""));
+    L.push("     " + it.qty + " x " + fmt(it.unit_cost) + " " + code + " = " + fmt(it.line_total) + " " + code + (it.vendor ? "  | " + it.vendor : "") + (it.quote_ref ? "  | quote " + it.quote_ref : ""));
+  });
+  L.push(""); L.push("POWER PLAN: " + d.power_plan + (d.power_load ? "  (load: " + d.power_load + ")" : ""));
+  d.extras.filter(x => x.amount).forEach(x => L.push(x.label + ": " + fmt(x.amount) + " " + code));
+  L.push(div); L.push("TOTAL: " + fmt(d.total_local) + " " + code + "  /  " + money(d.total_usd) + " USD"); L.push(div);
+  if (d.delivery.plan) { L.push("DELIVERY PLAN"); L.push(d.delivery.plan); L.push(""); }
+  if (d.notes) { L.push("NOTES"); L.push(d.notes); L.push(""); }
+  L.push("Open or update this work order: " + link); L.push("Attach the saved PDF to this email.");
+  return L.join("\n");
+}
+
+/* ---------- Print document ---------- */
+function renderPrint(d, wo, status) {
+  const a = d.assessment, code = d.currency_code, rate = d.exchange_rate || 1;
+  const kv = (k, v) => k === "" ? "<div></div><div></div>" : `<div class="k">${esc(k)}</div><div class="v">${esc(v == null || v === "" ? "—" : v)}</div>`;
+  const today = new Date().toLocaleDateString("en-US", { year:"numeric", month:"long", day:"numeric" });
+  const power = d.power_plan === "Undecided, needs review" ? `<span class="flag">UNDECIDED, NEEDS REVIEW</span>` : esc(d.power_plan || "—");
+  let h = `<div class="ph">East Africa Work Order</div>
+    <div class="ps"><span><b>${esc(wo || "Not yet assigned")}</b> &nbsp;·&nbsp; Status: <b>${esc(status || "Draft")}</b></span><span>${esc(today)}</span></div>
+
+    <div class="sec">Section 1 · Assessment</div>
+    <div class="kv">
+      ${kv("Church", d.church_name)}${kv("Pastor", a.pastor)}
+      ${kv("District / region", a.region)}${kv("Country", d.country)}
+      ${kv("Language(s)", a.language)}${kv("Members", a.members)}
+      ${kv("Spiritual standing", a.spiritual_standing)}${kv("Building", a.building_type)}
+      ${kv("Grid power", a.grid_power)}${kv("Distance from Kampala", a.distance_kampala)}
+      ${kv("Internet", a.internet)}${kv("Cell signal", a.cell_signal)}
+      ${kv("Has today", (a.existing_equipment || []).join(", ") || "None recorded")}${kv("Requested by", d.requester_name)}
+    </div>
+    ${a.notes ? `<div class="box" style="margin-top:8px">${esc(a.notes)}</div>` : ""}
+    ${a.photos_link ? `<div class="sm" style="margin-top:4px">Photos and documents: ${esc(a.photos_link)}</div>` : ""}
+
+    <div class="sec">Section 2 · Work Order</div>
+    <div class="kv"><div class="k">Why</div><div class="wide">${esc(d.reason)}</div>
+      ${kv("Bought in", d.sourcing)}${kv("Needed by", d.needed_by)}
+      ${kv("Currency", code + " (1 USD = " + rate.toLocaleString(undefined, { maximumFractionDigits:2 }) + ")")}${kv("", "")}</div>
+    <table style="margin-top:8px"><thead><tr><th style="width:9%">ID</th><th style="width:37%">Item and specification</th><th class="r" style="width:6%">Qty</th><th style="width:20%">Vendor / quote</th><th class="r" style="width:13%">Unit (${esc(code)})</th><th class="r" style="width:15%">Total (${esc(code)})</th></tr></thead><tbody>`;
+  d.items.forEach(it => {
+    const bm = [it.brand, it.model].filter(Boolean).join(" ");
+    h += `<tr><td>${esc(it.catalog_id || "Custom")}</td><td><b>${esc(it.item)}</b>${bm ? " · " + esc(bm) : ""}<div class="sm">${esc(it.spec || "")}${it.notes ? " · " + esc(it.notes) : ""}${it.custom ? "<br>Why: " + esc(it.justification) : ""}</div></td>
+      <td class="r">${esc(it.qty)}</td><td>${esc(it.vendor || "—")}<div class="sm">${esc(it.quote_ref || "")}</div></td><td class="r">${fmt(it.unit_cost)}</td><td class="r">${fmt(it.line_total)}</td></tr>`;
+  });
+  h += `</tbody></table>
+    <div class="tot">
+      <div><span>Equipment subtotal</span><span>${fmt(d.items_subtotal)} ${esc(code)}</span></div>`;
+  d.extras.filter(x => x.amount).forEach(x => { h += `<div><span>${esc(x.label)}</span><span>${fmt(x.amount)} ${esc(code)}</span></div>`; });
+  h += `<div class="g"><span>Total</span><span>${fmt(d.total_local)} ${esc(code)}</span></div>
+      <div><span></span><span><b>${money(d.total_usd)} USD</b></span></div></div>
+    <div class="sec">Power plan</div>
+    <div class="kv"><div class="k">Plan</div><div class="wide">${power}</div>${kv("Load", d.power_load)}${kv("", "")}</div>
+    ${d.power_notes ? `<div class="box" style="margin-top:6px">${esc(d.power_notes)}</div>` : ""}
+    <div class="sec">Delivery and quotes</div>
+    <div class="kv">${kv("Warranty (months)", d.delivery.warranty_months)}${kv("Quote documents", d.delivery.quotes_link)}</div>
+    ${d.delivery.plan ? `<div class="sm" style="margin:6px 0 2px">Delivery plan</div><div class="box">${esc(d.delivery.plan)}</div>` : ""}
+    ${d.delivery.vendors_compared ? `<div class="sm" style="margin:6px 0 2px">Vendors compared and why this vendor</div><div class="box">${esc(d.delivery.vendors_compared)}</div>` : ""}
+    ${d.notes ? `<div class="sm" style="margin:6px 0 2px">Additional notes</div><div class="box">${esc(d.notes)}</div>` : ""}`;
+
+  const o = d.outcome || {};
+  const ver = (o.verification && o.verification.length) ? o.verification : ["Sealed factory boxes inspected","Serial numbers recorded","EFRIS tax invoice received","Written warranty received","Speaker drivers inspected (audio gear)"].map(c => ({ check:c, done:false }));
+  h += `<div class="sec">Section 3 · Final Outcome</div>
+    <div class="kv">${kv("Date delivered", o.delivered_date)}${kv("Date installed", o.installed_date)}
+      ${kv("Installed by", o.installer || o.installed_by)}${kv("Final invoice", o.invoice_total == null ? "" : fmt(o.invoice_total) + " " + code)}
+      ${kv("Actual total paid", o.actual_total == null ? "" : fmt(o.actual_total) + " " + code)}${kv("Receipts", o.receipts_link)}
+      ${kv("Install photos", o.photos_link)}${kv("", "")}</div>
+    <div style="margin-top:8px;font-size:9pt">${ver.map(v => `<div>${v.done ? "&#9745;" : "&#9744;"} ${esc(v.check)}</div>`).join("")}</div>
+    <div class="box" style="margin-top:8px;min-height:50px">${o.notes ? esc(o.notes) : ""}</div>
+    <div class="sig"><div>Trustee approval</div><div>Date</div></div>
+    <div class="foot">Prices and totals come from quotes entered for this work order. Verify authenticity before payment: sealed box, serial number, EFRIS tax invoice and written warranty. ${esc(FORM_URL)}</div>`;
+  return h;
+}
+function previewPrint() {
+  hideError();
+  const d = collect();
+  $("print-doc").innerHTML = renderPrint(d, savedWO || (editing && editing.wo_number) || (SAMPLE ? "SAMPLE (not saved)" : ""), editing ? editing.status : (SAMPLE ? "Sample" : "Draft"));
+  window.print();
+}
+
+/* ---------- Form control ---------- */
+function clearForm() {
+  if (!confirm("Clear everything on this form?")) return;
+  location.href = location.pathname;
+}
+
+function populateStatusSelect(current) {
+  const opts = [current || "Pending"];
+  ["Delivered", "Installed"].forEach(s => { if (!opts.includes(s)) opts.push(s); });
+  $("o-status").innerHTML = opts.map(s => `<option>${esc(s)}</option>`).join("");
+  $("o-status").value = current || "Pending";
+  $("o-status").disabled = !editing;
+}
+
+function applyRow(r) {
+  $("req-name").value = r.requester_name || "";
+  const a = r.assessment_json || {};
+  if (r.church_id != null && [...$("church-select").options].some(o => o.value === String(r.church_id))) $("church-select").value = String(r.church_id); else $("church-select").value = "other";
+  $("a-pastor").value = a.pastor || ""; $("a-location").value = a.location || r.church_name || ""; $("a-region").value = a.region || "";
+  $("a-country").value = ["Uganda","Kenya"].includes(a.country) ? a.country : (a.country ? "Other" : "Uganda");
+  $("a-language").value = a.language || ""; $("a-members").value = a.members == null ? "" : a.members;
+  $("a-standing").value = a.spiritual_standing || ""; $("a-building").value = a.building_type || ""; $("a-grid").value = a.grid_power || "";
+  $("a-internet").value = a.internet || ""; $("a-cell").value = a.cell_signal || ""; $("a-distance").value = a.distance_kampala || "";
+  document.querySelectorAll("#a-existing input").forEach(i => { i.checked = (a.existing_equipment || []).includes(i.value); });
+  $("a-photos").value = a.photos_link || ""; $("a-notes").value = a.notes || "";
+  $("reason").value = r.reason || ""; $("sourcing").value = r.sourcing || "Uganda"; onSourcingChange();
+  if (r.currency_code && [...$("currency-select").options].some(o => o.value === r.currency_code)) $("currency-select").value = r.currency_code;
+  updateRateDisplay();
+  $("items").innerHTML = "";
+  (r.items_json || []).forEach(it => {
+    addItem({ cat: it.custom ? "custom" : (it.catalog_id || ""), qty: it.qty, name: it.custom ? it.item : "", spec: it.spec_required || it.custom ? it.spec : "", just: it.justification, notes: it.notes, vendor: it.vendor, quote: it.quote_ref, cost: it.unit_cost });
+  });
+  if (!$("items").children.length) addItem();
+  $("power-plan").value = r.power_plan || "";
+  const pn = String(r.power_notes || ""); const m = pn.match(/^Load: (.*)(?:\n|$)/);
+  $("power-load").value = m ? m[1] : ""; $("power-notes").value = m ? pn.replace(/^Load: .*\n?/, "") : pn;
+  (r.extra_costs_json || []).forEach(x => {
+    if (x.type === "transport") $("x-transport").value = x.amount || ""; if (x.type === "installation") $("x-install").value = x.amount || "";
+    if (x.type === "clearance") $("x-clearance").value = x.amount || ""; if (x.type === "other") { $("x-other").value = x.amount || ""; $("x-other-label").value = x.label === "Other" ? "" : x.label; }
+  });
+  const d = r.delivery_json || {};
+  $("d-plan").value = d.plan || ""; $("d-warranty").value = d.warranty_months == null ? "" : d.warranty_months; $("d-quotes-link").value = d.quotes_link || ""; $("d-compared").value = d.vendors_compared || "";
+  $("needed-by").value = d.needed_by || "";
+  const o = r.outcome_json || {};
+  (o.verification || []).forEach(v => { const el = [...document.querySelectorAll("#o-verify input")].find(i => i.value === v.check); if (el) el.checked = !!v.done; });
+  $("o-delivered").value = o.delivered_date || ""; $("o-installed").value = o.installed_date || ""; $("o-installer").value = o.installed_by || "";
+  $("o-actual").value = o.actual_total == null ? "" : o.actual_total; $("o-invoice").value = o.invoice_total == null ? "" : o.invoice_total;
+  $("o-receipts").value = o.receipts_link || ""; $("o-photos").value = o.photos_link || ""; $("o-notes").value = o.notes || "";
+  $("notes").value = r.notes || "";
+  $("sig-name").value = r.submitted_by || ""; $("sig-email").value = r.requester_email || ""; $("sig-whatsapp").value = r.requester_whatsapp || "";
+  populateStatusSelect(r.status);
+  recalcAll(); checkWarnings();
+}
+
+async function loadExisting(wo) {
+  const rows = await sbGet("equipment_requests?wo_number=eq." + encodeURIComponent(wo) + "&limit=1");
+  if (!rows || !rows.length) { $("banner-area").innerHTML = `<div class="banner" style="border-radius:0">Could not find work order ${esc(wo)}. You can start a new one below.</div>`; return false; }
+  editing = rows[0]; applyRow(editing);
+  $("banner-area").innerHTML = `<div class="banner" style="border-radius:0"><b>${esc(wo)}</b> · Status: <b>${esc(editing.status)}</b>. You are updating this work order. Complete <b>Section 3, Final Outcome</b> after delivery and install, then save.</div>`;
+  $("submit-btn").textContent = "Save Changes"; $("outcome-box").open = true; $("clear-btn").style.display = "none";
+  return true;
+}
+
+function loadSample() {
+  const k = CHURCHES.find(c => c.id === 16);
+  $("banner-area").innerHTML = `<div class="banner sample" style="border-radius:0"><b>SAMPLE, nothing is saved.</b> Kisoro is the first Uganda deployment. The kit shown is the minimum setup discussed (TV, tablet, speaker with cables) and is illustrative. Prices are blank because they are entered from current quotes. The power plan is an open decision, so it is left undecided. Use <b>Preview / Save as PDF</b> to see the printed work order.</div>`;
+  if (k) $("church-select").value = "16"; onChurchPick();
+  $("req-name").value = "Sample for review";
+  $("a-location").value = "Teko, Kisoro (name to be reconciled with Faham Village Tabernacle, Nkuringo, Kikobero)";
+  $("a-notes").value = "Priority number one on the Uganda side. Border area near the DRC and Rwanda. Church name and location differ between the survey records and Pastor Agensi's Oct 23 letter and need to be reconciled before ordering. Pastor wants equipment ready for December crusades in Nkuringo and Kikobero.";
+  $("reason").value = "First Uganda deployment. Play recorded messages for the congregation in Lukiga, Lunyankole and Kinyarwanda.";
+  $("needed-by").value = "2026-12-01";
+  [["EQ-001"],["EQ-004"],["EQ-005"],["EQ-002"],["EQ-014"],["EQ-003"],["EQ-016"]].forEach(([c]) => addItem({ cat:c, qty:1 }));
+  $("power-plan").value = "Undecided, needs review"; $("power-load").value = "TV, powered speaker, tablet charging";
+  $("power-notes").value = "Solar, generator and power station are all still options. Kisoro is far from the grid and may not have a permanent building. Decision pending.";
+  $("d-plan").value = "Public transport is not viable for this volume. Preferred: hire a car or van. Fallback: bus with reserved storage, then a hired car from Kisoro town to the church. Written travel and delivery plan owed by Isaac and Juma Fred.";
+  $("d-compared").value = "Target three Ugandan vendors per line (Kampala, Kabale or Kisoro dealers). Quotes to be attached before approval.";
+  $("sig-name").value = "Sample"; $("submit-btn").style.display = "none";
+  recalcAll(); checkWarnings();
+}
+
+/* ---------- Init ---------- */
+(async function init() {
+  initCurrency();
+  $("sig-date").value = new Date().toISOString().split("T")[0];
+  $("sourcing").value = "Uganda"; onSourcingChange();
+  populateStatusSelect("Pending");
+  buildChurchSelect();                       // embedded list first so the page is usable immediately
+  addItem();
+  fetchLiveRates();
+  await loadReference();                     // then refresh from Supabase if reachable
+  buildChurchSelect();
+  document.querySelectorAll(".it-cat").forEach(s => { const v = s.value; s.innerHTML = catalogOptions(); s.value = v; });
+  if (EDIT_WO) await loadExisting(EDIT_WO);
+  else if (SAMPLE) { $("items").innerHTML = ""; loadSample(); }
+})();
 </script>
 </body>
 </html>
